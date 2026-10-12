@@ -12,6 +12,7 @@ nunca chegam ao ``sympify`` (que usa ``eval`` internamente).
 """
 
 import ast
+import re
 import types
 
 import sympy as sp
@@ -63,6 +64,24 @@ _SP_ATTRS = set(_MATH_FUNCTIONS) | set(_MATH_CONSTANTS)
 
 # Funções que recebem strings como *nomes* (nunca como expressão matemática).
 _STRING_ARG_FUNCS = {"symbols", "Symbol", "Function", "Wild", "Dummy"}
+
+# Nomes de símbolos: identificadores (unicode) com ":" para ranges
+# (ex.: ``symbols('x:5')``). Sem metacaracteres de HTML/JS — o nome chega
+# ao ``sp.latex`` e, sem validação, permitiria injeção de HTML no console.
+_SYMBOL_NAME_RE = re.compile(r"[\w:]+")
+_SYMBOL_SPLIT_RE = re.compile(r"[\s,]+")
+
+
+def _validate_symbol_names(value, func_name):
+    """Valida strings usadas como nomes de símbolos/funções SymPy."""
+    if isinstance(value, str):
+        for name in _SYMBOL_SPLIT_RE.split(value):
+            if name and not _SYMBOL_NAME_RE.fullmatch(name):
+                raise UnsafeExpressionError(
+                    f"Nome de símbolo inválido em {func_name}: {name!r}")
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            _validate_symbol_names(item, func_name)
 
 # Métodos/propriedades matemáticas permitidos em objetos SymPy.
 _ALLOWED_METHODS = {
@@ -339,7 +358,10 @@ class SafeMathEvaluator:
         encaminhá-las ao ``sympify``/``eval``; exceto as funções que tratam
         strings como nomes de símbolos e o ``print``.
         """
-        if func_name in _STRING_ARG_FUNCS or func_name == "print":
+        if func_name in _STRING_ARG_FUNCS:
+            _validate_symbol_names(value, func_name)
+            return value
+        if func_name == "print":
             return value
         if isinstance(value, str):
             return self.parse_expression(value)

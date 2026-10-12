@@ -1,8 +1,39 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import EditorMonaco from "@monaco-editor/react";
+import EditorMonaco, { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
+import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
+import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { fetchEditorTemplate, exportDocument } from "../lib/api.js";
+
+// Monaco empacotado localmente (sem CDN): requisito do CSP estrito
+// (script-src 'self') e do design offline do app.
+self.MonacoEnvironment = {
+  getWorker(_workerId, label) {
+    switch (label) {
+      case "json":
+        return new jsonWorker();
+      case "css":
+      case "scss":
+      case "less":
+        return new cssWorker();
+      case "html":
+      case "handlebars":
+      case "razor":
+        return new htmlWorker();
+      case "typescript":
+      case "javascript":
+        return new tsWorker();
+      default:
+        return new editorWorker();
+    }
+  },
+};
+loader.config({ monaco });
 
 function extractMathBlocks(text) {
   const blocks = [];

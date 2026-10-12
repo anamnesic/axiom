@@ -1,5 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 
+// new Function é eval-equivalente: só compilamos expressões com caracteres
+// matemáticos e identificadores de uma whitelist — bloqueia acesso a
+// window/__TAURI_INTERNALS__/fetch/globalThis etc. na webview.
+const SAFE_EXPR_CHARS = /^[0-9a-zA-Z_+\-*/^().,\s]*$/;
+const ALLOWED_IDENTIFIERS = new Set([
+  "x", "Math", "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
+  "sinh", "cosh", "tanh", "sqrt", "cbrt", "abs", "log", "log2", "log10",
+  "exp", "floor", "ceil", "round", "trunc", "sign", "min", "max", "pow",
+  "hypot", "PI", "E", "LN2", "LN10", "LOG2E", "LOG10E", "SQRT2", "SQRT1_2",
+]);
+
+function isSafePlotExpression(input) {
+  if (!SAFE_EXPR_CHARS.test(input)) return false;
+  const identifiers = input.match(/[a-zA-Z_][a-zA-Z_0-9]*/g) || [];
+  return identifiers.every((id) => ALLOWED_IDENTIFIERS.has(id));
+}
+
 function Viz2D({ expr = "sin(x)", xMin = -6.28, xMax = 6.28, height = 300 }) {
   const canvasRef = useRef(null);
   const [input, setInput] = useState(expr);
@@ -63,6 +80,7 @@ function Viz2D({ expr = "sin(x)", xMin = -6.28, xMax = 6.28, height = 300 }) {
     }
 
     try {
+      if (!isSafePlotExpression(input)) throw new Error("unsafe expression");
       const compiled = new Function("x", `"use strict"; return (${input});`);
       ctx.beginPath();
       ctx.strokeStyle = "var(--primary)";

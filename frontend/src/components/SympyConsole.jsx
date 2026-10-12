@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import {
   fetchSympySession,
   execSympyCode,
@@ -9,6 +11,25 @@ import {
   solveEquation,
   simplifyExpression,
 } from "../lib/api.js";
+
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// O LaTeX vem do backend (sp.latex de uma expressão do usuário) e pode
+// conter texto arbitrário em nomes de símbolos. Renderizar com KaTeX
+// (que sanitiza a saída) — nunca injetar a string crua no DOM.
+function renderLatex(latex) {
+  try {
+    return katex.renderToString(latex, {
+      displayMode: false,
+      throwOnError: true,
+      trust: false,
+    });
+  } catch {
+    return escapeHtml(latex);
+  }
+}
 
 function SympyConsole() {
   const [session, setSession] = useState(null);
@@ -168,11 +189,7 @@ function SympyConsole() {
           <div
             className="output-math"
             style={{ fontSize: "16px", fontFamily: "var(--font-math)" }}
-            dangerouslySetInnerHTML={{
-              __html: cell.output.latex
-                .replace(/\\kappa/gu, "<i>\u03ba</i>")
-                .replace(/\\tau/gu, "<i>\u03c4</i>"),
-            }}
+            dangerouslySetInnerHTML={{ __html: renderLatex(cell.output.latex) }}
           />
         )}
         {cell.output.result && !cell.output.latex && (

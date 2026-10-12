@@ -154,6 +154,32 @@ class TestLegitimateMathStillWorks:
         result = sympy_engine.execute("v = sp.Matrix([1, 2, 3])\nv[0]")
         assert result["result"] == "1"
 
+    def test_exec_rejects_html_in_symbol_name(self, sympy_engine):
+        # O nome chega ao sp.latex e daí ao frontend; sem validação,
+        # vira injeção de HTML no console (XSS).
+        result = sympy_engine.execute(
+            "x = Symbol('<img src=x onerror=alert(1)>')\nx")
+        assert result["type"] == "error"
+
+    def test_exec_rejects_html_in_function_name(self, sympy_engine):
+        result = sympy_engine.execute("f = Function('f<img>')\nf(x)")
+        assert result["type"] == "error"
+
+    def test_exec_rejects_html_in_symbols_string(self, sympy_engine):
+        result = sympy_engine.execute(
+            "v = symbols('a <img src=x onerror=alert(1)> b')\nv")
+        assert result["type"] == "error"
+
+    def test_exec_allows_symbol_range_syntax(self, sympy_engine):
+        result = sympy_engine.execute("v = symbols('x:3')\nv")
+        assert result["type"] == "exec"
+        assert "x0" in result["result"] and "x2" in result["result"]
+
+    def test_exec_allows_unicode_symbol_name(self, sympy_engine):
+        result = sympy_engine.execute("v = symbols('α')\nv")
+        assert result["type"] == "exec"
+        assert "α" in result["result"]
+
 
 @pytest.mark.asyncio(loop_scope="module")
 class TestSecurityAPI:
@@ -162,7 +188,7 @@ class TestSecurityAPI:
     @pytest.fixture
     async def client(self):
         transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        async with AsyncClient(transport=transport, base_url="http://localhost:8080") as ac:
             yield ac
 
     @pytest.mark.asyncio
@@ -196,3 +222,41 @@ class TestSecurityAPI:
         data = resp.json()
         assert data["ok"] is True
         assert data["result"] == "4"
+
+    @pytest.mark.asyncio
+    async def test_rejects_foreign_host(self, client):
+        # DNS rebinding: Host fora de localhost deve ser rejeitado.
+        resp = await client.post(
+            "/api/v1/solve/evaluate",
+            json={"expression": "1+1"},
+            headers={"Host": "evil.example:8080"},
+        )
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_rejects_cross_origin_write(self, client):
+        resp = await client.post(
+            "/api/v1/solve/evaluate",
+            json={"expression": "1+1"},
+            headers={"Origin": "http://evil.example"},
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_allows_tauri_origin_write(self, client):
+        resp = await client.post(
+            "/api/v1/solve/evaluate",
+            json={"expression": "1+1"},
+            headers={"Origin": "https://tauri.localhost"},
+        )
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_exec_endpoint_rejects_html_symbol_name(self, client):
+        resp = await client.post(
+            "/api/v1/solve/exec",
+            json={"code": "x = Symbol('<img src=x onerror=alert(1)>')\nx"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["type"] == "error"
