@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import uvicorn
 
 import shutil
@@ -14,18 +15,51 @@ app = FastAPI(
 )
 
 # CORS — allow the frontend dev server and Tauri webview
+_ALLOWED_ORIGINS = {
+    "http://localhost:1420",      # Vite dev server
+    "http://localhost:5173",      # Vite alternate port
+    "tauri://localhost",           # Tauri production webview
+    "https://tauri.localhost",     # Tauri production webview (alt)
+}
+_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:1420",      # Vite dev server
-        "http://localhost:5173",      # Vite alternate port
-        "tauri://localhost",           # Tauri production webview
-        "https://tauri.localhost",     # Tauri production webview (alt)
-    ],
+    allow_origins=list(_ALLOWED_ORIGINS),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _host_name(host_header: str) -> str:
+    """Extrai o hostname do header Host (sem porta)."""
+    host = (host_header or "").strip().lower()
+    if host.startswith("["):  # literal IPv6: [::1]:8080
+        end = host.find("]")
+        return host[1:end] if end != -1 else host
+    return host.rsplit(":", 1)[0] if ":" in host else host
+
+
+@app.middleware("http")
+async def enforce_local_origin(request: Request, call_next):
+    """Bloqueia DNS rebinding (Host fora de localhost) e escritas cross-origin.
+
+    O sidecar escuta apenas em 127.0.0.1, mas sem validar o header Host um
+    site externo poderia rebindar o DNS para 127.0.0.1:8080 e chamar a API
+    same-origin. Requisições de escrita com Origin fora da allowlist também
+    são rejeitadas.
+    """
+    if _host_name(request.headers.get("host", "")) not in _ALLOWED_HOSTS:
+        return JSONResponse(status_code=400, content={"detail": "Host not allowed"})
+    origin = request.headers.get("origin")
+    if (
+        request.method in ("POST", "PUT", "PATCH", "DELETE")
+        and origin is not None
+        and origin not in _ALLOWED_ORIGINS
+    ):
+        return JSONResponse(status_code=403, content={"detail": "Origin not allowed"})
+    return await call_next(request)
 
 app.include_router(solve.router)
 app.include_router(explain.router)
