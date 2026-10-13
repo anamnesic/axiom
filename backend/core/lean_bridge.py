@@ -232,14 +232,14 @@ open Real
             if line.startswith("theorem "):
                 # Pattern: theorem name (binders) : target :=
                 m = re.match(
-                    r"theorem\s+\w+\s*((?:\([^)]*\)\s*)*)\s*:\s*(.+?)\s*:=",
+                    r"^theorem\s+\w+\s*((?:\([^)]*\)\s*)*):(.*?):=",
                     line,
                 )
                 if m:
                     target = m.group(2).strip()
                     binder_section = m.group(1)
                     # Parse each (...) group
-                    for bg in re.findall(r"\(([^)]*)\)", binder_section):
+                    for bg in re.findall(r"\(([^()]*)\)", binder_section):
                         if ":" in bg:
                             # Handle "a b c : Type" (multiple names, one type)
                             bg = bg.strip()
