@@ -97,13 +97,81 @@ def _normalize(text: str) -> str:
     return text
 
 
+_ALLOWED_ASSUMPTIONS = frozenset(
+    {
+        "real",
+        "positive",
+        "negative",
+        "nonnegative",
+        "nonpositive",
+        "nonzero",
+        "integer",
+        "rational",
+        "prime",
+        "even",
+        "odd",
+        "complex",
+        "commutative",
+        "finite",
+    }
+)
+
+_CONTRADICTORY_PAIRS = (
+    ("positive", "negative"),
+    ("positive", "nonpositive"),
+    ("negative", "nonnegative"),
+    ("even", "odd"),
+)
+
+
+def _parse_assumption_spec(spec: object) -> dict[str, bool]:
+    """Normalize an assumption specification (string, list, or dict) into SymPy keyword flags."""
+    flags: dict[str, bool] = {}
+    if isinstance(spec, str):
+        for tok in re.split(r"[\s,&;]+", spec.strip()):
+            if not tok:
+                continue
+            neg = tok.startswith(("!", "~", "not_"))
+            clean = tok.lstrip("!~").removeprefix("not_").lower()
+            if clean not in _ALLOWED_ASSUMPTIONS:
+                raise ParseError(f"unsupported assumption flag: {tok!r}")
+            flags[clean] = not neg
+    elif isinstance(spec, dict):
+        for k, v in spec.items():
+            clean = str(k).lower().strip()
+            if clean not in _ALLOWED_ASSUMPTIONS:
+                raise ParseError(f"unsupported assumption flag: {k!r}")
+            flags[clean] = bool(v)
+    elif isinstance(spec, (list, tuple, set)):
+        for item in spec:
+            flags.update(_parse_assumption_spec(item))
+    for a, b in _CONTRADICTORY_PAIRS:
+        if flags.get(a) is True and flags.get(b) is True:
+            raise ParseError(f"contradictory assumptions: {a!r} and {b!r}")
+    return flags
+
+
 class Parser:
     """Converts text into SymPy objects without executing code."""
 
-    def __init__(self, symbols: dict[str, sp.Symbol] | None = None,
-                 locals_: dict[str, object] | None = None):
+    def __init__(
+        self,
+        symbols: dict[str, sp.Symbol] | None = None,
+        locals_: dict[str, object] | None = None,
+        assumptions: dict[str, object] | str | None = None,
+    ):
         self.symbols: dict[str, sp.Symbol] = dict(symbols or {})
         self.locals: dict[str, object] = dict(locals_ or {})
+        self.default_assumptions: dict[str, bool] = {}
+        self.symbol_assumptions: dict[str, dict[str, bool]] = {}
+        if isinstance(assumptions, str):
+            self.default_assumptions = _parse_assumption_spec(assumptions)
+        elif isinstance(assumptions, dict):
+            for sym_name, spec in assumptions.items():
+                if sym_name in _ALLOWED_ASSUMPTIONS and isinstance(spec, bool):
+                    self.default_assumptions[sym_name] = spec
+                else:
+                    self.symbol_assumptions[str(sym_name)] = _parse_assumption_spec(spec)
         self.functions = {
             name: getattr(sp, name)
             for name in _FUNCTIONS
@@ -149,7 +217,16 @@ class Parser:
         if not _SYMBOL_NAME.fullmatch(name or ""):
             raise ParseError(f"invalid variable name: {name!r}")
         if name not in self.symbols:
-            self.symbols[name] = sp.Symbol(name)
+            flags = dict(self.default_assumptions)
+            if name in self.symbol_assumptions:
+                flags.update(self.symbol_assumptions[name])
+            for a, b in _CONTRADICTORY_PAIRS:
+                if flags.get(a) is True and flags.get(b) is True:
+                    raise ParseError(f"contradictory assumptions for {name!r}: {a!r} and {b!r}")
+            try:
+                self.symbols[name] = sp.Symbol(name, **flags)
+            except Exception as exc:
+                raise ParseError(f"invalid assumptions for symbol {name!r}: {exc}") from exc
         return self.symbols[name]
 
     # ------------------------------------------------------------- internals

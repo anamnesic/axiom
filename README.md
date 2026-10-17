@@ -38,16 +38,19 @@ axiom solve "x^2 - 5*x + 6 = 0"
 
 ### Guarantee levels
 
-Not every mathematical result carries the same logical strength. AXIOM explicitly distinguishes 6 hierarchical levels:
+Not every operation carries the same logical strength. AXIOM separates **mathematical correctness claims** (`guarantee.is_mathematical_claim == True`, which strictly require an executed `Verification(passed=True)` in `MathResult`) from **operational / structural states** (`is_mathematical_claim == False`):
 
-| Level | Meaning |
-| --- | --- |
-| `formal-proof` | Proof verified by a formal proof kernel (Lean 4, with `sorry`/`admit` strictly rejected) |
-| `exact-symbolic` | Verified symbolic identity (e.g., canonical simplification, antiderivative differentiation) |
-| `verified-substitution` | Solution validated by independent substitution ($f(r)=0$, $A A^{-1}=I$, $\nabla_\lambda g_{\mu\nu}=0$) |
-| `numerical-approximation` | Arbitrary-precision numerical computation with declared error tolerance |
-| `heuristic` | Plausible pattern or open conjecture, not yet verified |
-| `unverified` | Raw or refuted computation |
+| Level | Category | Meaning |
+| --- | --- | --- |
+| `formal-proof` | Mathematical Claim | Proof verified by the Lean 4 kernel (`#print axioms` confirmed, `sorry`/`admit` and trivial `X = X` tautologies rejected) |
+| `exact-symbolic` | Mathematical Claim | Verified symbolic identity (canonical simplification, FTC antiderivative round-trip, symbolic L'Hôpital, with optional `assumptions`) |
+| `verified-substitution` | Mathematical Claim | Solution validated by independent substitution ($f(r)=0$, $A A^{-1}=I$, $\nabla_\lambda g_{\mu\nu}=0$) with pole & domain-error rejection |
+| `numerical-approximation` | Mathematical Claim | Arbitrary-precision evaluation, finite-difference check, adaptive quadrature, or two-sided sequence limit probe with declared `max_error` |
+| `structural-parse` | Operational State | Safe AST parse validated by canonical re-parse equivalence (`ast-roundtrip`) |
+| `catalog-lookup` | Operational State | Indexed declaration retrieved from the curated Mathlib 4 catalog or Loogle API |
+| `sampled-visualization` | Operational State | Sampled 1D curve coordinates rendered to vector SVG and ASCII preview |
+| `heuristic` | Operational State | Plausible pattern, exploratory summary, or open conjecture not yet verified |
+| `unverified` | Operational State | Refuted claim, interior pole / jump discontinuity failure, or unverified computation |
 
 Every result carries structured `Evidence` metadata: `engine`, `engine_version`, `method`, `steps`, `limitations`, and `reproducible_with`.
 
@@ -108,29 +111,27 @@ axiom mcp
 | Module | Capabilities & Independent Verification |
 | --- | --- |
 | `arithmetic` | Exact rationals, arbitrary-precision `mpmath` evaluation |
-| `algebra` | Equations, non-linear systems, polynomials, factoring, simplification |
-| `calculus` | Limits (Gruntz + sequence probes), derivatives, definite/indefinite integrals, Taylor series |
+| `algebra` | Equations, non-linear systems, polynomials, factoring, simplification, symbol `assumptions`, periodic solution families |
+| `calculus` | Two-sided & directional limits, derivatives, definite/indefinite integrals with interior pole detection, Taylor series |
 | `linear-algebra` | Matrices (`eigen`, `inv`, `det`, `lu`, `rref`, `solve`, `trace`) verified via $A A^{-1}=I$, $PA=LU$, $Av=\lambda v$ |
 | `tensor` | Differential geometry: $g^{\mu\nu}$, Christoffel $\Gamma^\lambda_{\mu\nu}$, Riemann, Ricci, Einstein tensors verified via Levi-Civita $\nabla_\lambda g_{\mu\nu}=0$ |
 | `number-theory` | Prime factorization (`factorint`), primality, Extended GCD (Bézout check), Chinese Remainder Theorem (`crt`), Euler totient, binomials |
 | `differential-equations` | Symbolic ODE solver (`dsolve`) verified by back-substitution into the differential equation |
 | `optimization` | Symbolic/numerical minimization & maximization verified via $f'(x^*)=0$ and neighborhood perturbations |
 | `statistics` | Exact rational/symbolic mean, median, variance, stdev verified via König-Huygens identity $\sigma^2 = E[X^2] - \mu^2$ |
-| `proof` | Lean 4 kernel checking, symbolic-to-Lean auto-formalization, and Mathlib 4 theorem search (`math_search_mathlib`) |
-| `visualization` | Zero-dependency vector SVG generation, terminal ASCII curve preview, and optional Matplotlib export |
+| `proof` | Lean 4 kernel checking (`#print axioms` + `X = X` tautology audit), symbolic-to-Lean auto-formalization, and Mathlib 4 theorem search |
+| `visualization` | Zero-dependency vector SVG generation, terminal ASCII curve preview, and optional Matplotlib export (`sampled-visualization`) |
 | `research` | Multi-step persistent sessions (`math_session`) with weakest-link `chain_guarantee` tracking and Markdown export |
 
-## 21 Composable MCP Tools
+## 21 Composable MCP Tools (by Category)
 
-```text
-math_parse            math_simplify         math_solve
-math_differentiate    math_integrate        math_limit
-math_evaluate         math_plot             math_prove
-math_verify           math_explain          math_compare
-math_explore          math_matrix           math_ode
-math_number_theory    math_optimize         math_statistics
-math_tensor           math_search_mathlib   math_session
-```
+| Category | Count | Tools |
+| --- | :---: | --- |
+| **1. Mathematical Computation** (independently verified) | 12 | `math_simplify`, `math_solve`, `math_differentiate`, `math_integrate`, `math_limit`, `math_evaluate`, `math_matrix`, `math_ode`, `math_number_theory`, `math_optimize`, `math_statistics`, `math_tensor` |
+| **2. Verification & Formal Proof** | 3 | `math_prove`, `math_verify`, `math_compare` |
+| **3. Structural & Diagnostic** | 3 | `math_parse` (`structural-parse`), `math_explain`, `math_explore` (`heuristic`) |
+| **4. Catalog Lookup** | 1 | `math_search_mathlib` (`catalog-lookup`) |
+| **5. Visualization & Session** | 2 | `math_plot` (`sampled-visualization`), `math_session` (weakest-link `chain_guarantee`) |
 
 ### CLI Examples
 
@@ -149,9 +150,9 @@ axiom verify solution.json
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0008`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0009`).
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
-- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
+- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`, Cloud MCP, and API MCP Service), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Roadmap
@@ -159,7 +160,7 @@ axiom verify solution.json
 - [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, hardened fail-closed verifiers, Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix (Python 3.10 & 3.12 on Ubuntu, Windows, macOS).
 - [x] **v0.1.1 — Verification Integrity**: Strict separation between `exact-symbolic` identities (FTC antiderivative round-trip, symbolic L'Hôpital/series) and `numerical-approximation` evidence (finite differences, quadrature, sequence probes), plus mandatory non-empty theorem confirmation in `#print axioms`.
 - [x] **v0.1.2 — Formal Integration**: Live Lean 4 + Lake formal verification job in GitHub Actions CI (`formal-lean`) validating constructive, classical, and invalid/spoofed proofs end-to-end.
-- [ ] **v0.2.0 — Mathematical Coverage**: Expanded test suites for singularities, branch cuts, domain restrictions, incomplete solution sets, directional limits, and automated counterexample generation.
+- [x] **v0.2.0 — Mathematical Coverage**: Separation of mathematical correctness claims from operational states (`structural-parse`, `catalog-lookup`, `sampled-visualization`), domain `assumptions`, branch-cut counterexample generation ($\sqrt{x^2} \neq x$ over $\mathbb{R}$), definite integral interior pole rejection, two-sided limit discontinuity rejection, extraneous pole filtering & periodic solution sets (`solveset`), and Lean 4 `X = X` reflexive tautology detection (`37` `pytest` tests).
 - [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
 
 ## Repository Layout
@@ -174,7 +175,7 @@ axiom/
 │   └── axiom/
 │       ├── core.py            # Mathematical core & dispatcher
 │       ├── contract.py        # MathResult, Evidence, Verification, Guarantee
-│       ├── parsing.py         # Safe AST mathematical parser
+│       ├── parsing.py         # Safe AST mathematical parser & domain assumptions
 │       ├── verification.py    # Independent verifiers for all domains
 │       ├── registry.py        # Multi-engine registry
 │       ├── mcp_server.py      # 21-tool MCP JSON-RPC 2.0 stdio server
@@ -189,10 +190,10 @@ axiom/
 ├── benchmarks/
 │   └── run_benchmarks.py
 ├── tests/
-│   ├── test_axiom.py
+│   ├── test_axiom.py          # 37 automated test_* methods
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0008)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0009)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

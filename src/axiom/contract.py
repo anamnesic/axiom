@@ -23,19 +23,37 @@ from typing import Any
 
 
 class Guarantee(str, Enum):
-    """Logical strength of a result, from strongest to weakest."""
+    """Logical strength or epistemic classification of a result, from strongest to weakest."""
 
+    # Mathematical correctness guarantees (require a passing independent Verification)
     FORMAL_PROOF = "formal-proof"
     EXACT_SYMBOLIC = "exact-symbolic"
     VERIFIED_SUBSTITUTION = "verified-substitution"
     NUMERICAL_APPROXIMATION = "numerical-approximation"
+
+    # Operational / non-proof states (parsing, catalog lookup, plotting, heuristics)
+    STRUCTURAL_PARSE = "structural-parse"
+    CATALOG_LOOKUP = "catalog-lookup"
+    SAMPLED_VISUALIZATION = "sampled-visualization"
     HEURISTIC = "heuristic"
+
+    # Unverified, refuted, or failed verification
     UNVERIFIED = "unverified"
 
     @property
     def rank(self) -> int:
         """Higher is stronger. Useful to compare or downgrade claims."""
         return _GUARANTEE_RANK[self]
+
+    @property
+    def is_mathematical_claim(self) -> bool:
+        """True only for guarantees representing a verified mathematical calculation or proof."""
+        return self in (
+            Guarantee.FORMAL_PROOF,
+            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.VERIFIED_SUBSTITUTION,
+            Guarantee.NUMERICAL_APPROXIMATION,
+        )
 
     def at_least(self, other: "Guarantee") -> bool:
         return self.rank >= other.rank
@@ -49,6 +67,9 @@ _GUARANTEE_RANK = {
     Guarantee.EXACT_SYMBOLIC: 4,
     Guarantee.VERIFIED_SUBSTITUTION: 3,
     Guarantee.NUMERICAL_APPROXIMATION: 2,
+    Guarantee.STRUCTURAL_PARSE: 1,
+    Guarantee.CATALOG_LOOKUP: 1,
+    Guarantee.SAMPLED_VISUALIZATION: 1,
     Guarantee.HEURISTIC: 1,
     Guarantee.UNVERIFIED: 0,
 }
@@ -102,6 +123,16 @@ class MathResult:
     verification: Verification | None = None
     warnings: list[str] = field(default_factory=list)
     error: str | None = None
+
+    def __post_init__(self) -> None:
+        """Enforce that no mathematical claim guarantee is granted without a passing Verification."""
+        if self.guarantee.is_mathematical_claim and not (
+            self.verification is not None and self.verification.passed
+        ):
+            raise ValueError(
+                f"Guarantee {self.guarantee.value!r} is a mathematical correctness claim "
+                "and requires a Verification object with passed=True"
+            )
 
     # ---------------------------------------------------------------- helpers
 

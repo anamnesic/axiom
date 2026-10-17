@@ -28,17 +28,79 @@ import sympy as sp
 
 from axiom.contract import Guarantee, Verification
 
-# Deterministic non-algebraic sample points to avoid accidental polynomial zeros
+# Deterministic non-algebraic sample points (alternating signs to catch branch cuts)
 _SAMPLE_POINTS: tuple[float, ...] = (
     0.3141592653,
+    -0.4669201609,
     0.7182818284,
+    -1.3247179572,
     1.1414213562,
     1.6180339887,
     2.2360679774,
-    -0.4669201609,
-    -1.3247179572,
     0.8660254037,
 )
+
+# Clean exact rational probes for human-readable counterexamples before transcendental floats
+_RATIONAL_PROBES: tuple[sp.Expr, ...] = (
+    sp.Integer(-1),
+    sp.Integer(2),
+    sp.Integer(-2),
+    sp.Integer(3),
+    sp.Rational(-3, 2),
+    sp.Rational(5, 3),
+)
+
+
+def _respects_symbol_assumptions(sym: sp.Symbol, val: sp.Expr | float) -> bool:
+    """Return True if candidate numeric probe ``val`` satisfies the assumptions declared on ``sym``."""
+    v_float = float(val)
+    if sym.is_positive is True and v_float <= 0:
+        return False
+    if sym.is_negative is True and v_float >= 0:
+        return False
+    if sym.is_nonnegative is True and v_float < 0:
+        return False
+    if sym.is_nonzero is True and v_float == 0:
+        return False
+    if sym.is_integer is True:
+        if isinstance(val, sp.Rational) and val.q != 1:
+            return False
+        if not isinstance(val, sp.Integer) and abs(v_float - round(v_float)) > 1e-12:
+            return False
+        iv = int(round(v_float))
+        if sym.is_even is True and iv % 2 != 0:
+            return False
+        if sym.is_odd is True and iv % 2 == 0:
+            return False
+    return True
+
+
+def _build_probe_sequence(sym: sp.Symbol, offset_index: int) -> list[sp.Expr]:
+    """Build an ordered list of exact + transcendental sample values respecting ``sym``'s assumptions."""
+    probes: list[sp.Expr] = []
+    if sym.is_integer is True:
+        int_candidates = [-1, 2, -2, 3, -3, 4, -4, 5, 6, 7]
+        for ic in int_candidates:
+            cand = sp.Integer(ic + offset_index)
+            if _respects_symbol_assumptions(sym, cand):
+                probes.append(cand)
+        return probes or [sp.Integer(2)]
+
+    for r_cand in _RATIONAL_PROBES:
+        shifted = r_cand + sp.Rational(offset_index, 7) if offset_index else r_cand
+        if _respects_symbol_assumptions(sym, shifted):
+            probes.append(shifted)
+
+    for base in _SAMPLE_POINTS:
+        f_val = base + 0.13 * offset_index
+        if sym.is_positive is True or sym.is_nonnegative is True:
+            f_val = abs(f_val) + 0.11
+        elif sym.is_negative is True:
+            f_val = -abs(f_val) - 0.11
+        cand_float = sp.Float(f_val, 40)
+        if _respects_symbol_assumptions(sym, cand_float):
+            probes.append(cand_float)
+    return probes
 
 
 def _is_symbolic_zero(expr: sp.Expr) -> bool:
@@ -65,6 +127,18 @@ def _is_symbolic_zero(expr: sp.Expr) -> bool:
                 continue
             if reduced == 0 or reduced is sp.S.Zero:
                 return True
+        # For real-domain identities involving Abs(x) (such as sqrt(x^2) - Abs(x)),
+        # check reduction over real variables when no symbol has non-real assumptions.
+        if isinstance(expr, sp.Basic) and expr.has(sp.Abs):
+            real_map = {
+                s: sp.Symbol(s.name, real=True)
+                for s in expr.free_symbols
+                if s.is_real is None
+            }
+            if real_map:
+                real_reduced = sp.simplify(expr.subs(real_map))
+                if real_reduced == 0 or real_reduced is sp.S.Zero:
+                    return True
     except Exception:
         pass
     return False
@@ -77,7 +151,7 @@ def verify_solutions(
     *,
     tol: float = 1e-25,
 ) -> tuple[Verification, Guarantee]:
-    """Verify candidate roots by substituting each into ``lhs - rhs``."""
+    """Verify candidate roots by substituting each into ``lhs`` and ``rhs`` and checking domain + residual."""
     if not isinstance(equation, sp.Equality):
         return (
             Verification(
@@ -105,6 +179,58 @@ def verify_solutions(
     residuals_data: list[dict[str, object]] = []
 
     for sol in solutions:
+        # 1. Domain / pole audit on LHS and RHS separately (catches 0/0 removable poles like (x^2-1)/(x-1)=0 at x=1)
+        try:
+            lhs_sub = equation.lhs.subs(var, sol)
+            rhs_sub = equation.rhs.subs(var, sol)
+            if lhs_sub.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or rhs_sub.has(
+                sp.nan, sp.zoo, sp.oo, -sp.oo
+            ):
+                residuals_data.append(
+                    {
+                        "solution": str(sol),
+                        "residual": "undefined (pole/singularity)",
+                        "exact": False,
+                    }
+                )
+                return (
+                    Verification(
+                        kind="substitution-domain-error",
+                        passed=False,
+                        detail=(
+                            f"candidate root {var} = {sol} hits a pole or singularity "
+                            f"in the equation (lhs={lhs_sub}, rhs={rhs_sub})"
+                        ),
+                        checks=len(solutions),
+                        data={"residuals": residuals_data},
+                    ),
+                    Guarantee.UNVERIFIED,
+                )
+        except Exception as exc:
+            return (
+                Verification(
+                    kind="substitution-domain-error",
+                    passed=False,
+                    detail=f"domain error substituting {var} = {sol}: {exc}",
+                    checks=len(solutions),
+                    data={"residuals": residuals_data},
+                ),
+                Guarantee.UNVERIFIED,
+            )
+
+        # 2. Check symbol assumptions on `var` if any are declared
+        if not _respects_symbol_assumptions(var, sol) if sol.is_number else False:
+            return (
+                Verification(
+                    kind="assumption-violation",
+                    passed=False,
+                    detail=f"candidate root {var} = {sol} violates domain assumptions on {var}",
+                    checks=len(solutions),
+                    data={"residuals": residuals_data},
+                ),
+                Guarantee.UNVERIFIED,
+            )
+
         sub = residual_expr.subs(var, sol)
         if _is_symbolic_zero(sub):
             residuals_data.append(
@@ -235,13 +361,13 @@ def verify_equivalence(
     *,
     tol: float = 1e-20,
 ) -> tuple[Verification, Guarantee]:
-    """Verify ``left == right`` via symbolic reduction and multi-point sampling."""
+    """Verify ``left == right`` via symbolic reduction and domain-aware multi-point sampling."""
     diff = left - right
     free = sorted(diff.free_symbols, key=str) if variables is None else list(variables)
 
     symbolic_ok = _is_symbolic_zero(diff)
 
-    # Also perform independent numerical spot-checks
+    # Also perform independent numerical spot-checks (starting with clean rational probes)
     checks = 0
     max_error = 0.0
     if not free:
@@ -263,14 +389,16 @@ def verify_equivalence(
         except Exception:
             pass
     else:
-        for idx, base in enumerate(_SAMPLE_POINTS):
-            subs = {
-                sym: sp.Float(base + 0.13 * k, 40)
-                for k, sym in enumerate(free)
-            }
+        probe_lists = [_build_probe_sequence(sym, k) for k, sym in enumerate(free)]
+        max_len = min((len(pl) for pl in probe_lists), default=0)
+        for idx in range(max_len):
+            subs = {sym: probe_lists[k][idx] for k, sym in enumerate(free)}
             try:
-                val = diff.subs(subs).evalf(35)
-                if val.has(sp.nan, sp.oo, sp.zoo):
+                sub_expr = diff.subs(subs)
+                if sub_expr.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
+                    continue
+                val = sub_expr.evalf(35)
+                if val.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
                     continue
                 err = abs(complex(val))
             except Exception:
@@ -290,7 +418,7 @@ def verify_equivalence(
                     ),
                     Guarantee.UNVERIFIED,
                 )
-            if checks >= 5:
+            if checks >= 6:
                 break
 
     if symbolic_ok:
@@ -447,6 +575,67 @@ def verify_derivative(
     )
 
 
+def _find_nonintegrable_poles(
+    integrand: sp.Expr,
+    var: sp.Symbol,
+    lower: sp.Expr,
+    upper: sp.Expr,
+) -> list[sp.Expr]:
+    """Detect non-integrable interior or endpoint poles of ``integrand`` on ``[lower, upper]``."""
+    other_vars = (
+        (integrand.free_symbols - {var})
+        | lower.free_symbols
+        | upper.free_symbols
+    )
+    if other_vars:
+        return []
+    try:
+        a_f = -float("inf") if lower == -sp.oo else (float("inf") if lower == sp.oo else float(lower.evalf()))
+        b_f = -float("inf") if upper == -sp.oo else (float("inf") if upper == sp.oo else float(upper.evalf()))
+        lo_f, hi_f = min(a_f, b_f), max(a_f, b_f)
+    except Exception:
+        return []
+
+    singularities: list[sp.Expr] = []
+    try:
+        _, den = sp.fraction(sp.together(integrand))
+        if den == 1:
+            return []
+        cand_poles = sp.solve(sp.Eq(den, 0), var)
+        if not isinstance(cand_poles, list):
+            cand_poles = [cand_poles]
+        for p in cand_poles:
+            try:
+                p_c = complex(p.evalf(30))
+                if abs(p_c.imag) > 1e-14:
+                    continue
+                p_f = p_c.real
+            except Exception:
+                continue
+            if not (lo_f - 1e-12 <= p_f <= hi_f + 1e-12):
+                continue
+            # Check if it's a true pole (not removable like sin(x)/x at 0)
+            lim_plus = sp.limit(sp.Abs(integrand), var, p, dir="+")
+            lim_minus = sp.limit(sp.Abs(integrand), var, p, dir="-")
+            if lim_plus not in (sp.oo, sp.zoo) and lim_minus not in (sp.oo, sp.zoo):
+                continue
+            # Check if improper integral split at p diverges
+            if lo_f + 1e-12 < p_f < hi_f - 1e-12:
+                left_int = sp.integrate(integrand, (var, lower, p))
+                right_int = sp.integrate(integrand, (var, p, upper))
+                if left_int.has(sp.oo, -sp.oo, sp.zoo, sp.nan) or right_int.has(
+                    sp.oo, -sp.oo, sp.zoo, sp.nan
+                ):
+                    singularities.append(p)
+            else:
+                full_int = sp.integrate(integrand, (var, lower, upper))
+                if full_int.has(sp.oo, -sp.oo, sp.zoo, sp.nan):
+                    singularities.append(p)
+    except Exception:
+        pass
+    return singularities
+
+
 def verify_integral(
     integrand: sp.Expr,
     result: sp.Expr,
@@ -455,13 +644,14 @@ def verify_integral(
     *,
     tol: float = 1e-10,
 ) -> tuple[Verification, Guarantee]:
-    """Verify an integral by differentiation (indefinite) or FTC + quadrature (definite).
+    """Verify an integral by differentiation (indefinite) or singularity audit + FTC + quadrature (definite).
 
     For definite integrals, :attr:`Guarantee.EXACT_SYMBOLIC` is granted only
-    when the symbolic Fundamental Theorem of Calculus check confirms an exact
-    antiderivative ``F'(x) == f(x)`` with ``F(b) - F(a) == result`` (and
-    numerical quadrature does not disagree). When only numerical quadrature
-    confirms the value, :attr:`Guarantee.NUMERICAL_APPROXIMATION` is returned.
+    when no non-integrable interior poles exist on ``[a, b]`` AND the symbolic
+    Fundamental Theorem of Calculus check confirms an exact antiderivative
+    ``F'(x) == f(x)`` with ``F(b) - F(a) == result`` (and numerical quadrature
+    does not disagree). When only numerical quadrature confirms the value,
+    :attr:`Guarantee.NUMERICAL_APPROXIMATION` is returned.
     """
     if result.has(sp.Integral):
         return (
@@ -469,6 +659,17 @@ def verify_integral(
                 kind="unevaluated-integral",
                 passed=False,
                 detail="integral remained in unevaluated form (no closed-form antiderivative found)",
+            ),
+            Guarantee.UNVERIFIED,
+        )
+
+    if result.has(sp.oo, -sp.oo, sp.zoo, sp.nan):
+        return (
+            Verification(
+                kind="divergent-integral",
+                passed=False,
+                detail=f"definite integral diverges or is undefined ({result})",
+                checks=1,
             ),
             Guarantee.UNVERIFIED,
         )
@@ -501,6 +702,23 @@ def verify_integral(
 
     # Definite integral:
     lower, upper = limits
+    poles = _find_nonintegrable_poles(integrand, var, lower, upper)
+    if poles:
+        pole_strs = [str(p) for p in poles]
+        return (
+            Verification(
+                kind="interior-singularity-check",
+                passed=False,
+                detail=(
+                    f"Integrand {integrand} has non-integrable pole/singularity at "
+                    f"{var} in {pole_strs} on [{lower}, {upper}]; naive FTC across pole rejected"
+                ),
+                checks=1,
+                data={"singularities": pole_strs},
+            ),
+            Guarantee.UNVERIFIED,
+        )
+
     other_vars = (
         (integrand.free_symbols - {var})
         | lower.free_symbols
@@ -628,17 +846,18 @@ def verify_limit(
 
     Assigns :attr:`Guarantee.EXACT_SYMBOLIC` only when an independent symbolic
     method (algebraic cancellation, L'Hôpital differentiation, or formal series
-    expansion) confirms the limit AND numerical sequence probing agrees. When
-    only the numerical sequence probe confirms convergence, assigns
+    expansion) confirms the limit AND numerical sequence probing agrees (both
+    from left and right when ``direction == '+-'``). When only the numerical
+    sequence probe confirms convergence, assigns
     :attr:`Guarantee.NUMERICAL_APPROXIMATION`.
     """
     if result.has(sp.AccumBounds) or result.has(sp.Limit):
         return (
             Verification(
-                kind="numerical-limit-probe",
+                kind="two-sided-or-oscillatory-limit-check",
                 passed=False,
-                detail="Limit is oscillatory (AccumBounds) or remained unevaluated",
-                checks=0,
+                detail="Limit does not exist as a single value (two-sided mismatch, oscillatory AccumBounds, or unevaluated)",
+                checks=1,
             ),
             Guarantee.UNVERIFIED,
         )
@@ -658,43 +877,76 @@ def verify_limit(
         with mp.workdps(35):
             fn = sp.lambdify(var, expr_1d, modules="mpmath")
             if point_1d == sp.oo:
-                samples = [mp.mpf(10) ** k for k in (3, 5, 7)]
+                sample_groups = [[mp.mpf(10) ** k for k in (3, 5, 7)]]
             elif point_1d == -sp.oo:
-                samples = [-(mp.mpf(10) ** k) for k in (3, 5, 7)]
+                sample_groups = [[-(mp.mpf(10) ** k) for k in (3, 5, 7)]]
             else:
                 p0 = mp.mpf(str(point_1d.evalf(35)))
-                sign = -1 if direction == "-" else 1
-                samples = [p0 + sign * (mp.mpf(10) ** (-k)) for k in (4, 6, 8)]
+                if direction == "+":
+                    sample_groups = [[p0 + (mp.mpf(10) ** (-k)) for k in (4, 6, 8)]]
+                elif direction == "-":
+                    sample_groups = [[p0 - (mp.mpf(10) ** (-k)) for k in (4, 6, 8)]]
+                else:
+                    # direction == "+-": check BOTH left and right approaching sequences!
+                    sample_groups = [
+                        [p0 - (mp.mpf(10) ** (-k)) for k in (4, 6, 8)],
+                        [p0 + (mp.mpf(10) ** (-k)) for k in (4, 6, 8)],
+                    ]
 
-            vals = [fn(x) for x in samples]
+            total_samples = sum(len(g) for g in sample_groups)
             if result_1d in (sp.oo, -sp.oo, sp.zoo):
-                mags = [float(mp.fabs(v)) for v in vals]
-                growing = mags[-1] > mags[0] * 10 and mags[-1] > 1e4
+                all_growing = True
+                last_mags: list[float] = []
+                for grp in sample_groups:
+                    vals = [fn(x) for x in grp]
+                    mags = [float(mp.fabs(v)) for v in vals]
+                    last_mags.append(mags[-1])
+                    if not (mags[-1] > mags[0] * 10 and mags[-1] > 1e4):
+                        all_growing = False
+                    if result_1d == sp.oo and float(mp.re(vals[-1])) <= 0:
+                        all_growing = False
+                    elif result_1d == -sp.oo and float(mp.re(vals[-1])) >= 0:
+                        all_growing = False
                 return (
                     Verification(
                         kind="numerical-limit-probe",
-                        passed=growing,
-                        detail=f"Magnitude grows unboundedly toward {point} (|f| ~ {mags[-1]:.2e})",
-                        checks=len(samples),
+                        passed=all_growing,
+                        detail=(
+                            f"Magnitude grows unboundedly toward {point} -> {result} (|f| ~ {min(last_mags):.2e})"
+                            if all_growing
+                            else f"Sequence near {point} did not diverge consistently to {result}"
+                        ),
+                        checks=total_samples,
                     ),
-                    Guarantee.NUMERICAL_APPROXIMATION if growing else Guarantee.UNVERIFIED,
+                    Guarantee.NUMERICAL_APPROXIMATION if all_growing else Guarantee.UNVERIFIED,
                 )
 
             target = mp.mpc(str(complex(result_1d.evalf(35)).real))
-            err = float(mp.fabs(vals[-1] - target))
             scale = max(float(mp.fabs(target)), 1.0)
-            rel_err = err / scale
-            if rel_err > tol:
-                return (
-                    Verification(
-                        kind="numerical-limit-probe",
-                        passed=False,
-                        detail=f"Numerical sequence near {point} diverged from {result} (error {rel_err:.2e})",
-                        checks=len(samples),
-                        max_error=rel_err,
-                    ),
-                    Guarantee.UNVERIFIED,
-                )
+            rel_err = 0.0
+            for side_idx, grp in enumerate(sample_groups):
+                vals = [fn(x) for x in grp]
+                side_err = float(mp.fabs(vals[-1] - target)) / scale
+                rel_err = max(rel_err, side_err)
+                if side_err > tol:
+                    side_label = (
+                        "left" if (len(sample_groups) == 2 and side_idx == 0) else (
+                            "right" if len(sample_groups) == 2 else direction
+                        )
+                    )
+                    return (
+                        Verification(
+                            kind="numerical-limit-probe",
+                            passed=False,
+                            detail=(
+                                f"Numerical sequence ({side_label}) near {point} diverged "
+                                f"from {result} (f ≈ {vals[-1]}, error {side_err:.2e})"
+                            ),
+                            checks=total_samples,
+                            max_error=rel_err,
+                        ),
+                        Guarantee.UNVERIFIED,
+                    )
     except Exception as exc:
         return (
             Verification(
@@ -709,10 +961,12 @@ def verify_limit(
     # Independent symbolic verification (without calling sp.limit)
     symbolic_ok = False
     symbolic_kind = ""
+    has_branch_ops = expr.has(sp.Abs, sp.sign, sp.floor, sp.ceiling, sp.Piecewise)
     if (
         not expr.has(sp.Float)
         and not result.has(sp.Float)
         and point not in (sp.oo, -sp.oo, sp.zoo)
+        and not has_branch_ops
     ):
         # 1. Algebraic / radical cancellation + continuous substitution
         try:
@@ -773,7 +1027,7 @@ def verify_limit(
                     f"Verified symbolically ({symbolic_kind}) and confirmed by "
                     f"numerical sequence convergence to {result} (step error {rel_err:.2e})"
                 ),
-                checks=len(samples) + 1,
+                checks=total_samples + 1,
                 max_error=rel_err,
             ),
             Guarantee.EXACT_SYMBOLIC,
@@ -784,7 +1038,7 @@ def verify_limit(
             kind="numerical-limit-probe",
             passed=True,
             detail=f"Sequence converges to {result} (error at 1e-8 step: {rel_err:.2e}; numerical evidence only)",
-            checks=len(samples),
+            checks=total_samples,
             max_error=rel_err,
         ),
         Guarantee.NUMERICAL_APPROXIMATION,

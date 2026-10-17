@@ -107,21 +107,79 @@ class SymPyEngine(Engine):
     # -------------------------------------------------------------- solving
 
     def solve(self, equation: sp.Rel, var: sp.Symbol) -> Answer:
-        solutions = sp.solve(equation, var)
-        if not isinstance(solutions, list):
-            solutions = [solutions]
+        raw_solutions = sp.solve(equation, var)
+        if not isinstance(raw_solutions, list):
+            raw_solutions = [raw_solutions]
+
+        # Filter out extraneous roots that hit poles/singularities in lhs or rhs
+        solutions: list[sp.Expr] = []
+        extraneous: list[str] = []
+        if isinstance(equation, sp.Equality):
+            for cand in raw_solutions:
+                try:
+                    lhs_sub = equation.lhs.subs(var, cand)
+                    rhs_sub = equation.rhs.subs(var, cand)
+                    if lhs_sub.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or rhs_sub.has(
+                        sp.nan, sp.zoo, sp.oo, -sp.oo
+                    ):
+                        extraneous.append(str(cand))
+                        continue
+                except Exception:
+                    pass
+                solutions.append(cand)
+        else:
+            solutions = list(raw_solutions)
+
+        # Inspect complete solution set via solveset to detect infinite periodic families
+        solution_set_str: str | None = None
+        periodic_family = False
+        if isinstance(equation, sp.Equality):
+            try:
+                domain = sp.S.Reals if var.is_real else sp.S.Complexes
+                sol_set = sp.solveset(equation, var, domain=domain)
+                if sol_set.has(sp.ImageSet):
+                    periodic_family = True
+                    solution_set_str = str(sol_set)
+            except Exception:
+                pass
+
+        warnings: list[str] = []
+        if not solutions:
+            warnings.append("no solutions found")
+        if extraneous:
+            warnings.append(
+                f"filtered extraneous/singular root(s) outside equation domain: {extraneous}"
+            )
+        if periodic_family and solution_set_str:
+            warnings.append(
+                f"equation has an infinite periodic solution family; principal branch solutions returned (full set: {solution_set_str})"
+            )
+
+        steps = [
+            f"solve {equation} for {var}",
+            f"solutions: {_fmt([str(s) for s in solutions])}",
+        ]
+        if extraneous:
+            steps.append(f"rejected extraneous roots (pole/domain violation): {extraneous}")
+        if periodic_family and solution_set_str:
+            steps.append(f"complete periodic solution set (solveset): {solution_set_str}")
+
         return Answer(
             value=[str(s) for s in solutions],
             value_str=str([str(s) for s in solutions]),
             latex=_latex(solutions),
-            method="algebraic solve (sympy.solve)",
-            steps=[
-                f"solve {equation} for {var}",
-                f"solutions: {_fmt([str(s) for s in solutions])}",
-            ],
-            warnings=[] if solutions else ["no solutions found"],
+            method="algebraic solve (sympy.solve + domain & solveset audit)",
+            steps=steps,
+            warnings=warnings,
             variables=[str(var)],
-            raw={"solutions": solutions, "var": var, "equation": equation},
+            raw={
+                "solutions": solutions,
+                "extraneous_roots": extraneous,
+                "periodic_family": periodic_family,
+                "solution_set": solution_set_str,
+                "var": var,
+                "equation": equation,
+            },
         )
 
     def solve_system(self, equations: list, variables: list) -> Answer:
@@ -199,18 +257,64 @@ class SymPyEngine(Engine):
         point: sp.Expr,
         direction: str = "+-",
     ) -> Answer:
-        kwargs = {}
+        warnings: list[str] = []
+        steps: list[str] = [f"limit {var} -> {point} (dir={direction}) of {expr}"]
+        left_lim: sp.Expr | None = None
+        right_lim: sp.Expr | None = None
+        two_sided_mismatch = False
+
         if direction == "+":
-            kwargs["dir"] = "+"
+            result = sp.limit(expr, var, point, dir="+")
+            right_lim = result
+            steps.append(f"right-hand limit -> {result}")
         elif direction == "-":
-            kwargs["dir"] = "-"
-        result = sp.limit(expr, var, point, **kwargs)
+            result = sp.limit(expr, var, point, dir="-")
+            left_lim = result
+            steps.append(f"left-hand limit -> {result}")
+        elif point in (sp.oo, -sp.oo, sp.zoo):
+            result = sp.limit(expr, var, point)
+            steps.append(f"asymptotic limit -> {result}")
+        else:
+            # SymPy's sp.limit(expr, var, point) defaults to dir="+"!
+            # For a genuine two-sided limit (direction="+-"), compute both left and right limits.
+            right_lim = sp.limit(expr, var, point, dir="+")
+            left_lim = sp.limit(expr, var, point, dir="-")
+            steps.append(f"left-hand limit (dir='-') -> {left_lim}")
+            steps.append(f"right-hand limit (dir='+') -> {right_lim}")
+            same = False
+            if left_lim == right_lim and not left_lim.has(sp.AccumBounds, sp.Limit):
+                same = True
+            else:
+                try:
+                    diff = sp.simplify(left_lim - right_lim)
+                    if diff == 0 and not left_lim.has(sp.AccumBounds, sp.Limit):
+                        same = True
+                except Exception:
+                    same = False
+            if same:
+                result = right_lim
+                steps.append(f"two-sided limit exists -> {result}")
+            else:
+                two_sided_mismatch = True
+                result = sp.Limit(expr, var, point, dir="+-")
+                warnings.append(
+                    f"two-sided limit does not exist: left limit ({left_lim}) != right limit ({right_lim})"
+                )
+                steps.append(
+                    f"two-sided limit DNE (left={left_lim} != right={right_lim})"
+                )
+
         return Answer(
             value=str(result),
-            value_str=str(result),
+            value_str=(
+                f"DNE (left={left_lim}, right={right_lim})"
+                if two_sided_mismatch
+                else str(result)
+            ),
             latex=_latex(result),
-            method="symbolic limit (sympy.limit)",
-            steps=[f"limit {var} -> {point} of {expr}", f"-> {result}"],
+            method="symbolic limit with explicit left/right audit (sympy.limit)",
+            steps=steps,
+            warnings=warnings,
             variables=[str(var)],
             raw={
                 "object": result,
@@ -218,6 +322,9 @@ class SymPyEngine(Engine):
                 "var": var,
                 "point": point,
                 "direction": direction,
+                "left_limit": left_lim,
+                "right_limit": right_lim,
+                "two_sided_mismatch": two_sided_mismatch,
             },
         )
 

@@ -91,10 +91,15 @@ class Axiom:
 
     # ----------------------------------------------------------------- parse
 
-    def parse(self, expression: str) -> MathResult:
+    def parse(
+        self,
+        expression: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+    ) -> MathResult:
         """Parse an expression or equation and inspect its mathematical structure."""
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             obj = parser.parse(expression)
         except ParseError as exc:
             return error_result("parse", expression, str(exc), engine="axiom-parser")
@@ -105,13 +110,22 @@ class Axiom:
         structure = (
             "equation" if is_eq else ("relation" if is_rel else "expression")
         )
+        # Round-trip structural verification: re-parse canonical representation and compare srepr
+        roundtrip_ok = False
+        try:
+            rt_str = f"{obj.lhs} = {obj.rhs}" if is_eq else str(obj)
+            rt_obj = Parser(assumptions=assumptions).parse(rt_str)
+            roundtrip_ok = sp.srepr(rt_obj) == sp.srepr(obj)
+        except Exception:
+            roundtrip_ok = False
+
         info = {
             "structure": structure,
             "canonical": str(obj),
             "srepr": sp.srepr(obj),
             "free_symbols": free,
             "is_polynomial": (
-                bool( (obj.lhs - obj.rhs).is_polynomial() )
+                bool((obj.lhs - obj.rhs).is_polynomial())
                 if is_eq
                 else bool(getattr(obj, "is_polynomial", lambda: False)())
             ),
@@ -124,13 +138,21 @@ class Axiom:
             value_str=str(obj),
             latex=sp.latex(obj),
             variables=free,
-            guarantee=Guarantee.EXACT_SYMBOLIC,
+            guarantee=(
+                Guarantee.STRUCTURAL_PARSE if roundtrip_ok else Guarantee.UNVERIFIED
+            ),
             evidence=Evidence(
                 engine="axiom-parser",
-                engine_version="0.1.0",
+                engine_version="0.2.0",
                 method="AST allowlist parser -> SymPy expression tree",
                 steps=[f"input: {expression}", f"parsed ({structure}): {obj}"],
                 reproducible_with=f'axiom parse "{expression}"',
+            ),
+            verification=Verification(
+                kind="ast-roundtrip",
+                passed=roundtrip_ok,
+                detail=f"Canonical AST ({structure}) verified by deterministic re-parse round-trip",
+                checks=1,
             ),
         )
 
@@ -142,10 +164,11 @@ class Axiom:
         *,
         precision: int | None = None,
         substitutions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | None = None,
         engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             expr = parser.parse_expression(expression)
             subs_sym = {
                 parser.symbol(k): parser.parse_expression(str(v))
@@ -196,20 +219,49 @@ class Axiom:
             reproducible_with=f'axiom evaluate "{expression}"',
         )
 
-    def simplify(self, expression: str, *, engine: str | None = None) -> MathResult:
-        return self._algebraic_transform("simplify", expression, engine=engine)
+    def simplify(
+        self,
+        expression: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+        engine: str | None = None,
+    ) -> MathResult:
+        return self._algebraic_transform(
+            "simplify", expression, assumptions=assumptions, engine=engine
+        )
 
-    def factor(self, expression: str, *, engine: str | None = None) -> MathResult:
-        return self._algebraic_transform("factor", expression, engine=engine)
+    def factor(
+        self,
+        expression: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+        engine: str | None = None,
+    ) -> MathResult:
+        return self._algebraic_transform(
+            "factor", expression, assumptions=assumptions, engine=engine
+        )
 
-    def expand(self, expression: str, *, engine: str | None = None) -> MathResult:
-        return self._algebraic_transform("expand", expression, engine=engine)
+    def expand(
+        self,
+        expression: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+        engine: str | None = None,
+    ) -> MathResult:
+        return self._algebraic_transform(
+            "expand", expression, assumptions=assumptions, engine=engine
+        )
 
     def _algebraic_transform(
-        self, op: str, expression: str, *, engine: str | None = None
+        self,
+        op: str,
+        expression: str,
+        *,
+        assumptions: dict[str, Any] | None = None,
+        engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             expr = parser.parse_expression(expression)
             eng = self.registry.select(op, preferred=engine)
             fn = eng.require(op)
@@ -237,6 +289,7 @@ class Axiom:
         expression: str,
         *,
         variable: str | None = None,
+        assumptions: dict[str, Any] | None = None,
         engine: str | None = None,
     ) -> MathResult:
         """Solve an equation or system of equations and verify all solutions."""
@@ -249,8 +302,8 @@ class Axiom:
             )
             return self.solve_system(parts, variables=vars_list, engine=engine)
 
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             equation = parser.parse_equation(expression)
             var = _pick_variable(equation, variable, parser)
         except ParseError as exc:
@@ -280,6 +333,11 @@ class Axiom:
             return error_result("solve", expression, str(exc), engine=engine)
 
         ver, guar = verify_solutions(equation, var, ans.raw["solutions"])
+        if ans.raw.get("periodic_family"):
+            ver.data["periodic_family"] = True
+            ver.data["solution_set"] = ans.raw.get("solution_set")
+        if ans.raw.get("extraneous_roots"):
+            ver.data["extraneous_roots"] = ans.raw.get("extraneous_roots")
         return _wrap_answer(
             kind="solve",
             expression=expression,
@@ -517,11 +575,12 @@ class Axiom:
         right: str,
         *,
         variables: list[str] | None = None,
+        assumptions: dict[str, Any] | None = None,
     ) -> MathResult:
         """Check whether two mathematical expressions are equivalent."""
-        parser = Parser()
         combined = f"{left} == {right}"
         try:
+            parser = Parser(assumptions=assumptions)
             lhs = parser.parse_expression(left)
             rhs = parser.parse_expression(right)
             sym_vars = (
@@ -570,6 +629,7 @@ class Axiom:
         *,
         candidate: str | list[str] | None = None,
         variable: str | None = None,
+        assumptions: dict[str, Any] | None = None,
     ) -> MathResult:
         """Independently verify a mathematical claim, equation root(s), or JSON result."""
         if isinstance(target, MathResult):
@@ -597,7 +657,11 @@ class Axiom:
             except Exception:
                 pass
 
-        parser = Parser()
+        try:
+            parser = Parser(assumptions=assumptions)
+        except ParseError as exc:
+            return error_result("verify", target_str, str(exc))
+
         # Case 1: Equation + candidate solutions provided
         if candidate is not None:
             try:
@@ -645,7 +709,9 @@ class Axiom:
             return error_result("verify", target_str, str(exc))
 
         if isinstance(parsed, sp.Equality):
-            return self.compare(str(parsed.lhs), str(parsed.rhs))
+            return self.compare(
+                str(parsed.lhs), str(parsed.rhs), assumptions=assumptions
+            )
 
         return error_result(
             "verify",
@@ -903,6 +969,7 @@ class Axiom:
         axioms_used = list(ans.raw.get("axioms_used") or [])
         theorems = list(ans.raw.get("theorems") or [])
         audited_theorems = list(ans.raw.get("audited_theorems") or [])
+        trivial_theorems = list(ans.raw.get("trivial_theorems") or [])
         audit_complete = bool(ans.raw.get("audit_complete"))
 
         if (
@@ -927,6 +994,7 @@ class Axiom:
                 data={
                     "theorems": theorems,
                     "audited_theorems": audited_theorems,
+                    "trivial_theorems": trivial_theorems,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": [],
                 },
@@ -954,6 +1022,7 @@ class Axiom:
                 data={
                     "theorems": theorems,
                     "audited_theorems": audited_theorems,
+                    "trivial_theorems": trivial_theorems,
                     "diagnostics": ans.raw.get("diagnostics", []),
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted,
@@ -1089,7 +1158,11 @@ class Axiom:
             value_str=summary,
             latex=sp.latex(expr),
             variables=[str(var)],
-            guarantee=Guarantee.NUMERICAL_APPROXIMATION,
+            guarantee=(
+                Guarantee.SAMPLED_VISUALIZATION
+                if len(valid_ys) > 0
+                else Guarantee.UNVERIFIED
+            ),
             evidence=Evidence(
                 engine="numeric",
                 engine_version=mp.__version__,
@@ -1392,7 +1465,7 @@ class Axiom:
             expression=query,
             engine=lean_eng,
             answer=ans,
-            guarantee=Guarantee.EXACT_SYMBOLIC if hits else Guarantee.HEURISTIC,
+            guarantee=Guarantee.CATALOG_LOOKUP if hits else Guarantee.UNVERIFIED,
             verification=ver,
             reproducible_with=f'axiom search-mathlib "{query}"',
         )

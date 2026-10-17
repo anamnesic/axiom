@@ -251,14 +251,20 @@ class TestAxiom(unittest.TestCase):
         ax = Axiom()
         res = ax.search_mathlib("sin_sq_add_cos_sq")
         self.assertTrue(res.ok and res.verified)
-        self.assertEqual(res.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(res.guarantee, Guarantee.CATALOG_LOOKUP)
+        self.assertFalse(res.guarantee.is_mathematical_claim)
         self.assertGreaterEqual(res.value["count"], 1)
         self.assertEqual(res.value["results"][0]["name"], "Real.sin_sq_add_cos_sq")
 
         fermat = ax.search_mathlib("fermat little prime")
         self.assertTrue(fermat.ok and fermat.verified)
+        self.assertEqual(fermat.guarantee, Guarantee.CATALOG_LOOKUP)
         names = [r["name"] for r in fermat.value["results"]]
         self.assertIn("ZMod.fermat_little", names)
+
+        no_match = ax.search_mathlib("nonexistent_theorem_xyz_999999")
+        self.assertTrue(no_match.ok and not no_match.verified)
+        self.assertEqual(no_match.guarantee, Guarantee.UNVERIFIED)
 
     def test_matrix_operations_verified(self) -> None:
         ax = Axiom()
@@ -872,9 +878,220 @@ class TestAxiom(unittest.TestCase):
             "verified-substitution",
         )
 
+    # --------------------------------------- v0.2.0 contract & coverage tests
+
+    def test_contract_parse_plot_and_catalog_guarantees(self) -> None:
+        from axiom.contract import MathResult, Verification
+
+        ax = Axiom()
+
+        # 1. math_parse uses STRUCTURAL_PARSE with AST round-trip verification (never EXACT_SYMBOLIC with verification=None)
+        parsed = ax.parse("2x + 1 = 0")
+        self.assertTrue(parsed.ok and parsed.verified)
+        self.assertEqual(parsed.guarantee, Guarantee.STRUCTURAL_PARSE)
+        self.assertFalse(parsed.guarantee.is_mathematical_claim)
+        assert parsed.verification is not None
+        self.assertEqual(parsed.verification.kind, "ast-roundtrip")
+
+        # 2. math_plot uses SAMPLED_VISUALIZATION
+        plotted = ax.plot("sin(x)/x", points=11)
+        self.assertTrue(plotted.ok and plotted.verified)
+        self.assertEqual(plotted.guarantee, Guarantee.SAMPLED_VISUALIZATION)
+        self.assertFalse(plotted.guarantee.is_mathematical_claim)
+
+        # 3. MathResult.__post_init__ forbids any mathematical claim without passed Verification
+        for claim_g in (
+            Guarantee.FORMAL_PROOF,
+            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.VERIFIED_SUBSTITUTION,
+            Guarantee.NUMERICAL_APPROXIMATION,
+        ):
+            with self.assertRaises(ValueError):
+                MathResult(
+                    kind="test",
+                    input="x",
+                    ok=True,
+                    guarantee=claim_g,
+                    verification=None,
+                )
+            with self.assertRaises(ValueError):
+                MathResult(
+                    kind="test",
+                    input="x",
+                    ok=True,
+                    guarantee=claim_g,
+                    verification=Verification(kind="test", passed=False, detail="failed"),
+                )
+
+    def test_domain_assumptions_and_branch_cuts(self) -> None:
+        ax = Axiom()
+
+        # Over general reals (default), sqrt(x^2) != x: refuted with clean rational counterexample x = -1
+        over_reals = ax.compare("sqrt(x^2)", "x")
+        self.assertTrue(over_reals.ok and not over_reals.verified)
+        self.assertIs(over_reals.value["equivalent"], False)
+        self.assertEqual(over_reals.guarantee, Guarantee.UNVERIFIED)
+        assert over_reals.verification is not None
+        self.assertEqual(
+            over_reals.verification.data["counterexample"], {"x": "-1"}
+        )
+
+        # Over general reals, sqrt(x^2) == Abs(x) holds identically
+        abs_id = ax.compare("sqrt(x^2)", "Abs(x)")
+        self.assertTrue(abs_id.ok and abs_id.verified)
+        self.assertIs(abs_id.value["equivalent"], True)
+        self.assertEqual(abs_id.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+        # Under assumption x > 0 (positive), sqrt(x^2) == x holds as EXACT_SYMBOLIC
+        pos_id = ax.compare("sqrt(x^2)", "x", assumptions={"x": "positive"})
+        self.assertTrue(pos_id.ok and pos_id.verified)
+        self.assertIs(pos_id.value["equivalent"], True)
+        self.assertEqual(pos_id.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+        # Under assumption x < 0 (negative), sqrt(x^2) == -x holds as EXACT_SYMBOLIC
+        neg_id = ax.compare("sqrt(x^2)", "-x", assumptions={"x": "negative"})
+        self.assertTrue(neg_id.ok and neg_id.verified)
+        self.assertIs(neg_id.value["equivalent"], True)
+        self.assertEqual(neg_id.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+        # Simplification with positive assumption reduces sqrt(x^2) -> x
+        simp_pos = ax.simplify("sqrt(x^2)", assumptions={"x": "positive"})
+        self.assertTrue(simp_pos.ok and simp_pos.verified)
+        self.assertEqual(simp_pos.value, "x")
+        self.assertEqual(simp_pos.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+    def test_contradictory_and_invalid_assumptions_rejected(self) -> None:
+        ax = Axiom()
+
+        bad_contradiction = ax.simplify(
+            "sqrt(x^2)", assumptions={"x": ["positive", "negative"]}
+        )
+        self.assertFalse(bad_contradiction.ok)
+        self.assertIn("contradictory assumptions", bad_contradiction.error or "")
+
+        bad_parity = ax.compare(
+            "n", "n", assumptions={"n": ["even", "odd"]}
+        )
+        self.assertFalse(bad_parity.ok)
+        self.assertIn("contradictory assumptions", bad_parity.error or "")
+
+        bad_unknown = ax.simplify("x", assumptions={"x": "superluminal"})
+        self.assertFalse(bad_unknown.ok)
+        self.assertIn("unsupported assumption", bad_unknown.error or "")
+
+    def test_definite_integral_interior_singularities_and_divergence(self) -> None:
+        import sympy as sp
+        from axiom.verification import verify_integral
+
+        ax = Axiom()
+        x = sp.Symbol("x", real=True)
+
+        # 1. Divergent integral with interior pole at x = 0: integral_{-1}^{1} 1/x^2 dx -> oo
+        div_res = ax.integrate("1/x^2", variable="x", lower="-1", upper="1")
+        self.assertTrue(div_res.ok and not div_res.verified)
+        self.assertEqual(div_res.guarantee, Guarantee.UNVERIFIED)
+        assert div_res.verification is not None
+        self.assertEqual(div_res.verification.kind, "divergent-integral")
+
+        # 2. Naive FTC claim F(1) - F(-1) = (-1/1) - (-1/-1) = -2 across pole at x = 0 must be rejected!
+        ver_naive, guar_naive = verify_integral(
+            1 / x**2,
+            sp.Integer(-2),
+            x,
+            limits=(sp.Integer(-1), sp.Integer(1)),
+        )
+        self.assertFalse(ver_naive.passed)
+        self.assertEqual(guar_naive, Guarantee.UNVERIFIED)
+        self.assertEqual(ver_naive.kind, "interior-singularity-check")
+        self.assertEqual(ver_naive.data["singularities"], ["0"])
+
+        # 3. Non-integrable odd pole 1/x on [-1, 1] (even if someone claims 0 by principal value)
+        ver_pv, guar_pv = verify_integral(
+            1 / x,
+            sp.Integer(0),
+            x,
+            limits=(sp.Integer(-1), sp.Integer(1)),
+        )
+        self.assertFalse(ver_pv.passed)
+        self.assertEqual(guar_pv, Guarantee.UNVERIFIED)
+        self.assertEqual(ver_pv.kind, "interior-singularity-check")
+
+        # 4. Convergent improper integral 1/sqrt(x) on [0, 1] = 2 still passes as EXACT_SYMBOLIC
+        conv_res = ax.integrate("1/sqrt(x)", variable="x", lower="0", upper="1")
+        self.assertTrue(conv_res.ok and conv_res.verified)
+        self.assertEqual(conv_res.value, "2")
+        self.assertEqual(conv_res.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+    def test_two_sided_limits_and_jump_discontinuities(self) -> None:
+        ax = Axiom()
+
+        # 1. Jump discontinuity at x = 0: Abs(x)/x has left=-1, right=+1 -> two-sided limit DNE
+        jump = ax.limit("Abs(x)/x", variable="x", point="0", direction="+-")
+        self.assertTrue(jump.ok and not jump.verified)
+        self.assertEqual(jump.guarantee, Guarantee.UNVERIFIED)
+        self.assertIn("left=-1", jump.value_str)
+        self.assertIn("right=1", jump.value_str)
+
+        # 2. One-sided limits of Abs(x)/x at x = 0 exist and are verified
+        right_lim = ax.limit("Abs(x)/x", variable="x", point="0", direction="+")
+        self.assertTrue(right_lim.ok and right_lim.verified)
+        self.assertEqual(right_lim.value, "1")
+
+        left_lim = ax.limit("Abs(x)/x", variable="x", point="0", direction="-")
+        self.assertTrue(left_lim.ok and left_lim.verified)
+        self.assertEqual(left_lim.value, "-1")
+
+        # 3. Odd pole 1/x at x = 0: left=-oo, right=+oo -> two-sided limit DNE
+        odd_pole = ax.limit("1/x", variable="x", point="0", direction="+-")
+        self.assertTrue(odd_pole.ok and not odd_pole.verified)
+        self.assertEqual(odd_pole.guarantee, Guarantee.UNVERIFIED)
+
+        # 4. Even pole 1/x^2 at x = 0: both left and right -> +oo -> verified
+        even_pole = ax.limit("1/x^2", variable="x", point="0", direction="+-")
+        self.assertTrue(even_pole.ok and even_pole.verified)
+        self.assertEqual(even_pole.value, "oo")
+        self.assertEqual(even_pole.guarantee, Guarantee.NUMERICAL_APPROXIMATION)
+
+    def test_extraneous_roots_and_periodic_solution_sets(self) -> None:
+        ax = Axiom()
+
+        # 1. (x^2 - 1)/(x - 1) = 0 has root x = -1; x = 1 is an extraneous removable pole (0/0)
+        rat_eq = ax.solve("(x^2 - 1)/(x - 1) = 0")
+        self.assertTrue(rat_eq.ok and rat_eq.verified)
+        self.assertEqual(rat_eq.value, ["-1"])
+        self.assertEqual(rat_eq.guarantee, Guarantee.VERIFIED_SUBSTITUTION)
+
+        # 2. Explicitly verifying the extraneous root x = 1 must fail domain audit
+        bad_pole_root = ax.verify("(x^2 - 1)/(x - 1) = 0", candidate="1")
+        self.assertTrue(bad_pole_root.ok and not bad_pole_root.verified)
+        self.assertEqual(bad_pole_root.guarantee, Guarantee.UNVERIFIED)
+        assert bad_pole_root.verification is not None
+        self.assertEqual(bad_pole_root.verification.kind, "substitution-domain-error")
+
+        # 3. Solving with domain assumption x > 0 rejects negative root when verifying
+        violated_assump = ax.verify(
+            "x^2 - 4 = 0", candidate="-2", assumptions={"x": "positive"}
+        )
+        self.assertTrue(violated_assump.ok and not violated_assump.verified)
+        self.assertEqual(violated_assump.guarantee, Guarantee.UNVERIFIED)
+
+        # 4. Periodic equation sin(x) = 0 reports principal roots + solveset periodic family metadata
+        trig_eq = ax.solve("sin(x) = 0")
+        self.assertTrue(trig_eq.ok and trig_eq.verified)
+        self.assertEqual(trig_eq.value, ["0", "pi"])
+        assert trig_eq.verification is not None
+        self.assertTrue(trig_eq.verification.data.get("periodic_family"))
+        self.assertIn("ImageSet", str(trig_eq.verification.data.get("solution_set")))
+
+    def test_lean4_trivial_reflexive_tautology_detection(self) -> None:
+        from axiom.engines.lean_engine import LeanEngine
+
+        triv = LeanEngine.detect_trivial_reflexive_theorems(
+            "theorem refl_nat (x : Nat) : x = x := by rfl\n"
+            "theorem non_triv (a b : Nat) : a + b = b + a := by omega\n"
+        )
+        self.assertEqual(triv, ["refl_nat"])
+
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

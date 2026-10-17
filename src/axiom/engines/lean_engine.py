@@ -418,12 +418,45 @@ class LeanEngine(Engine):
             return [self.lake_bin, "env", "lean", str(target_file)], str(lake_root)
         return [self.lean_bin or "lean", str(target_file)], None
 
+    @staticmethod
+    def detect_trivial_reflexive_theorems(source: str) -> list[str]:
+        """Detect theorems whose statement is a syntactic reflexive tautology ``X = X``."""
+        stripped = _strip_lean_comments(source)
+        trivial: list[str] = []
+        decl_pat = re.compile(
+            r"(?:theorem|lemma)\s+([A-Za-z_][A-Za-z0-9_'.]*)\s*(.*?):=",
+            re.DOTALL,
+        )
+        for m in decl_pat.finditer(stripped):
+            name = m.group(1)
+            header = m.group(2)
+            # Find the first top-level ':' outside (), {}, []
+            depth = 0
+            colon_idx = -1
+            for i, ch in enumerate(header):
+                if ch in "({[":
+                    depth += 1
+                elif ch in ")}]":
+                    depth = max(0, depth - 1)
+                elif ch == ":" and depth == 0:
+                    colon_idx = i
+                    break
+            if colon_idx < 0:
+                continue
+            prop = header[colon_idx + 1 :].strip()
+            if "=" in prop and "≠" not in prop and "<=" not in prop and ">=" not in prop:
+                parts = prop.split("=")
+                if len(parts) == 2 and parts[0].strip() == parts[1].strip():
+                    trivial.append(name)
+        return trivial
+
     def prove(self, statement_or_path: str, proof: str = "") -> Answer:
         """Check a Lean 4 theorem file or inline snippet with ``#print axioms`` auditing."""
         source, origin = self._load_source(statement_or_path, proof)
         audited_source, theorem_names, custom_axioms, has_hole = (
             self.prepare_audited_source(source)
         )
+        trivial_theorems = self.detect_trivial_reflexive_theorems(audited_source)
         warnings: list[str] = []
         if not theorem_names:
             warnings.append(
@@ -436,6 +469,10 @@ class LeanEngine(Engine):
         if custom_axioms:
             warnings.append(
                 f"source declares custom/unsafe axiom construct(s): {', '.join(custom_axioms)}"
+            )
+        if trivial_theorems:
+            warnings.append(
+                f"syntactic reflexive tautology (X = X) detected in: {', '.join(trivial_theorems)}"
             )
 
         origin_path = (
@@ -451,6 +488,7 @@ class LeanEngine(Engine):
                     "complete": bool(theorem_names) and not has_hole and not custom_axioms,
                     "theorems": theorem_names,
                     "audited_theorems": [],
+                    "trivial_theorems": trivial_theorems,
                     "untrusted_axioms": custom_axioms,
                     "source": source,
                 },
@@ -470,6 +508,7 @@ class LeanEngine(Engine):
                     "has_hole": has_hole,
                     "theorems": theorem_names,
                     "audited_theorems": [],
+                    "trivial_theorems": trivial_theorems,
                     "audit_complete": False,
                     "axioms_used": [],
                     "untrusted_axioms": custom_axioms,
@@ -557,6 +596,7 @@ class LeanEngine(Engine):
                     "returncode": proc.returncode,
                     "theorems": theorem_names,
                     "audited_theorems": audited_theorems,
+                    "trivial_theorems": trivial_theorems,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted_axioms,
                     "diagnostics": diagnostics,
@@ -576,6 +616,7 @@ class LeanEngine(Engine):
                     "has_hole": has_hole,
                     "theorems": theorem_names,
                     "audited_theorems": audited_theorems,
+                    "trivial_theorems": trivial_theorems,
                     "audit_complete": audit_complete,
                     "missing_audits": missing_audits,
                     "axioms_used": axioms_used,

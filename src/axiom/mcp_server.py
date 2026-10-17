@@ -514,21 +514,23 @@ def dispatch_tool(
     args = dict(arguments or {})
 
     if name == "math_parse":
-        return ax.parse(args["expression"])
+        return ax.parse(args["expression"], assumptions=args.get("assumptions"))
 
     if name == "math_simplify":
         mode = args.get("mode", "simplify")
         eng = args.get("engine")
+        assump = args.get("assumptions")
         if mode == "factor":
-            return ax.factor(args["expression"], engine=eng)
+            return ax.factor(args["expression"], assumptions=assump, engine=eng)
         if mode == "expand":
-            return ax.expand(args["expression"], engine=eng)
-        return ax.simplify(args["expression"], engine=eng)
+            return ax.expand(args["expression"], assumptions=assump, engine=eng)
+        return ax.simplify(args["expression"], assumptions=assump, engine=eng)
 
     if name == "math_solve":
         return ax.solve(
             args["expression"],
             variable=args.get("variable"),
+            assumptions=args.get("assumptions"),
             engine=args.get("engine"),
         )
 
@@ -561,6 +563,7 @@ def dispatch_tool(
             args["expression"],
             precision=args.get("precision"),
             substitutions=args.get("substitutions"),
+            assumptions=args.get("assumptions"),
         )
 
     if name == "math_plot":
@@ -586,6 +589,7 @@ def dispatch_tool(
             args["target"],
             candidate=args.get("candidate"),
             variable=args.get("variable"),
+            assumptions=args.get("assumptions"),
         )
 
     if name == "math_explain":
@@ -600,6 +604,7 @@ def dispatch_tool(
             args["left"],
             args["right"],
             variables=args.get("variables"),
+            assumptions=args.get("assumptions"),
         )
 
     if name == "math_explore":
