@@ -2,42 +2,49 @@
   "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
   "problem": "hodge-conjecture",
   "title": "Conjectura de Hodge",
-  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/05/hodge.pdf",
-  "clay_status": "Active (Unsolved)",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/06/hodge.pdf",
+  "clay_status": "Active (Under Evaluation since Sep 2026)",
   "maturity_level": "L2",
   "claims": [
     {
-      "statement": "Decomposição de cohomologia em variedades Kähler compactas, simetria do diamante de Hodge e classes de Lefschetz (1,1)",
-      "scope": "Paridade do número de Betti b1, diamante de Hodge de CP^n, característica de Euler e auto-interseção de hiperplanos",
-      "assumptions": ["X variedade Kähler compacta", "h_pq = h_qp"]
+      "statement": "Simetria de Hodge e paridade par de b1 em variedades Kähler compactas, característica de Euler de CP^n e classes algébricas de Lefschetz (1,1)",
+      "scope": "Variedades Kähler, diamante de Hodge em CP^2 e CP^3, classes de Chern/Lefschetz e sonda de fronteira de representação escalar em dimensão 4",
+      "assumptions": ["h:integer"]
     }
   ],
   "evidence": {
     "symbolic": [
-      "Simetria h_10 + h_01 = 2*h_10 comprovada (exact-symbolic)",
-      "Característica de Euler de CP^2 chi = 3 (exact-symbolic)",
-      "Característica de Euler de CP^3 chi = 4 (exact-symbolic)",
-      "Auto-interseção da classe geradora de Lefschetz (1,1) H^2 = 1 (exact-symbolic)"
+      "Simetria de Hodge b1 = 2*h10 comprovada (exact-symbolic)",
+      "Característica de Euler de CP^2 chi = 3 comprovada (exact-symbolic)",
+      "Característica de Euler de CP^3 chi = 4 comprovada (exact-symbolic)",
+      "Auto-interseção da classe de Lefschetz (1,1) H . H = 1 comprovada (exact-symbolic)"
     ],
     "numerical": [],
     "formal": [],
     "counterexamples": [
-      "Superfície de Hopf (b1=1) refutada como não-Kähler (EmptySet em Z)",
-      "Quebra de simetria do diamante (h_21 != h_12) refutada",
-      "Característica de Euler espúria chi(CP^2)=0 refutada com resíduo 3",
-      "Sonda em dimensão 4 recusada fail-closed"
+      "Superfície de Hopf não-Kähler refutada (conjunto vazio de inteiros para b1 ímpar)",
+      "Quebra da simetria do diamante de Hodge refutada via contraexemplo",
+      "Característica de Euler espúria chi(CP^2) = 0 refutada via contraexemplo"
+    ],
+    "open_boundary_probes": [
+      "Sonda de representação escalar livre hodge_class == algebraic_cycle (recusa fail-closed, sem prova espúria em dimensão 4)"
     ]
   },
   "verification": {
     "result": "inconclusive",
     "passed_criteria": 11,
     "total_criteria": 11,
+    "positive_claims_count": 5,
+    "true_positives_count": 5,
+    "negative_controls_count": 5,
+    "fail_closed_count": 5,
     "fail_closed_rate": 1.0,
+    "false_positives_count": 0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/hodge-conjecture/validate.py",
     "command": "python reports/hodge-conjecture/validate.py",
     "evidence_file": "reports/hodge-conjecture/validation.json",

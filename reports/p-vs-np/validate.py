@@ -96,6 +96,11 @@ def main():
         "mcp_binomial_verified": verified(mcp_result) and mcp_result.get("value") == comb(400, 100),
         "mcp_exit_success": proc.returncode == 0,
     }
+    equality_probe = runs["constant_equality_probe"]["result"]
+    checks["false_equality_2plus2_refuted"] = (
+        equality_probe.get("guarantee") == "unverified"
+        and equality_probe.get("verification", {}).get("passed") is False
+    )
     lean_available = bool(doctor.get("external_toolchains", {}).get("lean"))
     checks["lean_control_expected_status"] = (
         verified(lean) and lean.get("guarantee") == "formal-proof"
@@ -103,6 +108,23 @@ def main():
         lean.get("guarantee") == "unverified"
         and lean.get("verification", {}).get("passed") is False
     )
+
+    positive_keys = [
+        "groups_verified_exact", "groups_independent_math_comb",
+        "pairs_verified_exact", "pairs_independent_math_comb",
+        "mcp_binomial_verified"
+    ]
+    negative_keys = ["incorrect_root_refuted", "false_equality_2plus2_refuted"]
+    positive_claims_count = len(positive_keys)
+    true_positives_count = sum(1 for k in positive_keys if checks.get(k) is True)
+    true_positive_rate = true_positives_count / positive_claims_count if positive_claims_count > 0 else 1.0
+
+    negative_controls_count = len(negative_keys)
+    fail_closed_count = sum(1 for k in negative_keys if checks.get(k) is True)
+    false_positives_count = negative_controls_count - fail_closed_count
+    fail_closed_rate = fail_closed_count / negative_controls_count if negative_controls_count > 0 else 1.0
+    false_positive_rate = false_positives_count / negative_controls_count if negative_controls_count > 0 else 0.0
+
     paths = [
         "src/axiom/contract.py", "src/axiom/parsing.py", "src/axiom/core.py",
         "src/axiom/verification.py", "src/axiom/engines/lean_engine.py",
@@ -111,6 +133,7 @@ def main():
     ]
     record = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "axiom_version": "0.2.3",
         "scope": "Clay finite combinatorial example and AXIOM environment only",
         "p_vs_np_proven": False,
         "sources": [
@@ -123,6 +146,17 @@ def main():
                 "stderr": proc.stderr, "requests": requests, "responses": responses},
         "independent_checks": {"math_comb_400_100": comb(400, 100), "math_comb_100_2": comb(100, 2)},
         "checks": checks,
+        "evaluations": checks,
+        "total_evaluations": len(checks),
+        "passed_evaluations": sum(1 for v in checks.values() if v is True),
+        "positive_claims_count": positive_claims_count,
+        "true_positives_count": true_positives_count,
+        "true_positive_rate": true_positive_rate,
+        "negative_controls_count": negative_controls_count,
+        "fail_closed_count": fail_closed_count,
+        "fail_closed_rate": fail_closed_rate,
+        "false_positives_count": false_positives_count,
+        "false_positive_rate": false_positive_rate,
         "validation_passed": all(checks.values()),
         "formal_verification_available": lean_available,
     }

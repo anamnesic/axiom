@@ -1,30 +1,160 @@
 {
-  "timestamp_utc": "2026-10-17T19:25:55.063661+00:00",
-  "axiom_version": "0.2.2",
+  "timestamp_utc": "2026-10-17T20:38:35.915692+00:00",
+  "axiom_version": "0.2.3",
   "problem": "Hodge Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
   "total_evaluations": 11,
   "passed_evaluations": 11,
+  "positive_claims_count": 5,
+  "true_positives_count": 5,
+  "true_positive_rate": 1.0,
+  "negative_controls_count": 5,
+  "fail_closed_count": 5,
   "fail_closed_rate": 1.0,
+  "false_positives_count": 0,
   "false_positive_rate": 0.0,
+  "test_cases": [
+    {
+      "id": "doctor_healthy",
+      "kind": "operational_check",
+      "description": "AXIOM environment doctor self-test passes",
+      "expected_verdict": "ok",
+      "observed_verdict": "ok",
+      "evidence_type": "operational-self-test",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "hodge_symmetry_b1_even_exact",
+      "kind": "positive_claim",
+      "description": "Hodge symmetry on compact Kähler implies b1 = 2*h^{1,0} is strictly even",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "hopf_surface_refuted",
+      "kind": "negative_control",
+      "description": "Hopf surface with odd b1 = 1 cannot be Kähler (2*h - 1 = 0 has EmptySet in Z)",
+      "expected_verdict": "unsolved",
+      "observed_verdict": "unspecified",
+      "evidence_type": "empty-solution-set",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "broken_hodge_symmetry_refuted",
+      "kind": "negative_control",
+      "description": "Broken Hodge diamond symmetry h^{2,1} = 3 != h^{1,2} = 5 is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "euler_characteristic_cp2_exact",
+      "kind": "positive_claim",
+      "description": "Complex projective plane CP^2 Euler characteristic chi(CP^2) = 3 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "euler_characteristic_cp3_exact",
+      "kind": "positive_claim",
+      "description": "Complex projective space CP^3 Euler characteristic chi(CP^3) = 4 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "false_euler_cp2_refuted",
+      "kind": "negative_control",
+      "description": "False Euler characteristic claim chi(CP^2) == 0 is disproven with counterexample",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "lefschetz_11_self_intersection_exact",
+      "kind": "positive_claim",
+      "description": "Lefschetz (1,1) hyperplane generator self-intersection H . H = 1^2 = 1 verified",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "hodge_dim4_fail_closed",
+      "kind": "open_boundary_probe",
+      "description": "Unformalized free scalar probe of hodge_class == algebraic_cycle fails closed (no proof granted)",
+      "expected_verdict": "disproven_scalar_representation",
+      "observed_verdict": "disproven",
+      "evidence_type": "unformalized-representation-probe",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "mcp_cp2_euler_ok",
+      "kind": "positive_claim",
+      "description": "MCP stdio math_compare verifies CP^2 Euler characteristic chi = 3",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "mcp-jsonrpc-exact",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "mcp_broken_symmetry_refuted",
+      "kind": "negative_control",
+      "description": "MCP stdio math_compare refutes broken Hodge symmetry 3 == 5",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "mcp-jsonrpc-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    }
+  ],
   "evaluations": {
     "doctor_healthy": true,
     "hodge_symmetry_b1_even_exact": true,
-    "euler_characteristic_cp2_exact": true,
-    "euler_characteristic_cp3_exact": true,
-    "lefschetz_11_self_intersection_exact": true,
     "hopf_surface_refuted": true,
     "broken_hodge_symmetry_refuted": true,
+    "euler_characteristic_cp2_exact": true,
+    "euler_characteristic_cp3_exact": true,
     "false_euler_cp2_refuted": true,
+    "lefschetz_11_self_intersection_exact": true,
     "hodge_dim4_fail_closed": true,
     "mcp_cp2_euler_ok": true,
     "mcp_broken_symmetry_refuted": true
   },
   "file_hashes": {
-    "reports/hodge-conjecture/validate.py": "39ad314cb56af9dc094c3a57695ca6389687088da17991da8495bf0b6428a15c",
+    "reports/hodge-conjecture/validate.py": "f187f8b34d66e11d85eea9e2f956a56c6a4e1a2fc2779f6f7df084adb55968cf",
     "reports/hodge-conjecture/README.md": "2731738affb12b51b00dc1110fff6f35f5806f8b28c3382c8ed99c117c6b6cef",
+    "reports/hodge-conjecture/REPORT.md": "52507bab9518dc30091fe330b6e07ddeb1292aebbfc998713075c9cd521c9bca",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c"
   },
   "runs": {
     "doctor": {

@@ -1,31 +1,172 @@
 {
-  "timestamp_utc": "2026-10-17T19:26:27.073399+00:00",
-  "axiom_version": "0.2.2",
+  "timestamp_utc": "2026-10-17T20:39:06.904372+00:00",
+  "axiom_version": "0.2.3",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
   "total_evaluations": 12,
   "passed_evaluations": 12,
+  "positive_claims_count": 6,
+  "true_positives_count": 6,
+  "true_positive_rate": 1.0,
+  "negative_controls_count": 5,
+  "fail_closed_count": 5,
   "fail_closed_rate": 1.0,
+  "false_positives_count": 0,
   "false_positive_rate": 0.0,
+  "test_cases": [
+    {
+      "id": "doctor_healthy",
+      "kind": "operational_check",
+      "description": "AXIOM environment doctor self-test passes",
+      "expected_verdict": "ok",
+      "observed_verdict": "ok",
+      "evidence_type": "operational-self-test",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "scalar_curvature_s3_exact",
+      "kind": "positive_claim",
+      "description": "Round 3-sphere S^3 scalar curvature R = 6 / R0^2 verified under R0 > 0",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "einstein_condition_s3_exact",
+      "kind": "positive_claim",
+      "description": "Einstein metric condition R_{ij} = (R / 3) * g_{ij} holds on S^3",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "vanishing_curvature_refuted",
+      "kind": "negative_control",
+      "description": "Vanishing scalar curvature claim on round S^3 is disproven with counterexample",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "broken_einstein_refuted",
+      "kind": "negative_control",
+      "description": "Broken Einstein factor 5 / R0^2 != 6 / (3*R0^2) is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "ricci_flow_derivative_exact",
+      "kind": "positive_claim",
+      "description": "Hamilton-Perelman Ricci flow homothetic contraction d(r^2)/dt = -4 verified",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "extinction_time_solve_exact",
+      "kind": "positive_claim",
+      "description": "Ricci flow extinction time T = R0^2 / 4 solved by exact substitution",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "verified-substitution",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "infinite_existence_refuted",
+      "kind": "negative_control",
+      "description": "Infinite existence claim without surgery (R0^2 - 4*T == R0^2 for T > 0) is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "torus_flat_curvature_exact",
+      "kind": "positive_claim",
+      "description": "Flat 3-torus T^3 scalar curvature R = 0 verified (non-spherical fundamental group)",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "poincare_probe_fail_closed",
+      "kind": "open_boundary_probe",
+      "description": "Unformalized free scalar probe of M_3manifold == S3_sphere fails closed (no proof granted)",
+      "expected_verdict": "disproven_scalar_representation",
+      "observed_verdict": "disproven",
+      "evidence_type": "unformalized-representation-probe",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "mcp_einstein_ok",
+      "kind": "positive_claim",
+      "description": "MCP stdio math_compare verifies Einstein condition on S^3 under R0 > 0",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "mcp-jsonrpc-exact",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "mcp_vanishing_curvature_refuted",
+      "kind": "negative_control",
+      "description": "MCP stdio math_compare refutes vanishing curvature on S^3",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "mcp-jsonrpc-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    }
+  ],
   "evaluations": {
     "doctor_healthy": true,
     "scalar_curvature_s3_exact": true,
     "einstein_condition_s3_exact": true,
-    "ricci_flow_derivative_exact": true,
-    "extinction_time_solve_exact": true,
-    "torus_flat_curvature_exact": true,
     "vanishing_curvature_refuted": true,
     "broken_einstein_refuted": true,
+    "ricci_flow_derivative_exact": true,
+    "extinction_time_solve_exact": true,
     "infinite_existence_refuted": true,
+    "torus_flat_curvature_exact": true,
     "poincare_probe_fail_closed": true,
     "mcp_einstein_ok": true,
     "mcp_vanishing_curvature_refuted": true
   },
   "file_hashes": {
-    "reports/poincare-conjecture/validate.py": "8450501b8379b7f5e29202a70248a936d3b79d7b4ae3ccdd452c85907fd66841",
+    "reports/poincare-conjecture/validate.py": "309463bd66658b3e3065ff9ebb54d8b78c2fe627430dbf2239e1f3635892be8c",
     "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
+    "reports/poincare-conjecture/REPORT.md": "43b44e347f43e4e2f7f16dc6b8ed1e53a6533d032effde30bd0cc35e0810dd4d",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c"
   },
   "runs": {
     "doctor": {
@@ -638,21 +779,62 @@
         "-m",
         "axiom.cli",
         "compare",
-        "M_3manifold",
-        "S3_sphere",
+        "M_manifold",
+        "S_sphere",
         "--json"
       ],
-      "returncode": 1,
+      "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "M_3manifold == S3_sphere",
-        "ok": false,
+        "input": "M_manifold == S_sphere",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "M_manifold",
+          "right": "S_sphere",
+          "simplified_difference": "M_manifold - S_sphere",
+          "counterexample": {
+            "M_manifold": "-2",
+            "S_sphere": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'M_manifold': '-2', 'S_sphere': '2'})",
+        "latex": "M_{manifold} \\neq S_{sphere}",
+        "variables": [
+          "M_manifold",
+          "S_sphere"
+        ],
         "guarantee": "unverified",
         "evidence": {
-          "engine": "axiom"
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = M_manifold",
+            "rhs = S_sphere",
+            "status = disproven",
+            "simplify(lhs - rhs) -> M_manifold - S_sphere"
+          ],
+          "reproducible_with": "axiom compare \"M_manifold\" \"S_sphere\""
         },
-        "error": "name not allowed: '_sphere'"
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'M_manifold': '-2', 'S_sphere': '2'} (|diff| = 4.000e+00)",
+          "checks": 1,
+          "max_error": 4.0,
+          "data": {
+            "counterexample": {
+              "M_manifold": "-2",
+              "S_sphere": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
       }
     }
   },

@@ -727,8 +727,8 @@ class Axiom:
             all_symbols = (
                 left_parser.seen_symbols
                 | right_parser.seen_symbols
-                | lhs.free_symbols
-                | rhs.free_symbols
+                | getattr(lhs, "free_symbols", set())
+                | getattr(rhs, "free_symbols", set())
             )
             sym_vars = (
                 [right_parser.symbol(v) for v in variables]

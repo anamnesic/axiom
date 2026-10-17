@@ -44,7 +44,7 @@
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/riemann-hypothesis/validate.py",
     "command": "python reports/riemann-hypothesis/validate.py",
     "evidence_file": "reports/riemann-hypothesis/validation.json",

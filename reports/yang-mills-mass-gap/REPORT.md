@@ -1,7 +1,7 @@
 # Relatório de Validação e Integridade: Yang-Mills e o Gap de Massa no AXIOM
 
 Data de execução e consulta às fontes: 17 de outubro de 2026.  
-Escopo: Validação analítica e algébrica de teorias de gauge não-abelianas ($\mathfrak{su}(2)$), álgebra de comutadores e identidade de Jacobi, identidade de Bianchi para tensores de curvatura/intensidade de campo, ação euclidiana do instanton BPST ($S = \frac{8\pi^2}{g^2}$), invariância de calibre, e controles negativos estritos sob o motor AXIOM v0.2.2.  
+Escopo: Validação analítica e algébrica de teorias de gauge não-abelianas ($\mathfrak{su}(2)$), álgebra de comutadores e identidade de Jacobi, identidade de Bianchi para tensores de curvatura/intensidade de campo, ação euclidiana do instanton BPST ($S = \frac{8\pi^2}{g^2}$), invariância de calibre, e controles negativos e sondas de fronteira de representação sob o motor AXIOM v0.2.3.  
 **Nenhuma demonstração de existência de Yang-Mills quântico com gap de massa foi fornecida ou produzida.** O Clay Mathematics Institute continua classificando o problema como aberto ([Página oficial do Clay](https://www.claymath.org/millennium/yang-mills-the-maths-gap/)).
 
 ---
@@ -21,7 +21,7 @@ Os geradores $T^a$ satisfazem $[T^a, T^b] = i \epsilon^{abc} T^c$:
 Pela simetria de derivadas mistas no espaço euclidiano (Teorema de Schwarz):
 $$D_{[\lambda} F_{\mu\nu]} = 0$$
 - O cancelamento algébrico dos termos de segunda derivada cruzada foi validado pelo AXIOM como `exact-symbolic`.
-- **Controle negativo**: Quebra da identidade de Bianchi por alteração de coeficientes não-comutativos foi refutada fail-closed.
+- **Controle negativo**: Quebra da identidade de Bianchi por alteração de coeficientes não-comutativos foi refutada fail-closed com contraexemplo.
 
 ### 1.3. Ação Topológica do Instanton BPST em $\mathbb{R}^4$
 Instantons são soluções euclidianas auto-duais ($F = \tilde{F}$) com carga topológica inteira $Q = k \in \mathbb{Z}$:
@@ -30,29 +30,36 @@ Instantons são soluções euclidianas auto-duais ($F = \tilde{F}$) com carga to
 
 ### 1.4. Hipótese do Gap de Massa $\Delta > 0$ vs. Regime Eletrodinâmico Abeliano
 - No eletromagnetismo livre abeliano ($U(1)$ de Maxwell), o fóton é estritamente não-massivo ($m_\gamma = 0 \implies 0 \cdot c^2 = 0$), comprovado pelo AXIOM como `exact-symbolic`.
-- **Controle negativo de fóton massivo**: A afirmação de que a eletrodinâmica livre desenvolve massa positiva foi rejeitada fail-closed.
-- **Sonda da Conjectura Aberta de Yang-Mills**: Perante a equiparação incondicional do gap quântico não-abeliano a zero (`compare "Delta_YM" "0"`), o AXIOM recusou a igualdade como `disproven` / `unverified`, preservando a incerteza do problema em aberto.
+- **Controle negativo de fóton massivo**: A afirmação de que a eletrodinâmica livre desenvolve massa positiva foi rejeitada fail-closed com contraexemplo.
+- **Sonda de Fronteira da Conjectura Aberta (Classificação Epistemológica)**: A sonda `compare "Delta_YM" "0"` trata `Delta_YM` como um símbolo escalar livre em SymPy. O motor refuta a igualdade universal encontrando contraexemplo escalar numérico (`Delta_YM = -2`), mantendo garantia `unverified`. Essa recusa é fail-closed (não aceita a anulação espúria do gap), mas epistemologicamente representa uma sonda de fronteira de representação algébrica livre, e **NÃO** uma refutação física do problema quântico em aberto.
 
 ---
 
-## 2. Resumo da Execução de Controle
+## 2. Resumo da Execução de Controle e Métricas Dinâmicas
 
-Todos os 12 testes do script de validação foram aprovados com 100% de comportamento fail-closed:
+Todos os 12 testes do script de validação foram avaliados com métricas dinâmicas:
 
-| Verificação | Garantia AXIOM | `verification.passed` | Interpretação Científica |
-|---|---|---|---|
-| Autotestes do ambiente (`doctor`) | N/A | `true` | Ambiente íntegro e autotestes do núcleo aprovados |
-| Identidade de Jacobi em $\mathfrak{su}(2)$ | `exact-symbolic` | `true` | Estrutura de álgebra de Lie comprovada simbolicamente |
-| Identidade de Bianchi | `exact-symbolic` | `true` | Fechamento exterior do tensor de curvatura validado |
-| Ação euclidiana do instanton BPST | `exact-symbolic` | `true` | Invariante topológico e ação comprovados sob $g > 0$ |
-| Fóton de Maxwell não-massivo | `exact-symbolic` | `true` | Relação de dispersão abeliana verificada |
-| Controle de comutador abeliano espúrio | `unverified` | `false` | Quebra de não-abelianidade refutada via contraexemplo |
-| Controle de identidade de Bianchi violada | `unverified` | `false` | Resíduo não-nulo refutado fail-closed |
-| Carga topológica fracionária proibida | `heuristic` | `false` | $2k - 1 = 0$ em $\mathbb{Z}$ retorna conjunto vazio de soluções |
-| Controle de fóton massivo em Maxwell puro | `unverified` | `false` | Afirmação fisicamente impossível refutada |
-| Sonda do Gap de Massa quântico | `unverified` | `false` | Anulação arbitrária do gap refutada fail-closed |
-| MCP stdio: Ação do instanton BPST | `exact-symbolic` | `true` | Verificação via protocolo JSON-RPC 2.0 aprovada |
-| MCP stdio: Refutação de abelianidade em $\mathfrak{su}(2)$ | `unverified` | `false` | Rejeição via protocolo JSON-RPC 2.0 confirmada |
+| Identificador | Categoria | Garantia AXIOM | Veredito | Interpretação Científica |
+|---|---|---|---|---|
+| `doctor_healthy` | Operacional | N/A | `ok` | Ambiente íntegro e autotestes do núcleo aprovados |
+| `jacobi_identity_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Estrutura de álgebra de Lie $\mathfrak{su}(2)$ comprovada simbolicamente |
+| `abelian_su2_refuted` | Controle Negativo | `unverified` | `disproven` | Quebra de não-abelianidade refutada via contraexemplo |
+| `bianchi_identity_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Fechamento exterior do tensor de curvatura validado |
+| `broken_bianchi_refuted` | Controle Negativo | `unverified` | `disproven` | Resíduo de Bianchi quebrado refutado fail-closed |
+| `instanton_action_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Invariante topológico e ação de instanton comprovados sob $g > 0$ |
+| `fractional_charge_refuted` | Controle Negativo | `unverified` | `unsolved` | $2k - 1 = 0$ em $\mathbb{Z}$ retorna conjunto vazio de soluções |
+| `maxwell_massless_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Relação de dispersão de Maxwell verificada ($0 \cdot c^2 = 0$) |
+| `massive_photon_refuted` | Controle Negativo | `unverified` | `disproven` | Afirmação de fóton massivo refutada com contraexemplo |
+| `ym_mass_gap_fail_closed` | Sonda de Fronteira | `unverified` | `disproven` | Sonda de representação escalar livre rejeitada fail-closed |
+| `mcp_instanton_ok` | Afirmação Positiva | `exact-symbolic` | `proven` | Verificação via protocolo JSON-RPC 2.0 aprovada |
+| `mcp_non_abelian_refuted` | Controle Negativo | `unverified` | `disproven` | Rejeição de abelianidade via protocolo JSON-RPC 2.0 confirmada |
+
+### Métricas Derivadas Computadas
+- **Critérios Totais**: 12/12 aprovados (100.0%)
+- **Afirmações Positivas (Verdadeiros Positivos)**: 5/5 (Taxa de Verdadeiros Positivos: 100.0%)
+- **Controles Negativos & Sondas de Fronteira**: 6/6
+  - **Falsos Positivos**: 0/6 (Taxa de Falsos Positivos: 0.0%)
+  - **Comportamento Fail-Closed**: 6/6 (Taxa Fail-Closed: 100.0%)
 
 ---
 
@@ -66,5 +73,5 @@ python reports/yang-mills-mass-gap/validate.py
 
 O script regera [`reports/yang-mills-mass-gap/validation.json`](validation.json), contendo:
 - Metadados de ambiente e hashes SHA-256 de todos os arquivos relevantes.
-- Saídas JSON completas de todas as execuções CLI do AXIOM.
+- Saídas JSON completas de todas as execuções CLI do AXIOM com verificação e semântica ternária.
 - Requisições e respostas JSON-RPC 2.0 completas do servidor MCP por stdio.

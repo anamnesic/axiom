@@ -1,9 +1,15 @@
 {
-  "timestamp_utc": "2026-10-17T19:26:27.126599+00:00",
+  "timestamp_utc": "2026-10-17T20:39:06.939827+00:00",
   "all_ok": true,
-  "total_criteria": 98,
-  "passed_criteria": 98,
+  "total_criteria": 102,
+  "passed_criteria": 102,
+  "global_positive_claims": 52,
+  "global_true_positives": 52,
+  "global_true_positive_rate": 1.0,
+  "global_negative_controls": 36,
+  "global_fail_closed_count": 36,
   "global_fail_closed_rate": 1.0,
+  "global_false_positives_count": 0,
   "global_false_positive_rate": 0.0,
   "problems": [
     {
@@ -13,28 +19,46 @@
       "returncode": 0,
       "evaluations": 24,
       "passed": 24,
+      "positive_claims_count": 13,
+      "true_positives_count": 13,
+      "negative_controls_count": 7,
+      "fail_closed_count": 7,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "P vs NP",
       "folder": "p-vs-np",
       "ok": true,
       "returncode": 0,
-      "evaluations": 11,
-      "passed": 11,
+      "evaluations": 12,
+      "passed": 12,
+      "positive_claims_count": 5,
+      "true_positives_count": 5,
+      "negative_controls_count": 2,
+      "fail_closed_count": 2,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "Navier-Stokes Equation",
       "folder": "navier-stokes",
       "ok": true,
       "returncode": 0,
-      "evaluations": 13,
-      "passed": 13,
+      "evaluations": 16,
+      "passed": 16,
+      "positive_claims_count": 9,
+      "true_positives_count": 9,
+      "negative_controls_count": 6,
+      "fail_closed_count": 6,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "Birch and Swinnerton-Dyer",
@@ -43,8 +67,14 @@
       "returncode": 0,
       "evaluations": 15,
       "passed": 15,
+      "positive_claims_count": 9,
+      "true_positives_count": 9,
+      "negative_controls_count": 5,
+      "fail_closed_count": 5,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "Hodge Conjecture",
@@ -53,8 +83,14 @@
       "returncode": 0,
       "evaluations": 11,
       "passed": 11,
+      "positive_claims_count": 5,
+      "true_positives_count": 5,
+      "negative_controls_count": 5,
+      "fail_closed_count": 5,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "Yang-Mills and the Mass Gap",
@@ -63,8 +99,14 @@
       "returncode": 0,
       "evaluations": 12,
       "passed": 12,
+      "positive_claims_count": 5,
+      "true_positives_count": 5,
+      "negative_controls_count": 6,
+      "fail_closed_count": 6,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     },
     {
       "name": "Poincaré Conjecture",
@@ -73,8 +115,14 @@
       "returncode": 0,
       "evaluations": 12,
       "passed": 12,
+      "positive_claims_count": 6,
+      "true_positives_count": 6,
+      "negative_controls_count": 5,
+      "fail_closed_count": 5,
+      "false_positives_count": 0,
       "fail_closed_rate": 1.0,
-      "false_positive_rate": 0.0
+      "false_positive_rate": 0.0,
+      "true_positive_rate": 1.0
     }
   ]
 }

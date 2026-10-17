@@ -7,8 +7,8 @@
   "maturity_level": "L2",
   "claims": [
     {
-      "statement": "Balanço de momento de Navier-Stokes incompressível, divergente nulo e dissipação de energia cinética em L2",
-      "scope": "Vórtice periódico de Taylor-Green em 2D/3D, escoamento de Poiseuille e equação de Poisson para o campo de pressão",
+      "statement": "Balanço de momento de Navier-Stokes incompressível, divergente nulo e derivação dinâmica da taxa de dissipação de energia cinética em L2",
+      "scope": "Vórtice periódico de Taylor-Green em 2D/3D (E(t) = pi^2*exp(-4nu t)), escoamento de Poiseuille e equação de Poisson para a pressão",
       "assumptions": ["nu > 0", "mu > 0", "t >= 0", "div(u) = 0"]
     }
   ],
@@ -16,6 +16,9 @@
     "symbolic": [
       "div(u) = 0 para Vórtice de Taylor-Green (exact-symbolic)",
       "Balanço de momento em x comprovado simbolicamente (exact-symbolic)",
+      "Integral definida int_0^{2pi} sin^2(x) dx = pi (exact-symbolic via FTC)",
+      "Integral definida int_0^{2pi} cos^2(y) dy = pi (exact-symbolic via FTC)",
+      "Diferenciação temporal dE/dt = -4*nu*pi^2*exp(-4*nu*t) (exact-symbolic)",
       "Balanço de dissipação de energia dE/dt + D(t) = 0 (exact-symbolic)",
       "Identidade da pressão de Poisson comprovada (exact-symbolic)",
       "Balanço de forças de Poiseuille sob mu > 0 (exact-symbolic)"
@@ -23,22 +26,30 @@
     "numerical": [],
     "formal": [],
     "counterexamples": [
-      "Campo não-solenoidal (x^2, y^2) refutado",
-      "Parâmetro incorreto de viscosidade refutado",
+      "Campo não-solenoidal (x^2, y^2) refutado via contraexemplo",
+      "Parâmetro incorreto de viscosidade refutado via contraexemplo",
       "Conservação de energia espúria sob nu > 0 refutada via contraexemplo relacional",
-      "Condição de contorno incorreta em Poiseuille refutada"
+      "Condição de contorno incorreta em Poiseuille refutada via contraexemplo"
+    ],
+    "open_boundary_probes": [
+      "Resolução fechada geral de EDP não-linear de Navier-Stokes (recusa fail-closed, sem prova espúria)"
     ]
   },
   "verification": {
     "result": "inconclusive",
-    "passed_criteria": 13,
-    "total_criteria": 13,
+    "passed_criteria": 16,
+    "total_criteria": 16,
+    "positive_claims_count": 9,
+    "true_positives_count": 9,
+    "negative_controls_count": 6,
+    "fail_closed_count": 6,
     "fail_closed_rate": 1.0,
+    "false_positives_count": 0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/navier-stokes/validate.py",
     "command": "python reports/navier-stokes/validate.py",
     "evidence_file": "reports/navier-stokes/validation.json",

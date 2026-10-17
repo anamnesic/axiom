@@ -28,14 +28,14 @@
   },
   "verification": {
     "result": "inconclusive",
-    "passed_criteria": 11,
-    "total_criteria": 11,
+    "passed_criteria": 12,
+    "total_criteria": 12,
     "fail_closed_rate": 1.0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/p-vs-np/validate.py",
     "command": "python reports/p-vs-np/validate.py",
     "evidence_file": "reports/p-vs-np/validation.json",

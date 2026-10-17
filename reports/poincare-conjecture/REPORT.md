@@ -31,28 +31,35 @@ $$\frac{\partial g_{ij}}{\partial t} = -2 R_{ij}$$
 ### 1.3. Obstruções Topológicas: $\mathbb{RP}^3$ e o 3-Toro $\mathbb{T}^3$
 - O espaço projetivo real $\mathbb{RP}^3 = S^3 / \mathbb{Z}_2$ possui métrica com curvatura seccional constante e positiva idêntica a $S^3$, mas seu grupo fundamental é $\pi_1(\mathbb{RP}^3) = \mathbb{Z}_2 \neq 0$. Logo, **não é homeomorfo a $S^3$**.
 - O 3-toro plano $\mathbb{T}^3$ possui curvatura de Ricci nula ($R = 0$, verificado pelo AXIOM como `exact-symbolic`), mas $\pi_1(\mathbb{T}^3) = \mathbb{Z}^3 \neq 0$.
-- **Sonda da Conjectura Global**: Perante a equiparação ingênua e abstrata de uma 3-variedade arbitrária à 3-esfera (`compare "M_3manifold" "S3_sphere"`), o AXIOM recusou a identificação universal como `unverified` / `disproven`, garantindo rigor fail-closed.
+- **Sonda da Conjectura Global (Classificação Epistemológica)**: Perante a equiparação abstrata de uma 3-variedade arbitrária à 3-esfera (`compare "M_manifold" "S_sphere"`), o AXIOM recusou a identificação universal como `unverified` / `disproven` (contraexemplo numérico de símbolos escalares livres), garantindo rigor fail-closed. Trata-se de uma sonda de fronteira de representação algébrica e não de refutação do teorema topológico demonstrado por Perelman.
 
 ---
 
-## 2. Resumo da Execução de Controle
+## 2. Resumo da Execução de Controle e Métricas Dinâmicas
 
-Todos os 12 testes do script de validação foram aprovados com 100% de comportamento fail-closed:
+Todos os 12 testes do script de validação foram avaliados com métricas dinâmicas:
 
-| Verificação | Garantia AXIOM | `verification.passed` | Interpretação Científica |
-|---|---|---|---|
-| Autotestes do ambiente (`doctor`) | N/A | `true` | Ambiente íntegro e autotestes do núcleo aprovados |
-| Curvatura escalar de $S^3$ ($R = 6/R_0^2$) | `exact-symbolic` | `true` | Métrica riemanniana canônica comprovada |
-| Condição de variedade de Einstein para $S^3$ | `exact-symbolic` | `true` | Proporcionalidade $R_{ij} = (R/3)g_{ij}$ validada |
-| Derivada da evolução do raio sob fluxo de Ricci | `exact-symbolic` | `true` | EDO $\frac{d(r^2)}{dt} = -4$ verificada com roundtrip |
-| Tempo de extinção singular $T = R_0^2/4$ | `exact-substitution` | `true` | Raiz algébrica exata verificada por substituição |
-| Curvatura escalar nula do 3-toro plano $\mathbb{T}^3$ | `exact-symbolic` | `true` | Invariante riemanniano comprovado simbolicamente |
-| Controle de curvatura escalar nula em $S^3$ | `unverified` | `false` | Afirmação espúria refutada via contraexemplo |
-| Controle de condição de Einstein violada | `unverified` | `false` | Fator incompatível refutado fail-closed |
-| Controle de existência eterna sem cirurgia | `unverified` | `false` | Colapso em tempo finito demonstrado |
-| Sonda global da Conjectura de Poincaré | `unverified` | `false` | Homeomorfismo universal arbitrário refutado fail-closed |
-| MCP stdio: Condição de Einstein em $S^3$ | `exact-symbolic` | `true` | Verificação via protocolo JSON-RPC 2.0 aprovada |
-| MCP stdio: Refutação de curvatura nula em $S^3$ | `unverified` | `false` | Rejeição via protocolo JSON-RPC 2.0 confirmada |
+| Identificador | Categoria | Garantia AXIOM | Veredito | Interpretação Científica |
+|---|---|---|---|---|
+| `doctor_healthy` | Operacional | N/A | `ok` | Ambiente íntegro e autotestes do núcleo aprovados |
+| `scalar_curvature_s3_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Métrica riemanniana canônica comprovada ($R = 6/R_0^2$) |
+| `einstein_condition_s3_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Proporcionalidade de Einstein $R_{ij} = (R/3)g_{ij}$ validada |
+| `vanishing_curvature_refuted` | Controle Negativo | `unverified` | `disproven` | Curvatura nula espúria refutada via contraexemplo |
+| `broken_einstein_refuted` | Controle Negativo | `unverified` | `disproven` | Fator incompatível de Einstein refutado fail-closed |
+| `ricci_flow_derivative_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | EDO homotética $\frac{d(r^2)}{dt} = -4$ verificada com roundtrip |
+| `extinction_time_solve_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Tempo de extinção $T = R_0^2/4$ verificado por substituição |
+| `infinite_existence_refuted` | Controle Negativo | `unverified` | `disproven` | Existência eterna sem cirurgia refutada via contraexemplo |
+| `torus_flat_curvature_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Curvatura nula do 3-toro plano $\mathbb{T}^3$ comprovada |
+| `poincare_probe_fail_closed` | Sonda de Fronteira | `unverified` | `disproven` | Sonda de representação escalar livre rejeitada fail-closed |
+| `mcp_einstein_ok` | Afirmação Positiva | `exact-symbolic` | `proven` | Verificação via protocolo JSON-RPC 2.0 aprovada |
+| `mcp_vanishing_curvature_refuted` | Controle Negativo | `unverified` | `disproven` | Rejeição de curvatura nula via protocolo JSON-RPC 2.0 |
+
+### Métricas Derivadas Computadas
+- **Critérios Totais**: 12/12 aprovados (100.0%)
+- **Afirmações Positivas (Verdadeiros Positivos)**: 6/6 (Taxa de Verdadeiros Positivos: 100.0%)
+- **Controles Negativos & Sondas de Fronteira**: 5/5
+  - **Falsos Positivos**: 0/5 (Taxa de Falsos Positivos: 0.0%)
+  - **Comportamento Fail-Closed**: 5/5 (Taxa Fail-Closed: 100.0%)
 
 ---
 
@@ -66,5 +73,5 @@ python reports/poincare-conjecture/validate.py
 
 O script regera [`reports/poincare-conjecture/validation.json`](validation.json), contendo:
 - Metadados de ambiente e hashes SHA-256 de todos os arquivos relevantes.
-- Saídas JSON completas de todas as execuções CLI do AXIOM.
+- Saídas JSON completas de todas as execuções CLI do AXIOM com verificação e semântica ternária.
 - Requisições e respostas JSON-RPC 2.0 completas do servidor MCP por stdio.

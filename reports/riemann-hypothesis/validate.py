@@ -380,6 +380,40 @@ def main() -> int:
         ),
     }
 
+    positive_keys = [
+        "zeta_2_exact_verified",
+        "zeta_4_exact_verified",
+        "trivial_zeros_verified_zero",
+        "zeta_0_and_neg1_bernoulli_values",
+        "compare_basel_exact_symbolic",
+        "residue_at_pole_s1_verified",
+        "mellin_integral_s2_verified",
+        "primorial_30030_factorint_and_totient",
+        "euler_product_p13_matches_independent_fraction",
+        "zeta_half_nonzero_matches_mpmath",
+        "first_nontrivial_zero_residual_small",
+        "mcp_branch_cut_verified_with_positive_assumption",
+        "mcp_basel_diff_zero",
+    ]
+    negative_and_probe_keys = [
+        "compare_basel_false_refuted",
+        "two_sided_limit_at_pole_rejected_v020",
+        "interior_pole_integral_rejected_v020",
+        "mcp_branch_cut_refuted_without_assumptions",
+        "lean_expected_fail_closed",
+        "solve_zeta_zero_fails_closed",
+        "functional_equation_spot_checked_numerical",
+    ]
+    positive_claims_count = len(positive_keys)
+    true_positives_count = sum(1 for k in positive_keys if checks.get(k) is True)
+    true_positive_rate = true_positives_count / positive_claims_count if positive_claims_count > 0 else 1.0
+
+    negative_controls_count = len(negative_and_probe_keys)
+    fail_closed_count = sum(1 for k in negative_and_probe_keys if checks.get(k) is True)
+    false_positives_count = negative_controls_count - fail_closed_count
+    fail_closed_rate = fail_closed_count / negative_controls_count if negative_controls_count > 0 else 1.0
+    false_positive_rate = false_positives_count / negative_controls_count if negative_controls_count > 0 else 0.0
+
     tracked_files = [
         "src/axiom/contract.py",
         "src/axiom/parsing.py",
@@ -394,9 +428,10 @@ def main() -> int:
 
     record = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "axiom_version": "0.2.3",
         "scope": (
             "Analytical, number-theoretic, and numerical properties of the Riemann zeta "
-            "function (Bombieri Clay exposition) + AXIOM v0.2.0 contract & edge-case validation"
+            "function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation"
         ),
         "riemann_hypothesis_proven": False,
         "sources": [
@@ -425,6 +460,17 @@ def main() -> int:
             "responses": mcp_responses,
         },
         "checks": checks,
+        "evaluations": checks,
+        "total_evaluations": len(checks),
+        "passed_evaluations": sum(1 for v in checks.values() if v is True),
+        "positive_claims_count": positive_claims_count,
+        "true_positives_count": true_positives_count,
+        "true_positive_rate": true_positive_rate,
+        "negative_controls_count": negative_controls_count,
+        "fail_closed_count": fail_closed_count,
+        "fail_closed_rate": fail_closed_rate,
+        "false_positives_count": false_positives_count,
+        "false_positive_rate": false_positive_rate,
         "validation_passed": all(checks.values()),
         "formal_verification_available_locally": lean_available,
     }

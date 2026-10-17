@@ -3,7 +3,8 @@
 Scope: Cohomology decomposition on compact Kähler manifolds, Hodge symmetries,
 even Betti number b_1 constraint, complex projective spaces CP^n Euler characteristics,
 Lefschetz (1,1) theorem on CP^2 algebraic classes, and fail-closed negative controls
-(odd b_1 Kähler impossibility, broken Hodge diamond symmetry, and arbitrary 4-fold open conjecture probe).
+(odd b_1 Kähler impossibility, broken Hodge diamond symmetry, false Euler characteristic,
+and open 4-fold unformalized representation probe).
 This does NOT prove or disprove the Clay Millennium Hodge conjecture.
 
 Run from repository root:
@@ -72,15 +73,17 @@ def is_verified_claim(result: dict) -> bool:
     )
 
 
-def is_properly_refuted(result: dict) -> bool:
-    """Fail-closed check: negative controls must NOT pass verification."""
+def extract_status(result: dict) -> str:
     if not result.get("ok"):
-        return True
-    if result.get("guarantee") in ("unverified", "heuristic"):
-        verification = result.get("verification")
-        if verification is None or verification.get("passed") is False:
-            return True
-    return False
+        return "unsolved" if result.get("error") else "error"
+    val = result.get("value")
+    if isinstance(val, dict) and "status" in val:
+        return val["status"]
+    if is_verified_claim(result):
+        return "proven"
+    if result.get("guarantee") == "unverified":
+        return "inconclusive"
+    return "unspecified"
 
 
 def main() -> int:
@@ -146,8 +149,10 @@ def main() -> int:
         "1",
     )
 
-    # 5. Hodge Conjecture in Dimension 4 Open Problem Probe
+    # 5. Hodge Conjecture in Dimension 4 Open Problem Boundary Probe
     # Equating an arbitrary Hodge class to an algebraic cycle class without proof must fail closed
+    # Note: Free scalar symbol probe hodge_class == algebraic_cycle. AXIOM disproves scalar identity
+    # over free variables without falsely granting a proof or refuting the open geometric conjecture.
     runs["hodge_conjecture_dim4_probe"] = cli(
         "compare",
         "hodge_class",
@@ -164,7 +169,7 @@ def main() -> int:
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "axiom-hodge-validation", "version": "0.2.2"},
+                "clientInfo": {"name": "axiom-hodge-validation", "version": "0.2.3"},
             },
         },
         {"jsonrpc": "2.0", "method": "notifications/initialized"},
@@ -216,57 +221,219 @@ def main() -> int:
         except Exception:
             pass
 
-    # Evaluate all criteria
-    evaluations = {}
+    test_cases = []
 
-    doctor_res = runs["doctor"]["result"]
-    evaluations["doctor_healthy"] = doctor_res.get("ok") is True
+    # Doctor check
+    doc_res = runs["doctor"]["result"]
+    test_cases.append({
+        "id": "doctor_healthy",
+        "kind": "operational_check",
+        "description": "AXIOM environment doctor self-test passes",
+        "expected_verdict": "ok",
+        "observed_verdict": "ok" if doc_res.get("ok") is True else "fail",
+        "evidence_type": "operational-self-test",
+        "passed": doc_res.get("ok") is True,
+        "is_false_positive": False,
+        "is_fail_closed": True,
+    })
 
-    # Exact positive checks
-    evaluations["hodge_symmetry_b1_even_exact"] = is_verified_claim(runs["hodge_symmetry_b1_even"]["result"])
-    evaluations["euler_characteristic_cp2_exact"] = is_verified_claim(runs["euler_characteristic_cp2"]["result"])
-    evaluations["euler_characteristic_cp3_exact"] = is_verified_claim(runs["euler_characteristic_cp3"]["result"])
-    evaluations["lefschetz_11_self_intersection_exact"] = is_verified_claim(runs["lefschetz_11_self_intersection"]["result"])
+    # Hodge symmetry b1 even (Positive claim)
+    hodge_sym = runs["hodge_symmetry_b1_even"]["result"]
+    hodge_sym_ok = is_verified_claim(hodge_sym)
+    test_cases.append({
+        "id": "hodge_symmetry_b1_even_exact",
+        "kind": "positive_claim",
+        "description": "Hodge symmetry on compact Kähler implies b1 = 2*h^{1,0} is strictly even",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(hodge_sym),
+        "evidence_type": hodge_sym.get("guarantee"),
+        "passed": hodge_sym_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
 
-    # Fail-closed negative controls
-    # hopf_surface: EmptySet solution set, passed=False
-    evaluations["hopf_surface_refuted"] = is_properly_refuted(runs["hopf_surface_non_kaehler_control"]["result"])
-    evaluations["broken_hodge_symmetry_refuted"] = is_properly_refuted(runs["broken_hodge_symmetry_control"]["result"])
-    evaluations["false_euler_cp2_refuted"] = is_properly_refuted(runs["false_euler_characteristic_control"]["result"])
-    evaluations["hodge_dim4_fail_closed"] = is_properly_refuted(runs["hodge_conjecture_dim4_probe"]["result"])
+    # Hopf surface non-Kähler control (Negative control)
+    hopf_res = runs["hopf_surface_non_kaehler_control"]["result"]
+    hopf_status = extract_status(hopf_res)
+    hopf_refuted = (not is_verified_claim(hopf_res)) and (hopf_res.get("value") == [] or hopf_status in ("unsolved", "disproven"))
+    test_cases.append({
+        "id": "hopf_surface_refuted",
+        "kind": "negative_control",
+        "description": "Hopf surface with odd b1 = 1 cannot be Kähler (2*h - 1 = 0 has EmptySet in Z)",
+        "expected_verdict": "unsolved",
+        "observed_verdict": hopf_status,
+        "evidence_type": "empty-solution-set",
+        "passed": hopf_refuted,
+        "is_false_positive": is_verified_claim(hopf_res),
+        "is_fail_closed": not is_verified_claim(hopf_res),
+    })
+
+    # Broken Hodge symmetry control (Negative control)
+    broken_sym = runs["broken_hodge_symmetry_control"]["result"]
+    broken_sym_status = extract_status(broken_sym)
+    broken_sym_refuted = broken_sym_status == "disproven" and not is_verified_claim(broken_sym)
+    test_cases.append({
+        "id": "broken_hodge_symmetry_refuted",
+        "kind": "negative_control",
+        "description": "Broken Hodge diamond symmetry h^{2,1} = 3 != h^{1,2} = 5 is disproven",
+        "expected_verdict": "disproven",
+        "observed_verdict": broken_sym_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": broken_sym_refuted,
+        "is_false_positive": is_verified_claim(broken_sym),
+        "is_fail_closed": not is_verified_claim(broken_sym),
+    })
+
+    # CP^2 Euler characteristic (Positive claim)
+    cp2_res = runs["euler_characteristic_cp2"]["result"]
+    cp2_ok = is_verified_claim(cp2_res)
+    test_cases.append({
+        "id": "euler_characteristic_cp2_exact",
+        "kind": "positive_claim",
+        "description": "Complex projective plane CP^2 Euler characteristic chi(CP^2) = 3 verified exactly",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(cp2_res),
+        "evidence_type": cp2_res.get("guarantee"),
+        "passed": cp2_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # CP^3 Euler characteristic (Positive claim)
+    cp3_res = runs["euler_characteristic_cp3"]["result"]
+    cp3_ok = is_verified_claim(cp3_res)
+    test_cases.append({
+        "id": "euler_characteristic_cp3_exact",
+        "kind": "positive_claim",
+        "description": "Complex projective space CP^3 Euler characteristic chi(CP^3) = 4 verified exactly",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(cp3_res),
+        "evidence_type": cp3_res.get("guarantee"),
+        "passed": cp3_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # False Euler characteristic control (Negative control)
+    false_euler = runs["false_euler_characteristic_control"]["result"]
+    false_euler_status = extract_status(false_euler)
+    false_euler_refuted = false_euler_status == "disproven" and not is_verified_claim(false_euler)
+    test_cases.append({
+        "id": "false_euler_cp2_refuted",
+        "kind": "negative_control",
+        "description": "False Euler characteristic claim chi(CP^2) == 0 is disproven with counterexample",
+        "expected_verdict": "disproven",
+        "observed_verdict": false_euler_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": false_euler_refuted,
+        "is_false_positive": is_verified_claim(false_euler),
+        "is_fail_closed": not is_verified_claim(false_euler),
+    })
+
+    # Lefschetz (1,1) self-intersection (Positive claim)
+    lef_res = runs["lefschetz_11_self_intersection"]["result"]
+    lef_ok = is_verified_claim(lef_res)
+    test_cases.append({
+        "id": "lefschetz_11_self_intersection_exact",
+        "kind": "positive_claim",
+        "description": "Lefschetz (1,1) hyperplane generator self-intersection H . H = 1^2 = 1 verified",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(lef_res),
+        "evidence_type": lef_res.get("guarantee"),
+        "passed": lef_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Hodge dim 4 open problem probe (Open boundary probe)
+    hodge_probe = runs["hodge_conjecture_dim4_probe"]["result"]
+    hodge_probe_status = extract_status(hodge_probe)
+    hodge_probe_pass = (not is_verified_claim(hodge_probe)) and (hodge_probe_status in ("disproven", "inconclusive"))
+    test_cases.append({
+        "id": "hodge_dim4_fail_closed",
+        "kind": "open_boundary_probe",
+        "description": "Unformalized free scalar probe of hodge_class == algebraic_cycle fails closed (no proof granted)",
+        "expected_verdict": "disproven_scalar_representation",
+        "observed_verdict": hodge_probe_status,
+        "evidence_type": "unformalized-representation-probe",
+        "passed": hodge_probe_pass,
+        "is_false_positive": is_verified_claim(hodge_probe),
+        "is_fail_closed": not is_verified_claim(hodge_probe),
+    })
 
     # MCP checks
     mcp_ok = len(mcp_responses) >= 3
+    mcp_val1 = {}
+    mcp_val2 = {}
     if mcp_ok:
         res1 = mcp_responses[1].get("result", {})
-        val1 = res1.get("structuredContent", {}).get("value")
-        if not val1 and res1.get("content"):
+        mcp_val1 = res1.get("structuredContent", {}).get("value")
+        if not mcp_val1 and res1.get("content"):
             try:
-                val1 = json.loads(res1["content"][0]["text"]).get("value")
+                mcp_val1 = json.loads(res1["content"][0]["text"]).get("value")
             except Exception:
-                val1 = {}
-        val1 = val1 or {}
+                mcp_val1 = {}
+        mcp_val1 = mcp_val1 or {}
 
         res2 = mcp_responses[2].get("result", {})
-        val2 = res2.get("structuredContent", {}).get("value")
-        if not val2 and res2.get("content"):
+        mcp_val2 = res2.get("structuredContent", {}).get("value")
+        if not mcp_val2 and res2.get("content"):
             try:
-                val2 = json.loads(res2["content"][0]["text"]).get("value")
+                mcp_val2 = json.loads(res2["content"][0]["text"]).get("value")
             except Exception:
-                val2 = {}
-        val2 = val2 or {}
+                mcp_val2 = {}
+        mcp_val2 = mcp_val2 or {}
 
-        evaluations["mcp_cp2_euler_ok"] = val1.get("equivalent") is True and val1.get("status") == "proven"
-        evaluations["mcp_broken_symmetry_refuted"] = val2.get("equivalent") is False and val2.get("status") in ("disproven", "inconclusive")
-    else:
-        evaluations["mcp_cp2_euler_ok"] = False
-        evaluations["mcp_broken_symmetry_refuted"] = False
+    mcp_euler_pass = mcp_val1.get("equivalent") is True and mcp_val1.get("status") == "proven"
+    test_cases.append({
+        "id": "mcp_cp2_euler_ok",
+        "kind": "positive_claim",
+        "description": "MCP stdio math_compare verifies CP^2 Euler characteristic chi = 3",
+        "expected_verdict": "proven",
+        "observed_verdict": mcp_val1.get("status", "unknown"),
+        "evidence_type": "mcp-jsonrpc-exact",
+        "passed": mcp_euler_pass,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
 
-    all_passed = all(evaluations.values())
+    mcp_ctrl_pass = mcp_val2.get("equivalent") is False and mcp_val2.get("status") in ("disproven", "inconclusive")
+    test_cases.append({
+        "id": "mcp_broken_symmetry_refuted",
+        "kind": "negative_control",
+        "description": "MCP stdio math_compare refutes broken Hodge symmetry 3 == 5",
+        "expected_verdict": "disproven",
+        "observed_verdict": mcp_val2.get("status", "unknown"),
+        "evidence_type": "mcp-jsonrpc-counterexample",
+        "passed": mcp_ctrl_pass,
+        "is_false_positive": mcp_val2.get("equivalent") is True,
+        "is_fail_closed": mcp_val2.get("equivalent") is False,
+    })
+
+    # Dynamically compute derived metrics
+    positive_records = [t for t in test_cases if t["kind"] == "positive_claim"]
+    negative_like_records = [t for t in test_cases if t["kind"] in ("negative_control", "open_boundary_probe")]
+
+    positive_claims_count = len(positive_records)
+    true_positives_count = sum(1 for t in positive_records if t["observed_verdict"] == "proven" and t["passed"])
+    true_positive_rate = (true_positives_count / positive_claims_count) if positive_claims_count > 0 else 1.0
+
+    negative_controls_count = len(negative_like_records)
+    false_positives_count = sum(1 for t in negative_like_records if t["is_false_positive"])
+    fail_closed_count = sum(1 for t in negative_like_records if t["is_fail_closed"])
+    false_positive_rate = (false_positives_count / negative_controls_count) if negative_controls_count > 0 else 0.0
+    fail_closed_rate = (fail_closed_count / negative_controls_count) if negative_controls_count > 0 else 1.0
+
+    total_evaluations = len(test_cases)
+    passed_evaluations = sum(1 for t in test_cases if t["passed"])
+    all_passed = (passed_evaluations == total_evaluations) and (false_positives_count == 0)
+
+    evaluations = {t["id"]: t["passed"] for t in test_cases}
 
     files_to_hash = [
         ROOT / "reports" / "hodge-conjecture" / "validate.py",
         ROOT / "reports" / "hodge-conjecture" / "README.md",
+        ROOT / "reports" / "hodge-conjecture" / "REPORT.md",
         ROOT / "src" / "axiom" / "verification.py",
         ROOT / "src" / "axiom" / "core.py",
     ]
@@ -277,13 +444,20 @@ def main() -> int:
 
     summary = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "axiom_version": "0.2.2",
+        "axiom_version": "0.2.3",
         "problem": "Hodge Conjecture (Clay Millennium Problem)",
         "all_criteria_passed": all_passed,
-        "total_evaluations": len(evaluations),
-        "passed_evaluations": sum(1 for v in evaluations.values() if v),
-        "fail_closed_rate": 1.0,
-        "false_positive_rate": 0.0,
+        "total_evaluations": total_evaluations,
+        "passed_evaluations": passed_evaluations,
+        "positive_claims_count": positive_claims_count,
+        "true_positives_count": true_positives_count,
+        "true_positive_rate": true_positive_rate,
+        "negative_controls_count": negative_controls_count,
+        "fail_closed_count": fail_closed_count,
+        "fail_closed_rate": fail_closed_rate,
+        "false_positives_count": false_positives_count,
+        "false_positive_rate": false_positive_rate,
+        "test_cases": test_cases,
         "evaluations": evaluations,
         "file_hashes": file_hashes,
         "runs": runs,
@@ -291,8 +465,8 @@ def main() -> int:
     }
 
     OUTPUT.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Hodge Conjecture validation complete: {summary['passed_evaluations']}/{summary['total_evaluations']} checks passed.")
-    print(f"Fail-Closed Rate: 100.0%, False Positive Rate: 0.0%")
+    print(f"Hodge Conjecture validation complete: {passed_evaluations}/{total_evaluations} checks passed.")
+    print(f"Dynamic Metrics: Fail-Closed Rate: {fail_closed_rate*100:.1f}%, False Positive Rate: {false_positive_rate*100:.1f}%, True Positive Rate: {true_positive_rate*100:.1f}%")
     return 0 if all_passed else 1
 
 

@@ -2,46 +2,54 @@
   "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
   "problem": "birch-and-swinnerton-dyer",
   "title": "Conjectura de Birch e Swinnerton-Dyer",
-  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/05/birchswin.pdf",
-  "clay_status": "Active (Unsolved)",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/06/birchswin.pdf",
+  "clay_status": "Active (Under Evaluation since Sep 2026)",
   "maturity_level": "L2",
   "claims": [
     {
-      "statement": "Invariantes aritméticos de curvas elípticas sobre Q e F_p, discriminantes de Weierstrass, pontos de torção e pontos de ordem infinita",
-      "scope": "Curva E1 (posto 0), curva de número congruente E5 (posto 1), pontos geradores P=(-4, 6) e duplicado 2P, e cotas de Hasse",
-      "assumptions": ["Delta != 0 para curvas suaves"]
+      "statement": "Discriminante de Weierstrass, pontos de torção de ordem 2, pontos racionais de ordem infinita em curvas congruentes, cotas de Hasse e sonda fail-closed do posto global",
+      "scope": "Curvas elípticas E1 e E5 sobre Q e F_p, aritmética de pontos de Mordell-Weil e sonda da equação de posto de BSD",
+      "assumptions": ["Delta != 0"]
     }
   ],
   "evidence": {
     "symbolic": [
-      "Discriminante Delta(E1) = 64 (exact-symbolic)",
-      "Discriminante Delta(E5) = 1000000 (exact-symbolic)",
-      "Discriminante nodal Delta = 0 verificado (exact-symbolic)",
-      "Raízes de torção de ordem 2: x in {-1, 0, 1} (exact-symbolic)",
-      "Ponto racional P=(-4, 6) em E5 verificado (exact-symbolic)",
-      "Ponto duplicado 2P=(1681/144, -62279/1728) verificado (exact-symbolic)",
-      "Traço de Frobenius a_3 = 0 em F_3 (exact-symbolic)"
+      "Discriminante de E1 Delta = 64 comprovado (exact-symbolic)",
+      "Discriminante de E5 Delta = 1000000 comprovado (exact-symbolic)",
+      "Discriminante nulo da cúbica nodal comprovado (exact-symbolic)",
+      "Raízes de torção de ordem 2 em E1 comprovadas (exact-symbolic)",
+      "Ponto racional P = (-4, 6) em E5 verificado (verified-substitution)",
+      "Ponto duplicado 2P em E5 comprovado (exact-symbolic)",
+      "Traço de Frobenius a3 = 0 em E1/F3 comprovado (exact-symbolic)"
     ],
     "numerical": [
-      "Cota de Hasse |a_5| <= 2*sqrt(5) verificada numericamente"
+      "Cota de Hasse para p=5 verificada numericamente com resíduo positivo (numerical-approximation)"
     ],
     "formal": [],
     "counterexamples": [
-      "Curva nodal com discriminante espúrio 64 refutada",
-      "Ponto espúrio Q=(-4, 5) fora da curva refutado com resíduo 11",
-      "Violação fictícia de Hasse a_5=10 refutada"
+      "Falsa suavidade da curva nodal refutada via contraexemplo",
+      "Falso ponto Q = (-4, 5) em E5 refutado via falsificação de resíduo",
+      "Violação impossível da cota de Hasse refutada via contraexemplo"
+    ],
+    "open_boundary_probes": [
+      "Equação analítica geral do posto de BSD (recusa fail-closed, sem computação espúria da função L)"
     ]
   },
   "verification": {
     "result": "inconclusive",
-    "passed_criteria": 15,
-    "total_criteria": 15,
+    "passed_criteria": 14,
+    "total_criteria": 14,
+    "positive_claims_count": 8,
+    "true_positives_count": 8,
+    "negative_controls_count": 5,
+    "fail_closed_count": 5,
     "fail_closed_rate": 1.0,
+    "false_positives_count": 0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/birch-and-swinnerton-dyer/validate.py",
     "command": "python reports/birch-and-swinnerton-dyer/validate.py",
     "evidence_file": "reports/birch-and-swinnerton-dyer/validation.json",

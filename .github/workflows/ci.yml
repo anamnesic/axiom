@@ -28,6 +28,13 @@ jobs:
         run: python -m axiom.cli doctor
       - name: Run verification benchmarks
         run: python benchmarks/run_benchmarks.py
+      - name: Run Millennium Research Bench
+        run: python benchmarks/millennium/run_millennium_bench.py
+      - name: Upload Millennium Scorecard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: millennium-scorecard-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: benchmarks/millennium/scorecard.json
 
   formal-lean:
     runs-on: ubuntu-latest

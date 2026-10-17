@@ -2,43 +2,50 @@
   "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
   "problem": "yang-mills-mass-gap",
   "title": "Yang-Mills e o Gap de Massa",
-  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/05/yangmills.pdf",
-  "clay_status": "Active (Unsolved)",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/06/yangmills.pdf",
+  "clay_status": "Active (Under Evaluation since Sep 2026)",
   "maturity_level": "L2",
   "claims": [
     {
-      "statement": "Estrutura algébrica da teoria de gauge su(2), invariância geométrica de Bianchi e ação do instanton BPST",
-      "scope": "Identidade de Jacobi para geradores de gauge, tensor de curvatura de Yang-Mills, ação topológica euclidiana S=8*pi^2/g^2 e dispersão não-massiva abeliana",
-      "assumptions": ["g > 0", "T3 != 0"]
+      "statement": "Estrutura algébrica de Lie su(2), identidade de Bianchi em teorias de calibre, ação do instanton BPST e fotons não-massivos em Maxwell",
+      "scope": "Álgebra su(2), instanton em R^4, teoria de Maxwell U(1) e sonda de fronteira de representação escalar do gap de massa",
+      "assumptions": ["g > 0", "T3 != 0", "k:integer"]
     }
   ],
   "evidence": {
     "symbolic": [
-      "Identidade de Jacobi comprovada algebricamente (exact-symbolic)",
-      "Cancelamento da identidade de Bianchi exterior (exact-symbolic)",
-      "Ação do instanton BPST sob acoplamento g > 0 (exact-symbolic)",
-      "Fóton abeliano de Maxwell não-massivo (exact-symbolic)"
+      "Identidade de Jacobi em su(2) comprovada (exact-symbolic)",
+      "Identidade de Bianchi exterior comprovada (exact-symbolic)",
+      "Ação euclidiana do instanton BPST S = 8*pi^2/g^2 sob g > 0 (exact-symbolic)",
+      "Relação de dispersão de Maxwell com foton não-massivo 0*c^2 == 0 (exact-symbolic)"
     ],
     "numerical": [],
     "formal": [],
     "counterexamples": [
-      "Comutador abeliano espúrio em su(2) refutado via contraexemplo relacional",
-      "Quebra da identidade de Bianchi refutada",
-      "Carga topológica fracionária k=1/2 na 4-esfera refutada (EmptySet em Z)",
-      "Fóton massivo espúrio refutado",
-      "Sonda incondicional do gap quântico recusada fail-closed"
+      "Afirmação de su(2) abeliano sob T3 != 0 refutada via contraexemplo",
+      "Identidade de Bianchi violada refutada via contraexemplo",
+      "Carga topológica fracionária k = 1/2 refutada (conjunto vazio de inteiros)",
+      "Afirmação de foton massivo em Maxwell livre refutada via contraexemplo"
+    ],
+    "open_boundary_probes": [
+      "Sonda de representação escalar livre Delta_YM == 0 (recusa fail-closed, sem prova de anulação do gap quântico)"
     ]
   },
   "verification": {
     "result": "inconclusive",
     "passed_criteria": 12,
     "total_criteria": 12,
+    "positive_claims_count": 5,
+    "true_positives_count": 5,
+    "negative_controls_count": 6,
+    "fail_closed_count": 6,
     "fail_closed_rate": 1.0,
+    "false_positives_count": 0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/yang-mills-mass-gap/validate.py",
     "command": "python reports/yang-mills-mass-gap/validate.py",
     "evidence_file": "reports/yang-mills-mass-gap/validation.json",

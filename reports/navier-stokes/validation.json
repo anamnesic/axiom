@@ -1,32 +1,220 @@
 {
-  "timestamp_utc": "2026-10-17T19:25:25.487758+00:00",
-  "axiom_version": "0.2.2",
+  "timestamp_utc": "2026-10-17T20:38:04.569700+00:00",
+  "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
-  "total_evaluations": 13,
-  "passed_evaluations": 13,
+  "total_evaluations": 16,
+  "passed_evaluations": 16,
+  "positive_claims_count": 9,
+  "true_positives_count": 9,
+  "true_positive_rate": 1.0,
+  "negative_controls_count": 6,
+  "fail_closed_count": 6,
   "fail_closed_rate": 1.0,
+  "false_positives_count": 0,
   "false_positive_rate": 0.0,
+  "test_cases": [
+    {
+      "id": "doctor_healthy",
+      "kind": "operational_check",
+      "description": "AXIOM environment doctor self-test passes",
+      "expected_verdict": "ok",
+      "observed_verdict": "ok",
+      "evidence_type": "operational-self-test",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "taylor_green_div_exact",
+      "kind": "positive_claim",
+      "description": "Taylor-Green velocity field divergence is identically zero (incompressible)",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "non_solenoidal_refuted",
+      "kind": "negative_control",
+      "description": "Non-solenoidal field u = (x^2, y^2) divergence claim 2x+2y == 0 is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "momentum_x_balance_exact",
+      "kind": "positive_claim",
+      "description": "Exact Navier-Stokes momentum residual for Taylor-Green cancels to 0",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "viscosity_mismatch_refuted",
+      "kind": "negative_control",
+      "description": "Momentum balance with mismatched viscosity coefficient leaves non-zero residual",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "ke_integral_x_pi",
+      "kind": "positive_claim",
+      "description": "Exact definite integral int_0^{2pi} sin^2(x) dx = pi",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "ke_integral_y_pi",
+      "kind": "positive_claim",
+      "description": "Exact definite integral int_0^{2pi} cos^2(y) dy = pi",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "ke_time_derivative_exact",
+      "kind": "positive_claim",
+      "description": "Time derivative d/dt [ pi^2 * exp(-4*nu*t) ] = -4*nu*pi^2*exp(-4*nu*t)",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "energy_dissipation_exact",
+      "kind": "positive_claim",
+      "description": "Kinetic energy dissipation identity dE/dt + D(t) == 0 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "energy_conservation_refuted",
+      "kind": "negative_control",
+      "description": "Energy conservation dE/dt = 0 under nu > 0 is disproven with counterexample",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "pressure_poisson_exact",
+      "kind": "positive_claim",
+      "description": "Pressure Poisson equation Laplacian(p) + sum(d u_i / dx_j * d u_j / dx_i) == 0",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "unsolvable_navier_stokes_fail_closed",
+      "kind": "open_boundary_probe",
+      "description": "General non-linear Navier-Stokes differential equation fails closed (unsolved/unsupported)",
+      "expected_verdict": "unsolved",
+      "observed_verdict": "unsolved",
+      "evidence_type": "unsupported-open-problem",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "poiseuille_exact",
+      "kind": "positive_claim",
+      "description": "Poiseuille steady laminar momentum balance holds under mu > 0",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "poiseuille_false_bc_refuted",
+      "kind": "negative_control",
+      "description": "Poiseuille false no-slip boundary violation is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "mcp_exact_div_ok",
+      "kind": "positive_claim",
+      "description": "MCP stdio math_compare verifies Taylor-Green divergence cancellation",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "mcp-jsonrpc-exact",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "mcp_negative_control_refuted",
+      "kind": "negative_control",
+      "description": "MCP stdio math_compare refutes non-solenoidal field claim",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "mcp-jsonrpc-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    }
+  ],
   "evaluations": {
     "doctor_healthy": true,
     "taylor_green_div_exact": true,
-    "momentum_x_balance_exact": true,
-    "energy_dissipation_exact": true,
-    "pressure_poisson_exact": true,
-    "poiseuille_exact": true,
     "non_solenoidal_refuted": true,
+    "momentum_x_balance_exact": true,
     "viscosity_mismatch_refuted": true,
+    "ke_integral_x_pi": true,
+    "ke_integral_y_pi": true,
+    "ke_time_derivative_exact": true,
+    "energy_dissipation_exact": true,
     "energy_conservation_refuted": true,
-    "poiseuille_false_bc_refuted": true,
+    "pressure_poisson_exact": true,
     "unsolvable_navier_stokes_fail_closed": true,
+    "poiseuille_exact": true,
+    "poiseuille_false_bc_refuted": true,
     "mcp_exact_div_ok": true,
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "11ccebbbcbb150bd2065c4e0c0dd876b3a8c8285ccb2c721c278a81b532cff21",
-    "reports/navier-stokes/README.md": "fe9557ce7fa57743c7feb2432d5dd43b94a78525ea9eea63c39207456a48412f",
+    "reports/navier-stokes/validate.py": "59c9cb3ff814e0c3f01721bb2cd86ee7c2a34423dd9adf597ca67c83beaad199",
+    "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
+    "reports/navier-stokes/REPORT.md": "cbe9545b2ddc4c467aa2c0dc1969a264843f5bdd2c6982252aa3aa9b4010ca28",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c"
   },
   "runs": {
     "doctor": {
@@ -376,13 +564,150 @@
         }
       }
     },
+    "kinetic_energy_integral_x": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "sin(x)^2",
+        "--variable",
+        "x",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "sin(x)^2",
+        "ok": true,
+        "value": "pi",
+        "value_str": "pi",
+        "latex": "\\pi",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from 0 to 2*pi of sin(x)**2",
+            "-> pi"
+          ],
+          "reproducible_with": "axiom integrate \"sin(x)^2\" --variable x --from 0 --to 2*pi"
+        },
+        "verification": {
+          "kind": "ftc-antiderivative-check",
+          "passed": true,
+          "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == pi (quadrature rel error 7.59e-17)",
+          "checks": 12,
+          "max_error": 7.590501687441757e-17
+        }
+      }
+    },
+    "kinetic_energy_integral_y": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "cos(y)^2",
+        "--variable",
+        "y",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "cos(y)^2",
+        "ok": true,
+        "value": "pi",
+        "value_str": "pi",
+        "latex": "\\pi",
+        "variables": [
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from 0 to 2*pi of cos(y)**2",
+            "-> pi"
+          ],
+          "reproducible_with": "axiom integrate \"cos(y)^2\" --variable y --from 0 --to 2*pi"
+        },
+        "verification": {
+          "kind": "ftc-antiderivative-check",
+          "passed": true,
+          "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == pi (quadrature rel error 7.59e-17)",
+          "checks": 12,
+          "max_error": 7.590501687441757e-17
+        }
+      }
+    },
+    "kinetic_energy_time_derivative": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "pi^2 * exp(-4*nu*t)",
+        "--variable",
+        "t",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "pi^2 * exp(-4*nu*t)",
+        "ok": true,
+        "value": "-4*pi**2*nu*exp(-4*nu*t)",
+        "value_str": "-4*pi**2*nu*exp(-4*nu*t)",
+        "latex": "- 4 \\pi^{2} \\nu e^{- 4 \\nu t}",
+        "variables": [
+          "t"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dt (1x) of pi**2*exp(-4*nu*t)",
+            "-> -4*pi**2*nu*exp(-4*nu*t)"
+          ],
+          "reproducible_with": "axiom differentiate \"pi^2 * exp(-4*nu*t)\" --variable t"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 1.31e-41)",
+          "checks": 6,
+          "max_error": 1.3054839543745994e-41
+        }
+      }
+    },
     "kinetic_energy_dissipation_balance": {
       "command": [
         "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
         "-m",
         "axiom.cli",
         "compare",
-        "-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t)",
+        "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)",
         "0",
         "--json"
       ],
@@ -390,7 +715,7 @@
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t) == 0",
+        "input": "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t) == 0",
         "ok": true,
         "value": {
           "status": "proven",
@@ -417,7 +742,7 @@
             "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
-          "reproducible_with": "axiom compare \"-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t)\" \"0\""
+          "reproducible_with": "axiom compare \"-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)\" \"0\""
         },
         "verification": {
           "kind": "symbolic-identity",
@@ -438,7 +763,7 @@
         "-m",
         "axiom.cli",
         "compare",
-        "-2*nu*pi^2*exp(-4*nu*t)",
+        "-4*nu*pi^2*exp(-4*nu*t)",
         "0",
         "-A",
         "nu>0, t>0",
@@ -448,22 +773,22 @@
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "-2*nu*pi^2*exp(-4*nu*t) == 0",
+        "input": "-4*nu*pi^2*exp(-4*nu*t) == 0",
         "ok": true,
         "value": {
           "status": "disproven",
           "equivalent": false,
           "consistent_with_samples": false,
-          "left": "-2*pi**2*nu*exp(-4*nu*t)",
+          "left": "-4*pi**2*nu*exp(-4*nu*t)",
           "right": "0",
-          "simplified_difference": "-2*pi**2*nu*exp(-4*nu*t)",
+          "simplified_difference": "-4*pi**2*nu*exp(-4*nu*t)",
           "counterexample": {
             "nu": "2",
             "t": "15/7"
           }
         },
         "value_str": "not equivalent (counterexample: {'nu': '2', 't': '15/7'})",
-        "latex": "- 2 \\pi^{2} \\nu e^{- 4 \\nu t} \\neq 0",
+        "latex": "- 4 \\pi^{2} \\nu e^{- 4 \\nu t} \\neq 0",
         "variables": [
           "nu",
           "t"
@@ -474,24 +799,24 @@
           "engine_version": "1.14.0",
           "method": "symbolic difference reduction + domain & multi-point sampling",
           "steps": [
-            "lhs = -2*pi**2*nu*exp(-4*nu*t)",
+            "lhs = -4*pi**2*nu*exp(-4*nu*t)",
             "rhs = 0",
             "status = disproven",
-            "simplify(lhs - rhs) -> -2*pi**2*nu*exp(-4*nu*t)",
+            "simplify(lhs - rhs) -> -4*pi**2*nu*exp(-4*nu*t)",
             "assumptions: {'nu': {'real': True, 'positive': True}, 't': {'real': True, 'positive': True}}",
             "Domain constraint(s): nu > 0, t > 0"
           ],
           "limitations": [
             "Domain constraint(s): nu > 0, t > 0"
           ],
-          "reproducible_with": "axiom compare \"-2*nu*pi^2*exp(-4*nu*t)\" \"0\" --assumptions \"nu>0, t>0\""
+          "reproducible_with": "axiom compare \"-4*nu*pi^2*exp(-4*nu*t)\" \"0\" --assumptions \"nu>0, t>0\""
         },
         "verification": {
           "kind": "counterexample-search",
           "passed": false,
-          "detail": "counterexample found at {'nu': '2', 't': '15/7'} (|diff| = 1.417e-06)",
+          "detail": "counterexample found at {'nu': '2', 't': '15/7'} (|diff| = 2.834e-06)",
           "checks": 1,
-          "max_error": 1.4168095498866357e-06,
+          "max_error": 2.8336190997732714e-06,
           "data": {
             "domain_constraints": [
               "nu > 0",

@@ -1,8 +1,9 @@
 """Reproduce the Navier-Stokes existence and smoothness analytical/numerical experiments in AXIOM.
 
 Scope: Exact 2D/3D Taylor-Green vortex solutions, incompressibility (divergence-free constraint),
-viscous momentum balance, kinetic energy dissipation identities, and fail-closed negative controls
-(interior blowup claims, non-solenoidal fields, and invalid viscosity coefficients).
+viscous momentum balance, dynamic kinetic energy integration and dissipation rate identities,
+and fail-closed negative controls (interior blowup claims, non-solenoidal fields, invalid viscosity coefficients,
+and open non-linear PDE boundary probes).
 This does NOT prove or disprove the Clay Millennium Navier-Stokes existence and smoothness problem.
 
 Run from repository root:
@@ -72,15 +73,18 @@ def is_verified_claim(result: dict) -> bool:
     )
 
 
-def is_properly_refuted(result: dict) -> bool:
-    """Fail-closed check: negative controls must NOT pass verification."""
+def extract_status(result: dict) -> str:
+    """Extract semantic verdict status from an AXIOM result."""
     if not result.get("ok"):
-        return True
+        return "unsolved" if result.get("error") else "error"
+    val = result.get("value")
+    if isinstance(val, dict) and "status" in val:
+        return val["status"]
+    if is_verified_claim(result):
+        return "proven"
     if result.get("guarantee") == "unverified":
-        verification = result.get("verification")
-        if verification is None or verification.get("passed") is False:
-            return True
-    return False
+        return "inconclusive"
+    return "unspecified"
 
 
 def main() -> int:
@@ -124,20 +128,53 @@ def main() -> int:
         "0",
     )
 
-    # 4. Kinetic Energy Dissipation Rate
-    # E(t) = (pi^2 / 2) * exp(-4*nu*t)
-    # dE/dt = -2 * nu * pi^2 * exp(-4*nu*t)
-    # Total dissipation D(t) = 2 * nu * pi^2 * exp(-4*nu*t)
-    # dE/dt + D(t) == 0
+    # 4. Kinetic Energy Dynamic Integration and Dissipation Rate
+    # Over periodic domain Omega = [0, 2*pi]^2:
+    # int_0^{2pi} sin(x)^2 dx = pi
+    runs["kinetic_energy_integral_x"] = cli(
+        "integrate",
+        "sin(x)^2",
+        "--variable",
+        "x",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+    )
+    # int_0^{2pi} cos(y)^2 dy = pi
+    runs["kinetic_energy_integral_y"] = cli(
+        "integrate",
+        "cos(y)^2",
+        "--variable",
+        "y",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+    )
+    # Therefore:
+    # int_Omega u^2 dx dy = pi * pi * exp(-4*nu*t) = pi^2 * exp(-4*nu*t)
+    # int_Omega v^2 dx dy = pi * pi * exp(-4*nu*t) = pi^2 * exp(-4*nu*t)
+    # int_Omega (u^2 + v^2) dx dy = 2 * pi^2 * exp(-4*nu*t)
+    # Total Kinetic Energy: E(t) = (1/2) * int (u^2 + v^2) = pi^2 * exp(-4*nu*t)  [NOT pi^2/2]
+    # Time derivative: dE/dt = d/dt [ pi^2 * exp(-4*nu*t) ] = -4 * nu * pi^2 * exp(-4*nu*t)
+    runs["kinetic_energy_time_derivative"] = cli(
+        "differentiate",
+        "pi^2 * exp(-4*nu*t)",
+        "--variable",
+        "t",
+    )
+    # Viscous dissipation: D(t) = nu * int_Omega |grad u|^2 dx dy = 4 * nu * pi^2 * exp(-4*nu*t)
+    # Balance identity: dE/dt + D(t) = -4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t) == 0
     runs["kinetic_energy_dissipation_balance"] = cli(
         "compare",
-        "-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t)",
+        "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)",
         "0",
     )
     # Negative control: Claiming energy is conserved (dE/dt = 0) with non-zero viscosity nu > 0
     runs["energy_conservation_false_claim"] = cli(
         "compare",
-        "-2*nu*pi^2*exp(-4*nu*t)",
+        "-4*nu*pi^2*exp(-4*nu*t)",
         "0",
         "-A",
         "nu>0, t>0",
@@ -153,8 +190,8 @@ def main() -> int:
         "0",
     )
 
-    # 6. Negative Control: 3D Navier-Stokes general closed-form solve attempt
-    # Non-linear PDE cannot be solved closed-form generally; AXIOM must fail-closed
+    # 6. Open Problem Boundary Probe: 3D Navier-Stokes general non-linear solve attempt
+    # Non-linear PDE cannot be solved closed-form generally; AXIOM must fail-closed (unsolved, no proof)
     runs["unsolvable_navier_stokes_ode_attempt"] = cli(
         "solve",
         "u*diff(u, x) - nu*diff(u, x, 2) = 0",
@@ -191,7 +228,7 @@ def main() -> int:
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "axiom-ns-validation", "version": "0.2.2"},
+                "clientInfo": {"name": "axiom-ns-validation", "version": "0.2.3"},
             },
         },
         {"jsonrpc": "2.0", "method": "notifications/initialized"},
@@ -243,57 +280,298 @@ def main() -> int:
         except Exception:
             pass
 
-    # Evaluate all assertions
-    evaluations = {}
+    # Build structured test case records with explicit epistemological taxonomy
+    test_cases = []
 
     # Doctor check
-    doctor_res = runs["doctor"]["result"]
-    evaluations["doctor_healthy"] = doctor_res.get("ok") is True
+    doc_res = runs["doctor"]["result"]
+    test_cases.append({
+        "id": "doctor_healthy",
+        "kind": "operational_check",
+        "description": "AXIOM environment doctor self-test passes",
+        "expected_verdict": "ok",
+        "observed_verdict": "ok" if doc_res.get("ok") is True else "fail",
+        "evidence_type": "operational-self-test",
+        "passed": doc_res.get("ok") is True,
+        "is_false_positive": False,
+        "is_fail_closed": True,
+    })
 
-    # Exact checks must pass with valid mathematical guarantee
-    evaluations["taylor_green_div_exact"] = is_verified_claim(runs["taylor_green_divergence"]["result"])
-    evaluations["momentum_x_balance_exact"] = is_verified_claim(runs["momentum_x_balance"]["result"])
-    evaluations["energy_dissipation_exact"] = is_verified_claim(runs["kinetic_energy_dissipation_balance"]["result"])
-    evaluations["pressure_poisson_exact"] = is_verified_claim(runs["pressure_poisson_identity"]["result"])
-    evaluations["poiseuille_exact"] = is_verified_claim(runs["poiseuille_momentum_balance"]["result"])
+    # Taylor-Green divergence (Positive claim)
+    tg_div = runs["taylor_green_divergence"]["result"]
+    tg_div_ok = is_verified_claim(tg_div)
+    test_cases.append({
+        "id": "taylor_green_div_exact",
+        "kind": "positive_claim",
+        "description": "Taylor-Green velocity field divergence is identically zero (incompressible)",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(tg_div),
+        "evidence_type": tg_div.get("guarantee"),
+        "passed": tg_div_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
 
-    # Negative controls must fail-closed (NEVER pass verification)
-    evaluations["non_solenoidal_refuted"] = is_properly_refuted(runs["non_solenoidal_divergence_control"]["result"])
-    evaluations["viscosity_mismatch_refuted"] = is_properly_refuted(runs["momentum_viscosity_mismatch_control"]["result"])
-    evaluations["energy_conservation_refuted"] = is_properly_refuted(runs["energy_conservation_false_claim"]["result"])
-    evaluations["poiseuille_false_bc_refuted"] = is_properly_refuted(runs["poiseuille_false_boundary_control"]["result"])
-    evaluations["unsolvable_navier_stokes_fail_closed"] = is_properly_refuted(runs["unsolvable_navier_stokes_ode_attempt"]["result"])
+    # Non-solenoidal divergence (Negative control)
+    ns_div = runs["non_solenoidal_divergence_control"]["result"]
+    ns_status = extract_status(ns_div)
+    ns_refuted = ns_status == "disproven" and not is_verified_claim(ns_div)
+    test_cases.append({
+        "id": "non_solenoidal_refuted",
+        "kind": "negative_control",
+        "description": "Non-solenoidal field u = (x^2, y^2) divergence claim 2x+2y == 0 is disproven",
+        "expected_verdict": "disproven",
+        "observed_verdict": ns_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": ns_refuted,
+        "is_false_positive": is_verified_claim(ns_div),
+        "is_fail_closed": not is_verified_claim(ns_div),
+    })
 
-    # MCP responses check
+    # Momentum balance X (Positive claim)
+    mom_x = runs["momentum_x_balance"]["result"]
+    mom_x_ok = is_verified_claim(mom_x)
+    test_cases.append({
+        "id": "momentum_x_balance_exact",
+        "kind": "positive_claim",
+        "description": "Exact Navier-Stokes momentum residual for Taylor-Green cancels to 0",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(mom_x),
+        "evidence_type": mom_x.get("guarantee"),
+        "passed": mom_x_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Viscosity mismatch control (Negative control)
+    visc_mismatch = runs["momentum_viscosity_mismatch_control"]["result"]
+    visc_status = extract_status(visc_mismatch)
+    visc_refuted = visc_status == "disproven" and not is_verified_claim(visc_mismatch)
+    test_cases.append({
+        "id": "viscosity_mismatch_refuted",
+        "kind": "negative_control",
+        "description": "Momentum balance with mismatched viscosity coefficient leaves non-zero residual",
+        "expected_verdict": "disproven",
+        "observed_verdict": visc_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": visc_refuted,
+        "is_false_positive": is_verified_claim(visc_mismatch),
+        "is_fail_closed": not is_verified_claim(visc_mismatch),
+    })
+
+    # Dynamic kinetic energy integration step X (Positive claim)
+    ke_x = runs["kinetic_energy_integral_x"]["result"]
+    ke_x_ok = is_verified_claim(ke_x) and ke_x.get("value") == "pi"
+    test_cases.append({
+        "id": "ke_integral_x_pi",
+        "kind": "positive_claim",
+        "description": "Exact definite integral int_0^{2pi} sin^2(x) dx = pi",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(ke_x),
+        "evidence_type": ke_x.get("guarantee"),
+        "passed": ke_x_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Dynamic kinetic energy integration step Y (Positive claim)
+    ke_y = runs["kinetic_energy_integral_y"]["result"]
+    ke_y_ok = is_verified_claim(ke_y) and ke_y.get("value") == "pi"
+    test_cases.append({
+        "id": "ke_integral_y_pi",
+        "kind": "positive_claim",
+        "description": "Exact definite integral int_0^{2pi} cos^2(y) dy = pi",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(ke_y),
+        "evidence_type": ke_y.get("guarantee"),
+        "passed": ke_y_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Kinetic energy time derivative (Positive claim)
+    ke_dt = runs["kinetic_energy_time_derivative"]["result"]
+    ke_dt_ok = is_verified_claim(ke_dt) and "-4*pi**2*nu*exp(-4*nu*t)" in ke_dt.get("value", "")
+    test_cases.append({
+        "id": "ke_time_derivative_exact",
+        "kind": "positive_claim",
+        "description": "Time derivative d/dt [ pi^2 * exp(-4*nu*t) ] = -4*nu*pi^2*exp(-4*nu*t)",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(ke_dt),
+        "evidence_type": ke_dt.get("guarantee"),
+        "passed": ke_dt_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Energy dissipation balance identity (Positive claim)
+    ke_bal = runs["kinetic_energy_dissipation_balance"]["result"]
+    ke_bal_ok = is_verified_claim(ke_bal)
+    test_cases.append({
+        "id": "energy_dissipation_exact",
+        "kind": "positive_claim",
+        "description": "Kinetic energy dissipation identity dE/dt + D(t) == 0 verified exactly",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(ke_bal),
+        "evidence_type": ke_bal.get("guarantee"),
+        "passed": ke_bal_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Energy conservation false claim (Negative control)
+    ke_cons = runs["energy_conservation_false_claim"]["result"]
+    ke_cons_status = extract_status(ke_cons)
+    ke_cons_refuted = ke_cons_status == "disproven" and not is_verified_claim(ke_cons)
+    test_cases.append({
+        "id": "energy_conservation_refuted",
+        "kind": "negative_control",
+        "description": "Energy conservation dE/dt = 0 under nu > 0 is disproven with counterexample",
+        "expected_verdict": "disproven",
+        "observed_verdict": ke_cons_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": ke_cons_refuted,
+        "is_false_positive": is_verified_claim(ke_cons),
+        "is_fail_closed": not is_verified_claim(ke_cons),
+    })
+
+    # Pressure Poisson identity (Positive claim)
+    pres_p = runs["pressure_poisson_identity"]["result"]
+    pres_p_ok = is_verified_claim(pres_p)
+    test_cases.append({
+        "id": "pressure_poisson_exact",
+        "kind": "positive_claim",
+        "description": "Pressure Poisson equation Laplacian(p) + sum(d u_i / dx_j * d u_j / dx_i) == 0",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(pres_p),
+        "evidence_type": pres_p.get("guarantee"),
+        "passed": pres_p_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Open problem non-linear PDE solve probe (Open boundary probe)
+    pde_solve = runs["unsolvable_navier_stokes_ode_attempt"]["result"]
+    pde_status = extract_status(pde_solve)
+    pde_failed_closed = (not is_verified_claim(pde_solve)) and (pde_status in ("unsolved", "inconclusive", "error"))
+    test_cases.append({
+        "id": "unsolvable_navier_stokes_fail_closed",
+        "kind": "open_boundary_probe",
+        "description": "General non-linear Navier-Stokes differential equation fails closed (unsolved/unsupported)",
+        "expected_verdict": "unsolved",
+        "observed_verdict": pde_status,
+        "evidence_type": "unsupported-open-problem",
+        "passed": pde_failed_closed,
+        "is_false_positive": is_verified_claim(pde_solve),
+        "is_fail_closed": not is_verified_claim(pde_solve),
+    })
+
+    # Poiseuille momentum balance (Positive claim)
+    pois_bal = runs["poiseuille_momentum_balance"]["result"]
+    pois_bal_ok = is_verified_claim(pois_bal)
+    test_cases.append({
+        "id": "poiseuille_exact",
+        "kind": "positive_claim",
+        "description": "Poiseuille steady laminar momentum balance holds under mu > 0",
+        "expected_verdict": "proven",
+        "observed_verdict": extract_status(pois_bal),
+        "evidence_type": pois_bal.get("guarantee"),
+        "passed": pois_bal_ok,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
+
+    # Poiseuille false boundary control (Negative control)
+    pois_bc = runs["poiseuille_false_boundary_control"]["result"]
+    pois_bc_status = extract_status(pois_bc)
+    pois_bc_refuted = pois_bc_status == "disproven" and not is_verified_claim(pois_bc)
+    test_cases.append({
+        "id": "poiseuille_false_bc_refuted",
+        "kind": "negative_control",
+        "description": "Poiseuille false no-slip boundary violation is disproven",
+        "expected_verdict": "disproven",
+        "observed_verdict": pois_bc_status,
+        "evidence_type": "numerical-counterexample",
+        "passed": pois_bc_refuted,
+        "is_false_positive": is_verified_claim(pois_bc),
+        "is_fail_closed": not is_verified_claim(pois_bc),
+    })
+
+    # MCP checks
     mcp_ok = len(mcp_responses) >= 3
+    mcp_val1 = {}
+    mcp_val2 = {}
     if mcp_ok:
         res1 = mcp_responses[1].get("result", {})
-        val1 = res1.get("structuredContent", {}).get("value")
-        if not val1 and res1.get("content"):
+        mcp_val1 = res1.get("structuredContent", {}).get("value")
+        if not mcp_val1 and res1.get("content"):
             try:
-                val1 = json.loads(res1["content"][0]["text"]).get("value")
+                mcp_val1 = json.loads(res1["content"][0]["text"]).get("value")
             except Exception:
-                val1 = {}
-        val1 = val1 or {}
+                mcp_val1 = {}
+        mcp_val1 = mcp_val1 or {}
 
         res2 = mcp_responses[2].get("result", {})
-        val2 = res2.get("structuredContent", {}).get("value")
-        if not val2 and res2.get("content"):
+        mcp_val2 = res2.get("structuredContent", {}).get("value")
+        if not mcp_val2 and res2.get("content"):
             try:
-                val2 = json.loads(res2["content"][0]["text"]).get("value")
+                mcp_val2 = json.loads(res2["content"][0]["text"]).get("value")
             except Exception:
-                val2 = {}
-        val2 = val2 or {}
+                mcp_val2 = {}
+        mcp_val2 = mcp_val2 or {}
 
-        evaluations["mcp_exact_div_ok"] = val1.get("equivalent") is True and val1.get("status") == "proven"
-        evaluations["mcp_negative_control_refuted"] = val2.get("equivalent") is False and val2.get("status") in ("disproven", "inconclusive")
+    mcp_div_pass = mcp_val1.get("equivalent") is True and mcp_val1.get("status") == "proven"
+    test_cases.append({
+        "id": "mcp_exact_div_ok",
+        "kind": "positive_claim",
+        "description": "MCP stdio math_compare verifies Taylor-Green divergence cancellation",
+        "expected_verdict": "proven",
+        "observed_verdict": mcp_val1.get("status", "unknown"),
+        "evidence_type": "mcp-jsonrpc-exact",
+        "passed": mcp_div_pass,
+        "is_false_positive": False,
+        "is_fail_closed": False,
+    })
 
-    all_passed = all(evaluations.values())
+    mcp_ctrl_pass = mcp_val2.get("equivalent") is False and mcp_val2.get("status") in ("disproven", "inconclusive")
+    test_cases.append({
+        "id": "mcp_negative_control_refuted",
+        "kind": "negative_control",
+        "description": "MCP stdio math_compare refutes non-solenoidal field claim",
+        "expected_verdict": "disproven",
+        "observed_verdict": mcp_val2.get("status", "unknown"),
+        "evidence_type": "mcp-jsonrpc-counterexample",
+        "passed": mcp_ctrl_pass,
+        "is_false_positive": mcp_val2.get("equivalent") is True,
+        "is_fail_closed": mcp_val2.get("equivalent") is False,
+    })
+
+    # Dynamically compute derived metrics from test cases
+    positive_records = [t for t in test_cases if t["kind"] == "positive_claim"]
+    negative_like_records = [t for t in test_cases if t["kind"] in ("negative_control", "open_boundary_probe")]
+
+    positive_claims_count = len(positive_records)
+    true_positives_count = sum(1 for t in positive_records if t["observed_verdict"] == "proven" and t["passed"])
+    true_positive_rate = (true_positives_count / positive_claims_count) if positive_claims_count > 0 else 1.0
+
+    negative_controls_count = len(negative_like_records)
+    false_positives_count = sum(1 for t in negative_like_records if t["is_false_positive"])
+    fail_closed_count = sum(1 for t in negative_like_records if t["is_fail_closed"])
+    false_positive_rate = (false_positives_count / negative_controls_count) if negative_controls_count > 0 else 0.0
+    fail_closed_rate = (fail_closed_count / negative_controls_count) if negative_controls_count > 0 else 1.0
+
+    total_evaluations = len(test_cases)
+    passed_evaluations = sum(1 for t in test_cases if t["passed"])
+    all_passed = (passed_evaluations == total_evaluations) and (false_positives_count == 0)
+
+    # Legacy evaluations dictionary for backwards compatibility
+    evaluations = {t["id"]: t["passed"] for t in test_cases}
 
     # SHA256 of relevant files
     files_to_hash = [
         ROOT / "reports" / "navier-stokes" / "validate.py",
         ROOT / "reports" / "navier-stokes" / "README.md",
+        ROOT / "reports" / "navier-stokes" / "REPORT.md",
         ROOT / "src" / "axiom" / "verification.py",
         ROOT / "src" / "axiom" / "core.py",
     ]
@@ -304,13 +582,20 @@ def main() -> int:
 
     summary = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "axiom_version": "0.2.2",
+        "axiom_version": "0.2.3",
         "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
         "all_criteria_passed": all_passed,
-        "total_evaluations": len(evaluations),
-        "passed_evaluations": sum(1 for v in evaluations.values() if v),
-        "fail_closed_rate": 1.0,
-        "false_positive_rate": 0.0,
+        "total_evaluations": total_evaluations,
+        "passed_evaluations": passed_evaluations,
+        "positive_claims_count": positive_claims_count,
+        "true_positives_count": true_positives_count,
+        "true_positive_rate": true_positive_rate,
+        "negative_controls_count": negative_controls_count,
+        "fail_closed_count": fail_closed_count,
+        "fail_closed_rate": fail_closed_rate,
+        "false_positives_count": false_positives_count,
+        "false_positive_rate": false_positive_rate,
+        "test_cases": test_cases,
         "evaluations": evaluations,
         "file_hashes": file_hashes,
         "runs": runs,
@@ -318,8 +603,8 @@ def main() -> int:
     }
 
     OUTPUT.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Navier-Stokes validation complete: {summary['passed_evaluations']}/{summary['total_evaluations']} checks passed.")
-    print(f"Fail-Closed Rate: 100.0%, False Positive Rate: 0.0%")
+    print(f"Navier-Stokes validation complete: {passed_evaluations}/{total_evaluations} checks passed.")
+    print(f"Dynamic Metrics: Fail-Closed Rate: {fail_closed_rate*100:.1f}%, False Positive Rate: {false_positive_rate*100:.1f}%, True Positive Rate: {true_positive_rate*100:.1f}%")
     return 0 if all_passed else 1
 
 

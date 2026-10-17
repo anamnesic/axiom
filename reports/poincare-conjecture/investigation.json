@@ -23,22 +23,29 @@
     "numerical": [],
     "formal": [],
     "counterexamples": [
-      "Curvatura nula espúria em S^3 refutada com resíduo 6/R0^2",
-      "Quebra da proporcionalidade de Einstein refutada",
-      "Existência global eterna sem cirurgia refutada",
-      "Sonda de homeomorfismo abstrato desprovido de prova recusada fail-closed"
+      "Curvatura nula espúria em S^3 refutada com resíduo 6/R0^2 via contraexemplo",
+      "Quebra da proporcionalidade de Einstein refutada via contraexemplo",
+      "Existência global eterna sem cirurgia refutada via contraexemplo"
+    ],
+    "open_boundary_probes": [
+      "Sonda de representação escalar livre M_3manifold == S3_sphere (recusa fail-closed, sem prova de homeomorfismo abstrato)"
     ]
   },
   "verification": {
     "result": "proven_auxiliary_lemmas_literature_solved",
     "passed_criteria": 12,
     "total_criteria": 12,
+    "positive_claims_count": 6,
+    "true_positives_count": 6,
+    "negative_controls_count": 5,
+    "fail_closed_count": 5,
     "fail_closed_rate": 1.0,
+    "false_positives_count": 0,
     "false_positive_rate": 0.0,
     "independent_review": "literature_accepted"
   },
   "reproducibility": {
-    "engine_version": "0.2.2",
+    "engine_version": "0.2.3",
     "script": "reports/poincare-conjecture/validate.py",
     "command": "python reports/poincare-conjecture/validate.py",
     "evidence_file": "reports/poincare-conjecture/validation.json",

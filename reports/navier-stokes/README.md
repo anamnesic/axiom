@@ -2,7 +2,7 @@
 
 - **Registro:** 17 de outubro de 2026.
 - **Status matemático:** **em aberto**, conforme a [página oficial do Clay Mathematics Institute](https://www.claymath.org/millennium/navier-stokes-equation/).
-- **Status da investigação:** **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 13 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos).
+- **Status da investigação:** **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 16 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos, derivação dinâmica de $E(t) = \pi^2 e^{-4\nu t}$ e $D(t) = 4\nu \pi^2 e^{-4\nu t}$).
 - **Referência técnica oficial:** [Existence & Smoothness of the Navier-Stokes Equation (Charles L. Fefferman)](https://www.claymath.org/wp-content/uploads/2022/06/navierstokes.pdf).
 - **Objetivo da pasta:** reunir referências, formulação físico-matemática, lemas auxiliares e experimentos com soluções analíticas e identidades de energia.
 
@@ -54,27 +54,28 @@ O Clay Mathematics Institute divide a resolução do problema em quatro cenário
 
 ---
 
-## Roteiro Inicial de Investigação com AXIOM
+## Roteiro de Investigação com AXIOM
 
 1. **Soluções Exatas Clássicas e Vórtices**:
-   - Mapear soluções analíticas exatas conhecidas (ex.: Vórtice de Taylor-Green, fluxos de Beltrami onde $\mathbf{u} \times (\nabla \times \mathbf{u}) = 0$, escoamento de Poiseuille/Couette).
-   - Utilizar o AXIOM (`axiom.verify` / `axiom.diff` / `axiom.integrate`) para verificar formalmente que essas famílias de soluções satisfazem a equação de balanço de momento e a condição de incompressibilidade ($\nabla \cdot \mathbf{u} = 0$).
+   - Mapeamento e verificação formal do Vórtice de Taylor-Green e Escoamento de Poiseuille via AXIOM (`exact-symbolic`).
+   - Auditoria de divergente nulo $\nabla \cdot \mathbf{u} = 0$ e balanço de momento de Navier-Stokes.
 
-2. **Identidades Fundamentais e Balanço de Energia**:
-   - Verificar simbolicamente a identidade clássica de dissipação de energia cinética para soluções suaves com decaimento no infinito:
-     $$\frac{1}{2}\frac{d}{dt} \|\mathbf{u}\|_{L^2}^2 + \nu \|\nabla \mathbf{u}\|_{L^2}^2 = \int_{\mathbb{R}^3} \mathbf{f} \cdot \mathbf{u} \, dx$$
-   - Em caso não forçado ($\mathbf{f} = 0$), verificar monotonicidade da energia $E(t) \le E(0)$.
+2. **Identidades Fundamentais e Balanço de Energia Dinâmico**:
+   - Integração simbólica direta da energia cinética em $L^2$: $E(t) = \pi^2 e^{-4\nu t}$.
+   - Derivação analítica da taxa de decaimento $\frac{dE}{dt} = -4\nu \pi^2 e^{-4\nu t}$ e dissipação $D(t) = 4\nu \pi^2 e^{-4\nu t}$.
+   - Verificação simbólica da identidade fundamental $\frac{dE}{dt} + D(t) = 0$.
 
-3. **Critérios de Regularidade e Limites Conhecidos**:
-   - Documentar os critérios clássicos de Serrin, Leray e Beale-Kato-Majda (BKM): se a vorticidade $\boldsymbol{\omega} = \nabla \times \mathbf{u}$ satisfizer $\int_0^T \|\boldsymbol{\omega}(t)\|_{L^\infty} dt < \infty$, não há blowup em $t \in [0, T]$.
+3. **Controles Negativos & Sondas de Fronteira**:
+   - Refutação adversarial de conservação de energia sob $\nu > 0$, divergentes não-nulos e viscosidades incompatíveis.
+   - Sonda de fronteira perante resolução geral não-linear fechada (recusa fail-closed, preservando honestidade epistemológica).
 
 ---
 
 ## Evidências AXIOM
 
-Nenhum `MathResult` foi produzido para este problema neste registro inicial. Não há garantia nem resultado de verificação a atribuir.
+O conjunto de evidências e resultados executados está registrado em [REPORT.md](REPORT.md) e [validation.json](validation.json).
 
 > [!IMPORTANT]
-> A verificação de soluções particulares, fluxos 2D ou identidades locais no AXIOM não constitui prova do problema geral do Milênio para $3D$. Toda asserção deve carregar explicitamente seu domínio de validade e grau de garantia (`Guarantee`).
+> A verificação de soluções particulares, fluxos 2D ou identidades locais no AXIOM não constitui prova do problema geral do Milênio para $3D$. Toda asserção carrega explicitamente seu domínio de validade e grau de garantia (`Guarantee`).
 
 Aplicam-se as [orientações comuns de registro](../README.md#como-registrar-o-trabalho).

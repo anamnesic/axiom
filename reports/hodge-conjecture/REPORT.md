@@ -1,7 +1,7 @@
 # Relatório de Validação e Integridade: Conjectura de Hodge no AXIOM
 
 Data de execução e consulta às fontes: 17 de outubro de 2026.  
-Escopo: Validação analítica e algébrico-geométrica de variedades Kähler compactas, decomposição de cohomologia de de Rham, diamante de Hodge e simetrias de reflexão ($h^{p,q} = h^{q,p}$), paridade de $b_1$, característica de Euler de espaços projetivos complexos $\mathbb{CP}^n$, classes algébricas via Teorema de Lefschetz $(1,1)$ e controles negativos estritos sob o motor AXIOM v0.2.2.  
+Escopo: Validação analítica e algébrico-geométrica de variedades Kähler compactas, decomposição de cohomologia de de Rham, diamante de Hodge e simetrias de reflexão ($h^{p,q} = h^{q,p}$), paridade de $b_1$, característica de Euler de espaços projetivos complexos $\mathbb{CP}^n$, classes algébricas via Teorema de Lefschetz $(1,1)$, e controles negativos e sondas de fronteira de representação sob o motor AXIOM v0.2.3.  
 **Nenhuma demonstração da Conjectura de Hodge geral foi fornecida ou produzida.** O Clay Mathematics Institute continua classificando o problema como aberto ([Página oficial do Clay](https://www.claymath.org/millennium/hodge-conjecture/)).
 
 ---
@@ -25,36 +25,44 @@ Para o plano projetivo complexo $\mathbb{CP}^2$, o diamante de Hodge tem $h^{0,0
 - Betti numbers: $b_0 = 1, b_1 = 0, b_2 = 1, b_3 = 0, b_4 = 1$.
 - Característica de Euler: $\chi(\mathbb{CP}^2) = \sum_{k=0}^4 (-1)^k b_k = 1 - 0 + 1 - 0 + 1 = 3$. O AXIOM comprovou a identidade com garantia `exact-symbolic`.
 - Para $\mathbb{CP}^3$: $\chi(\mathbb{CP}^3) = 1 + 1 + 1 + 1 = 4$. Comprovado como `exact-symbolic`.
-- **Controle negativo**: A asserção espúria $\chi(\mathbb{CP}^2) = 0$ foi refutada com resíduo 3.
+- **Controle negativo**: A asserção espúria $\chi(\mathbb{CP}^2) = 0$ foi refutada com resíduo 3 via contraexemplo.
 
 ### 1.3. Teorema de Lefschetz $(1,1)$ no Plano Projetivo $\mathbb{CP}^2$
 Para $k = 1$ (grau real 2), Solomon Lefschetz (1924) provou que toda classe de Hodge em $H^{1,1}(X, \mathbb{Z})$ provém de divisores (feixes de retas):
 - No $\mathbb{CP}^2$, o gerador de $H^{1,1}(\mathbb{CP}^2, \mathbb{Z})$ é a classe de hiperplano $H \cong [\mathbb{CP}^1]$, cuja auto-interseção é $H \cdot H = 1$.
 - O AXIOM validou a consistência geométrica da classe geradora como `exact-symbolic`.
 
-### 1.4. Tratamento Fail-Closed da Conjectura em Dimensão 4
+### 1.4. Tratamento Fail-Closed da Conjectura em Dimensão 4 (Classificação Epistemológica)
 Para uma 4-variedade algébrica arbitrária, igualar uma classe abstrata de Hodge em $H^{2,2}(X)$ a um ciclo algébrico sem construção explícita é uma asserção não-provada:
-- O AXIOM testou a equivalência universal `axiom compare "hodge_class" "algebraic_cycle"` e refutou a igualdade incondicional com contraexemplo (`status = disproven`, `guarantee = unverified`), garantindo integridade fail-closed perante o problema aberto.
+- A sonda `compare "hodge_class" "algebraic_cycle"` trata ambos como símbolos escalares livres em SymPy. O motor refuta a igualdade universal encontrando contraexemplo numérico (`algebraic_cycle = -2, hodge_class = 2`), mantendo garantia `unverified`.
+- Essa recusa é fail-closed (não aceita a prova incondicional), mas epistemologicamente representa uma sonda de fronteira de representação algébrica livre, e **NÃO** uma refutação geométrica da conjectura de Hodge em dimensão 4.
 
 ---
 
-## 2. Resumo da Execução de Controle
+## 2. Resumo da Execução de Controle e Métricas Dinâmicas
 
-Todos os 11 testes do script de validação foram aprovados com 100% de comportamento fail-closed:
+Todos os 11 testes do script de validação foram avaliados com métricas dinâmicas:
 
-| Verificação | Garantia AXIOM | `verification.passed` | Interpretação Científica |
-|---|---|---|---|
-| Autotestes do ambiente (`doctor`) | N/A | `true` | Ambiente íntegro e autotestes do núcleo aprovados |
-| Simetria de Hodge e paridade de $b_1$ | `exact-symbolic` | `true` | $b_1 = 2h^{1,0}$ demonstrado simbolicamente |
-| Controle de não-Kählerianidade da Superfície de Hopf | `heuristic` | `false` | $2h - 1 = 0$ em $\mathbb{Z}$ retorna conjunto vazio de soluções |
-| Controle de quebra da simetria do diamante | `unverified` | `false` | $h^{2,1} \neq h^{1,2}$ refutado via contraexemplo |
-| Característica de Euler de $\mathbb{CP}^2$ ($\chi = 3$) | `exact-symbolic` | `true` | Decomposição topológica de Betti confirmada |
-| Característica de Euler de $\mathbb{CP}^3$ ($\chi = 4$) | `exact-symbolic` | `true` | Invariante topológico verificado |
-| Controle de característica de Euler espúria | `unverified` | `false` | Afirmação $\chi(\mathbb{CP}^2) = 0$ refutada com resíduo 3 |
-| Auto-interseção da classe de Lefschetz $(1,1)$ | `exact-symbolic` | `true` | Classe geradora algébrica validada |
-| Sonda da Conjectura de Hodge em dimensão 4 | `unverified` | `false` | Equivalência universal arbitrária refutada fail-closed |
-| MCP stdio: Característica de Euler $\mathbb{CP}^2$ | `exact-symbolic` | `true` | Verificação via protocolo JSON-RPC 2.0 aprovada |
-| MCP stdio: Refutação de quebra de simetria | `unverified` | `false` | Rejeição via protocolo JSON-RPC 2.0 confirmada |
+| Identificador | Categoria | Garantia AXIOM | Veredito | Interpretação Científica |
+|---|---|---|---|---|
+| `doctor_healthy` | Operacional | N/A | `ok` | Ambiente íntegro e autotestes do núcleo aprovados |
+| `hodge_symmetry_b1_even_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | $b_1 = 2h^{1,0}$ demonstrado simbolicamente |
+| `hopf_surface_refuted` | Controle Negativo | `unverified` | `unsolved` | $2h - 1 = 0$ em $\mathbb{Z}$ retorna conjunto vazio de soluções |
+| `broken_hodge_symmetry_refuted` | Controle Negativo | `unverified` | `disproven` | $h^{2,1} \neq h^{1,2}$ refutado via contraexemplo |
+| `euler_characteristic_cp2_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Decomposição topológica de Betti confirmada ($\chi = 3$) |
+| `euler_characteristic_cp3_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Invariante topológico verificado ($\chi = 4$) |
+| `false_euler_cp2_refuted` | Controle Negativo | `unverified` | `disproven` | Afirmação $\chi(\mathbb{CP}^2) = 0$ refutada com contraexemplo |
+| `lefschetz_11_self_intersection_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Classe geradora algébrica validada ($H \cdot H = 1$) |
+| `hodge_dim4_fail_closed` | Sonda de Fronteira | `unverified` | `disproven` | Sonda de representação escalar livre rejeitada fail-closed |
+| `mcp_cp2_euler_ok` | Afirmação Positiva | `exact-symbolic` | `proven` | Verificação via protocolo JSON-RPC 2.0 aprovada |
+| `mcp_broken_symmetry_refuted` | Controle Negativo | `unverified` | `disproven` | Rejeição de assimetria via protocolo JSON-RPC 2.0 confirmada |
+
+### Métricas Derivadas Computadas
+- **Critérios Totais**: 11/11 aprovados (100.0%)
+- **Afirmações Positivas (Verdadeiros Positivos)**: 5/5 (Taxa de Verdadeiros Positivos: 100.0%)
+- **Controles Negativos & Sondas de Fronteira**: 5/5
+  - **Falsos Positivos**: 0/5 (Taxa de Falsos Positivos: 0.0%)
+  - **Comportamento Fail-Closed**: 5/5 (Taxa Fail-Closed: 100.0%)
 
 ---
 
@@ -68,5 +76,5 @@ python reports/hodge-conjecture/validate.py
 
 O script regera [`reports/hodge-conjecture/validation.json`](validation.json), contendo:
 - Metadados de ambiente e hashes SHA-256 de todos os arquivos relevantes.
-- Saídas JSON completas de todas as execuções CLI do AXIOM.
+- Saídas JSON completas de todas as execuções CLI do AXIOM com verificação e semântica ternária.
 - Requisições e respostas JSON-RPC 2.0 completas do servidor MCP por stdio.

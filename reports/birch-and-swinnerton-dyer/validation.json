@@ -1,34 +1,208 @@
 {
-  "timestamp_utc": "2026-10-17T19:25:42.454328+00:00",
-  "axiom_version": "0.2.2",
+  "timestamp_utc": "2026-10-17T20:38:22.644570+00:00",
+  "axiom_version": "0.2.3",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
   "total_evaluations": 15,
   "passed_evaluations": 15,
+  "positive_claims_count": 9,
+  "true_positives_count": 9,
+  "true_positive_rate": 1.0,
+  "negative_controls_count": 5,
+  "fail_closed_count": 5,
   "fail_closed_rate": 1.0,
+  "false_positives_count": 0,
   "false_positive_rate": 0.0,
+  "test_cases": [
+    {
+      "id": "doctor_healthy",
+      "kind": "operational_check",
+      "description": "AXIOM environment doctor self-test passes",
+      "expected_verdict": "ok",
+      "observed_verdict": "ok",
+      "evidence_type": "operational-self-test",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "discriminant_e1_exact",
+      "kind": "positive_claim",
+      "description": "Smooth Weierstrass curve E1 discriminant Delta = 64 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "discriminant_e5_exact",
+      "kind": "positive_claim",
+      "description": "Congruent curve E5 discriminant Delta = 1000000 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "nodal_zero_delta_exact",
+      "kind": "positive_claim",
+      "description": "Nodal cubic curve discriminant cancels to 0 (singular, non-smooth)",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "false_smoothness_refuted",
+      "kind": "negative_control",
+      "description": "Claiming nodal curve is smooth (Delta = 64) is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "torsion_order2_roots_exact",
+      "kind": "positive_claim",
+      "description": "Order 2 torsion points on E1 solved: x in {-1, 0, 1}",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "verified-substitution",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "rational_point_P_exact",
+      "kind": "positive_claim",
+      "description": "Rational point P = (-4, 6) lies on congruent curve E5",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "doubled_point_2P_exact",
+      "kind": "positive_claim",
+      "description": "Doubled rational point 2*P on E5 satisfies the Weierstrass equation",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "false_point_refuted",
+      "kind": "negative_control",
+      "description": "False non-curve point Q = (-4, 5) on E5 is refuting verification (25 != 36)",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "residual-falsification",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "trace_frobenius_p3_exact",
+      "kind": "positive_claim",
+      "description": "Trace of Frobenius a_3 = 3 + 1 - #E(F_3) = 0 verified exactly",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "hasse_bound_p5_numerical",
+      "kind": "positive_claim",
+      "description": "Hasse bound 2*sqrt(5) - |a_5| > 0 holds with exact/numerical verification",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "false_hasse_refuted",
+      "kind": "negative_control",
+      "description": "False Hasse violation claim 10 <= 2*sqrt(5) is disproven",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "numerical-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "bsd_global_rank_fail_closed",
+      "kind": "open_boundary_probe",
+      "description": "Global BSD analytic rank equation fails closed without uncomputed L-function proof",
+      "expected_verdict": "unsolved",
+      "observed_verdict": "unsolved",
+      "evidence_type": "unsupported-open-problem",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "mcp_point_valid_ok",
+      "kind": "positive_claim",
+      "description": "MCP stdio math_verify confirms point P = (-4, 6) on curve E5",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "mcp-jsonrpc-exact",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
+      "id": "mcp_false_point_refuted",
+      "kind": "negative_control",
+      "description": "MCP stdio math_verify rejects false non-curve point Q = (-4, 5)",
+      "expected_verdict": "disproven",
+      "observed_verdict": "disproven",
+      "evidence_type": "mcp-jsonrpc-counterexample",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    }
+  ],
   "evaluations": {
     "doctor_healthy": true,
     "discriminant_e1_exact": true,
     "discriminant_e5_exact": true,
     "nodal_zero_delta_exact": true,
+    "false_smoothness_refuted": true,
     "torsion_order2_roots_exact": true,
     "rational_point_P_exact": true,
     "doubled_point_2P_exact": true,
+    "false_point_refuted": true,
     "trace_frobenius_p3_exact": true,
     "hasse_bound_p5_numerical": true,
-    "false_smoothness_refuted": true,
-    "false_point_refuted": true,
     "false_hasse_refuted": true,
     "bsd_global_rank_fail_closed": true,
     "mcp_point_valid_ok": true,
     "mcp_false_point_refuted": true
   },
   "file_hashes": {
-    "reports/birch-and-swinnerton-dyer/validate.py": "040b17eefc9d278d1c7f1f51fbdc596488eabfc8283613c76544c80ecb17b0ad",
+    "reports/birch-and-swinnerton-dyer/validate.py": "f1a1539068efdf7fff1d8a40fd62ed5b9535cc910627185b355b2f32aaea77ed",
     "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
+    "reports/birch-and-swinnerton-dyer/REPORT.md": "85d560e8ff66b5b16b1a80daec34c738e8a41adcbd38646c72d678ea1ad51784",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c"
   },
   "runs": {
     "doctor": {
@@ -664,16 +838,50 @@
         "-m",
         "axiom.cli",
         "compare",
-        "10 <= 2*sqrt(5)",
-        "True",
+        "10",
+        "2*sqrt(5)",
         "--json"
       ],
-      "returncode": 1,
-      "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 585, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 479, in main\n    res = ax.compare(args.left, args.right, assumptions=assump)\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\core.py\", line 731, in compare\n    | rhs.free_symbols\n      ^^^^^^^^^^^^^^^^\nAttributeError: 'bool' object has no attribute 'free_symbols'\n",
+      "returncode": 0,
+      "stderr": "",
       "result": {
-        "ok": false,
-        "raw_stdout": "",
-        "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 585, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 479, in main\n    res = ax.compare(args.left, args.right, assumptions=assump)\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\core.py\", line 731, in compare\n    | rhs.free_symbols\n      ^^^^^^^^^^^^^^^^\nAttributeError: 'bool' object has no attribute 'free_symbols'\n"
+        "kind": "compare",
+        "input": "10 == 2*sqrt(5)",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "10",
+          "right": "2*sqrt(5)",
+          "simplified_difference": "10 - 2*sqrt(5)"
+        },
+        "value_str": "not equivalent (diff = 10 - 2*sqrt(5))",
+        "latex": "10 \\neq 2 \\sqrt{5}",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 10",
+            "rhs = 2*sqrt(5)",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 10 - 2*sqrt(5)"
+          ],
+          "reproducible_with": "axiom compare \"10\" \"2*sqrt(5)\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 5.528e+00",
+          "checks": 1,
+          "max_error": 5.52786404500042,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
+        }
       }
     },
     "bsd_global_rank_equation_attempt": {

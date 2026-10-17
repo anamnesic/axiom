@@ -43,27 +43,34 @@ Perante o comando `axiom solve "rank(E) - ord_s1(L(E, s)) = 0"`, o AXIOM recusou
 
 ---
 
-## 2. Resumo da Execução de Controle
+## 2. Resumo da Execução de Controle e Métricas Dinâmicas
 
-Todos os 15 testes do script de validação foram aprovados com 100% de comportamento fail-closed:
+Todos os 15 testes do script de validação foram avaliados com métricas dinâmicas:
 
-| Verificação | Garantia AXIOM | `verification.passed` | Interpretação Científica |
-|---|---|---|---|
-| Autotestes do ambiente (`doctor`) | N/A | `true` | Ambiente íntegro e autotestes do núcleo aprovados |
-| Discriminante $\Delta(E_1) = 64$ | `exact-symbolic` | `true` | Curva $E_1$ comprovada suave e não-singular |
-| Discriminante $\Delta(E_5) = 1.000.000$ | `exact-symbolic` | `true` | Curva $E_5$ comprovada suave e não-singular |
-| Discriminante $\Delta(\text{nodal}) = 0$ | `exact-symbolic` | `true` | Singularidade nodal detectada com precisão |
-| Controle de suavidade falsa em curva nodal | `unverified` | `false` | Afirmação espúria refutada via contraexemplo |
-| Raízes de torção de ordem 2 ($x \in \{-1, 0, 1\}$) | `exact-symbolic` | `true` | Solução algébrica completa e substituição verificada |
-| Pertinência do ponto racional $P = (-4, 6)$ | `exact-symbolic` | `true` | Ponto racional em $E_5$ certificado independentemente |
-| Pertinência do ponto duplicado $2P$ | `exact-symbolic` | `true` | Lei de adição de Weierstrass exata em $\mathbb{Q}$ |
-| Controle negativo de ponto espúrio $Q = (-4, 5)$ | `unverified` | `false` | Ponto fora da curva refutado com resíduo 11 |
-| Traço de Frobenius $a_3 = 0$ sobre $\mathbb{F}_3$ | `exact-symbolic` | `true` | Contagem exata de pontos sobre corpo finito |
-| Verificação numérica da Cota de Hasse em $\mathbb{F}_5$ | `numerical-approximation` | `true` | $|a_5| = 2 \le 2\sqrt{5}$ confirmado |
-| Controle de violação fictícia de Hasse | `unverified` | `false` | Afirmação impossível refutada fail-closed |
-| Equação analítica geral do posto BSD | `unverified` | `false` / `None` | Recusa fail-closed perante problema aberto |
-| MCP stdio: Verificação de ponto racional | `exact-symbolic` | `true` | Verificação via protocolo JSON-RPC 2.0 aprovada |
-| MCP stdio: Refutação de ponto espúrio | `unverified` | `false` | Rejeição via protocolo JSON-RPC 2.0 confirmada |
+| Identificador | Categoria | Garantia AXIOM | Veredito | Interpretação Científica |
+|---|---|---|---|---|
+| `doctor_healthy` | Operacional | N/A | `ok` | Ambiente íntegro e autotestes do núcleo aprovados |
+| `discriminant_e1_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Curva $E_1$ comprovada suave e não-singular ($\Delta = 64$) |
+| `discriminant_e5_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Curva $E_5$ comprovada suave e não-singular ($\Delta = 10^6$) |
+| `nodal_zero_delta_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Singularidade nodal detectada com precisão ($\Delta = 0$) |
+| `false_smoothness_refuted` | Controle Negativo | `unverified` | `disproven` | Afirmação espúria refutada via contraexemplo |
+| `torsion_order2_roots_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Solução algébrica completa e substituição verificada |
+| `rational_point_P_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Ponto racional em $E_5$ certificado independentemente |
+| `doubled_point_2P_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Lei de adição de Weierstrass exata em $\mathbb{Q}$ |
+| `false_point_refuted` | Controle Negativo | `unverified` | `disproven` | Ponto fora da curva refutado com resíduo 11 |
+| `trace_frobenius_p3_exact` | Afirmação Positiva | `exact-symbolic` | `proven` | Contagem exata de pontos sobre corpo finito ($a_3 = 0$) |
+| `hasse_bound_p5_numerical` | Afirmação Positiva | `exact-symbolic` | `proven` | $|a_5| \le 2\sqrt{5}$ verificado analiticamente |
+| `false_hasse_refuted` | Controle Negativo | `unverified` | `disproven` | Violação da cota ($a_5 = 10$) refutada via contraexemplo |
+| `bsd_global_rank_fail_closed` | Sonda de Fronteira | `unverified` | `unsolved` | Resolução analítica geral recusada fail-closed |
+| `mcp_point_valid_ok` | Afirmação Positiva | `exact-symbolic` | `proven` | Verificação via protocolo JSON-RPC 2.0 aprovada |
+| `mcp_false_point_refuted` | Controle Negativo | `unverified` | `disproven` | Rejeição de ponto espúrio via protocolo JSON-RPC 2.0 |
+
+### Métricas Derivadas Computadas
+- **Critérios Totais**: 15/15 aprovados (100.0%)
+- **Afirmações Positivas (Verdadeiros Positivos)**: 9/9 (Taxa de Verdadeiros Positivos: 100.0%)
+- **Controles Negativos & Sondas de Fronteira**: 5/5
+  - **Falsos Positivos**: 0/5 (Taxa de Falsos Positivos: 0.0%)
+  - **Comportamento Fail-Closed**: 5/5 (Taxa Fail-Closed: 100.0%)
 
 ---
 
@@ -77,5 +84,5 @@ python reports/birch-and-swinnerton-dyer/validate.py
 
 O script regera [`reports/birch-and-swinnerton-dyer/validation.json`](validation.json), contendo:
 - Metadados de ambiente e hashes SHA-256 de todos os arquivos relevantes.
-- Saídas JSON completas de todas as execuções CLI do AXIOM.
+- Saídas JSON completas de todas as execuções CLI do AXIOM com verificação e semântica ternária.
 - Requisições e respostas JSON-RPC 2.0 completas do servidor MCP por stdio.
