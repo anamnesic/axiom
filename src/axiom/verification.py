@@ -383,12 +383,12 @@ def verify_derivative(
 
     return (
         Verification(
-            kind="symbolic-rule-check",
-            passed=True,
-            detail="Computed via deterministic differentiation rules",
-            checks=1,
+            kind="numerical-derivative-check",
+            passed=False,
+            detail="Could not evaluate finite differences at any sample point for independent confirmation",
+            checks=0,
         ),
-        Guarantee.EXACT_SYMBOLIC,
+        Guarantee.UNVERIFIED,
     )
 
 
@@ -400,7 +400,7 @@ def verify_integral(
     *,
     tol: float = 1e-10,
 ) -> tuple[Verification, Guarantee]:
-    """Verify an integral by differentiation (indefinite) or quadrature (definite)."""
+    """Verify an integral by differentiation (indefinite) or quadrature / FTC antiderivative check (definite)."""
     if result.has(sp.Integral):
         return (
             Verification(
@@ -408,7 +408,7 @@ def verify_integral(
                 passed=False,
                 detail="integral remained in unevaluated form (no closed-form antiderivative found)",
             ),
-            Guarantee.HEURISTIC,
+            Guarantee.UNVERIFIED,
         )
 
     if limits is None:
@@ -437,57 +437,104 @@ def verify_integral(
             Guarantee.UNVERIFIED,
         )
 
-    # Definite integral: compare against mpmath.quad when limits and integrand are numeric
+    # Definite integral:
+    # Step 1: Compare against adaptive Gaussian quadrature (mpmath.quad) when numeric
     lower, upper = limits
     other_vars = (
         (integrand.free_symbols - {var})
         | lower.free_symbols
         | upper.free_symbols
     )
+    quad_error_msg: str | None = None
     if not other_vars:
         try:
             with mp.workdps(35):
                 fn = sp.lambdify(var, integrand, modules="mpmath")
-                a = mp.mpf(str(lower.evalf(35)))
-                b = mp.mpf(str(upper.evalf(35)))
+                a = (
+                    -mp.inf
+                    if lower == -sp.oo
+                    else (mp.inf if lower == sp.oo else mp.mpf(str(lower.evalf(35))))
+                )
+                b = (
+                    -mp.inf
+                    if upper == -sp.oo
+                    else (mp.inf if upper == sp.oo else mp.mpf(str(upper.evalf(35))))
+                )
                 quad_val = mp.quad(fn, [a, b])
                 sym_val = mp.mpc(str(complex(result.evalf(35)).real))
-                scale = max(mp.fabs(sym_val), mp.mpf("1.0"))
-                err = float(mp.fabs(quad_val - sym_val) / scale)
-            if err <= tol:
-                return (
-                    Verification(
-                        kind="numerical-quadrature",
-                        passed=True,
-                        detail=f"Agrees with adaptive Gaussian quadrature (rel error {err:.2e})",
-                        checks=1,
-                        max_error=err,
-                    ),
-                    Guarantee.EXACT_SYMBOLIC
-                    if not isinstance(result, sp.Float)
-                    else Guarantee.NUMERICAL_APPROXIMATION,
-                )
-            return (
-                Verification(
-                    kind="numerical-quadrature",
-                    passed=False,
-                    detail=f"Disagrees with numerical quadrature (rel error {err:.2e})",
-                    checks=1,
-                    max_error=err,
-                ),
-                Guarantee.UNVERIFIED,
-            )
-        except Exception:
-            pass
+                if mp.isfinite(quad_val) and mp.isfinite(sym_val):
+                    scale = max(mp.fabs(sym_val), mp.mpf("1.0"))
+                    err = float(mp.fabs(quad_val - sym_val) / scale)
+                    if err <= tol:
+                        return (
+                            Verification(
+                                kind="numerical-quadrature",
+                                passed=True,
+                                detail=f"Agrees with adaptive Gaussian quadrature (rel error {err:.2e})",
+                                checks=1,
+                                max_error=err,
+                            ),
+                            Guarantee.EXACT_SYMBOLIC
+                            if not isinstance(result, sp.Float)
+                            else Guarantee.NUMERICAL_APPROXIMATION,
+                        )
+                    return (
+                        Verification(
+                            kind="numerical-quadrature",
+                            passed=False,
+                            detail=f"Disagrees with numerical quadrature (rel error {err:.2e})",
+                            checks=1,
+                            max_error=err,
+                        ),
+                        Guarantee.UNVERIFIED,
+                    )
+                quad_error_msg = "quadrature produced non-finite value"
+        except Exception as exc:
+            quad_error_msg = f"quadrature failed ({exc})"
 
+    # Step 2: Independent FTC antiderivative check: find F(x) with F'(x) == f(x) and F(b) - F(a) == result
+    try:
+        antideriv = sp.integrate(integrand, var)
+        if not antideriv.has(sp.Integral):
+            deriv_check, _ = verify_equivalence(
+                sp.diff(antideriv, var), integrand, [var, *sorted(other_vars, key=str)]
+            )
+            if deriv_check.passed:
+                fb = sp.limit(antideriv, var, upper, dir="-")
+                fa = sp.limit(antideriv, var, lower, dir="+")
+                ftc_diff = fb - fa
+                eq_check, eq_guar = verify_equivalence(
+                    ftc_diff, result, sorted(other_vars, key=str)
+                )
+                if eq_check.passed:
+                    return (
+                        Verification(
+                            kind="ftc-antiderivative-check",
+                            passed=True,
+                            detail=(
+                                f"Verified F'({var}) = f({var}) and F({upper}) - F({lower}) == {result}"
+                            ),
+                            checks=deriv_check.checks + eq_check.checks,
+                            max_error=eq_check.max_error,
+                        ),
+                        eq_guar,
+                    )
+    except Exception:
+        pass
+
+    detail = (
+        f"Independent definite-integral verification failed: {quad_error_msg}"
+        if quad_error_msg
+        else "Could not independently verify definite integral via quadrature or FTC antiderivative differentiation"
+    )
     return (
         Verification(
-            kind="symbolic-ftc",
-            passed=True,
-            detail="Computed via Fundamental Theorem of Calculus",
-            checks=1,
+            kind="definite-integral-check",
+            passed=False,
+            detail=detail,
+            checks=0,
         ),
-        Guarantee.EXACT_SYMBOLIC,
+        Guarantee.UNVERIFIED,
     )
 
 
@@ -501,32 +548,42 @@ def verify_limit(
     tol: float = 1e-4,
 ) -> tuple[Verification, Guarantee]:
     """Verify a limit by sampling the expression along a sequence approaching ``point``."""
-    other_vars = expr.free_symbols - {var}
-    if other_vars or result.has(sp.AccumBounds):
+    if result.has(sp.AccumBounds) or result.has(sp.Limit):
         return (
             Verification(
-                kind="symbolic-limit",
-                passed=True,
-                detail="Computed symbolically via Gruntz/series algorithm",
-                checks=1,
+                kind="numerical-limit-probe",
+                passed=False,
+                detail="Limit is oscillatory (AccumBounds) or remained unevaluated",
+                checks=0,
             ),
-            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.UNVERIFIED,
         )
+
+    other_vars = sorted(
+        (expr.free_symbols | point.free_symbols | result.free_symbols) - {var},
+        key=str,
+    )
+    fixed_subs = {
+        sym: sp.Rational(idx + 2, idx + 3) for idx, sym in enumerate(other_vars)
+    }
+    expr_1d = expr.subs(fixed_subs)
+    point_1d = point.subs(fixed_subs)
+    result_1d = result.subs(fixed_subs)
 
     try:
         with mp.workdps(35):
-            fn = sp.lambdify(var, expr, modules="mpmath")
-            if point == sp.oo:
+            fn = sp.lambdify(var, expr_1d, modules="mpmath")
+            if point_1d == sp.oo:
                 samples = [mp.mpf(10) ** k for k in (3, 5, 7)]
-            elif point == -sp.oo:
+            elif point_1d == -sp.oo:
                 samples = [-(mp.mpf(10) ** k) for k in (3, 5, 7)]
             else:
-                p0 = mp.mpf(str(point.evalf(35)))
+                p0 = mp.mpf(str(point_1d.evalf(35)))
                 sign = -1 if direction == "-" else 1
                 samples = [p0 + sign * (mp.mpf(10) ** (-k)) for k in (4, 6, 8)]
 
             vals = [fn(x) for x in samples]
-            if result in (sp.oo, -sp.oo, sp.zoo):
+            if result_1d in (sp.oo, -sp.oo, sp.zoo):
                 mags = [float(mp.fabs(v)) for v in vals]
                 growing = mags[-1] > mags[0] * 10 and mags[-1] > 1e4
                 return (
@@ -536,10 +593,10 @@ def verify_limit(
                         detail=f"Magnitude grows unboundedly toward {point} (|f| ~ {mags[-1]:.2e})",
                         checks=len(samples),
                     ),
-                    Guarantee.EXACT_SYMBOLIC if growing else Guarantee.HEURISTIC,
+                    Guarantee.EXACT_SYMBOLIC if growing else Guarantee.UNVERIFIED,
                 )
 
-            target = mp.mpc(str(complex(result.evalf(35)).real))
+            target = mp.mpc(str(complex(result_1d.evalf(35)).real))
             err = float(mp.fabs(vals[-1] - target))
             scale = max(float(mp.fabs(target)), 1.0)
             rel_err = err / scale
@@ -564,15 +621,15 @@ def verify_limit(
                 ),
                 Guarantee.UNVERIFIED,
             )
-    except Exception:
+    except Exception as exc:
         return (
             Verification(
-                kind="symbolic-limit",
-                passed=True,
-                detail="Computed symbolically via Gruntz algorithm",
-                checks=1,
+                kind="numerical-limit-probe",
+                passed=False,
+                detail=f"Could not independently verify limit via sequence probe: {exc}",
+                checks=0,
             ),
-            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.UNVERIFIED,
         )
 
 

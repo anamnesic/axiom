@@ -380,19 +380,157 @@ class TestAxiom(unittest.TestCase):
             fake_home = Path(td)
             claude_cfg = fake_home / ".claude.json"
             claude_cfg.write_text('{"existing": true}\n', encoding="utf-8")
+            codex_cfg = fake_home / ".codex" / "config.toml"
+            codex_cfg.parent.mkdir(parents=True, exist_ok=True)
+            codex_cfg.write_text('model = "o3"\n', encoding="utf-8")
 
-            dry = configure_clients(clients=["claude-code"], apply=False, home=fake_home)
+            dry = configure_clients(
+                clients=["claude-code", "codex"], apply=False, home=fake_home
+            )
             self.assertFalse(dry["applied"])
             self.assertEqual(dry["clients"][0]["status"], "dry-run")
+            self.assertIn("codex mcp add axiom", dry["clients"][1]["cli_command"])
 
             applied = configure_clients(
-                clients=["claude-code", "cursor"], apply=True, home=fake_home
+                clients=["claude-code", "cursor", "codex"], apply=True, home=fake_home
             )
             self.assertTrue(applied["applied"])
             self.assertTrue((fake_home / ".claude.json.axiom.bak").exists())
+            self.assertTrue((fake_home / ".codex" / "config.toml.axiom.bak").exists())
             merged = json.loads(claude_cfg.read_text(encoding="utf-8"))
             self.assertTrue(merged["existing"])
             self.assertIn("axiom", merged["mcpServers"])
+
+            toml_text = codex_cfg.read_text(encoding="utf-8")
+            self.assertIn('model = "o3"', toml_text)
+            self.assertIn("[mcp_servers.axiom]", toml_text)
+            self.assertIn("axiom.mcp_server", toml_text)
+
+    def test_lean4_axiom_audit_and_lake_environment(self) -> None:
+        from axiom.engines.lean_engine import LeanEngine
+
+        # 1. prepare_audited_source injects #print axioms and ignores 'sorry' inside comments
+        src = (
+            "-- this comment mentions sorry but the proof is complete\n"
+            "theorem add_zero_right (n : Nat) : n + 0 = n := by rfl\n"
+            "example (a : Nat) : a = a := by rfl\n"
+        )
+        audited, thms, custom_ax, has_hole = LeanEngine.prepare_audited_source(src)
+        self.assertFalse(has_hole)
+        self.assertEqual(custom_ax, [])
+        self.assertEqual(thms, ["add_zero_right", "_axiom_example_1"])
+        self.assertIn("#print axioms add_zero_right", audited)
+        self.assertIn("#print axioms _axiom_example_1", audited)
+
+        # 2. User-declared `axiom` or `unsafe` in source is caught and rejected
+        bad_src = (
+            "axiom bogus : 1 = 2\n"
+            "theorem fake : 1 = 2 := bogus\n"
+        )
+        _, _, bad_custom_ax, _ = LeanEngine.prepare_audited_source(bad_src)
+        self.assertEqual(bad_custom_ax, ["bogus"])
+        ax_res = Axiom().prove(bad_src)
+        self.assertFalse(ax_res.verified)
+        self.assertEqual(ax_res.guarantee, Guarantee.UNVERIFIED)
+
+        # 3. parse_axiom_audit accepts standard Lean 4 axioms and rejects sorryAx / custom axioms
+        clean_diag = [
+            "'thm1' depends on axioms: [propext, Classical.choice, Quot.sound]",
+            "'thm2' does not depend on any axioms",
+        ]
+        used, untrusted, has_sorry = LeanEngine.parse_axiom_audit(clean_diag)
+        self.assertEqual(used, ["propext", "Classical.choice", "Quot.sound"])
+        self.assertEqual(untrusted, [])
+        self.assertFalse(has_sorry)
+
+        tainted_diag = [
+            "'thm_bad' depends on axioms: [propext, my_secret_axiom, sorryAx]",
+        ]
+        used2, untrusted2, has_sorry2 = LeanEngine.parse_axiom_audit(tainted_diag)
+        self.assertIn("my_secret_axiom", untrusted2)
+        self.assertTrue(has_sorry2)
+
+        # 4. Lake project detection (`lake env lean`)
+        with tempfile.TemporaryDirectory() as td:
+            proj = Path(td)
+            (proj / "lakefile.lean").write_text("-- lake project\n", encoding="utf-8")
+            sub_dir = proj / "MyPkg"
+            sub_dir.mkdir()
+            thm_file = sub_dir / "Basic.lean"
+            thm_file.write_text("theorem t : 1 = 1 := rfl\n", encoding="utf-8")
+
+            found_root = LeanEngine.find_lake_project_root(thm_file)
+            self.assertEqual(found_root, proj.resolve())
+
+            eng = LeanEngine()
+            eng.lake_bin = "/usr/bin/lake"
+            cmd, cwd = eng.build_lean_command(thm_file, origin_path=thm_file)
+            self.assertEqual(cmd[:3], ["/usr/bin/lake", "env", "lean"])
+            self.assertEqual(cwd, str(proj.resolve()))
+
+    def test_verifiers_never_elevate_without_evidence(self) -> None:
+        import sympy as sp
+        from axiom.verification import verify_derivative, verify_integral, verify_limit
+
+        x = sp.Symbol("x")
+        a = sp.Symbol("a")
+
+        # False definite integral must be rejected as UNVERIFIED
+        ver_bad, guar_bad = verify_integral(
+            sp.sin(x), sp.Integer(99), x, limits=(sp.Integer(0), sp.pi)
+        )
+        self.assertFalse(ver_bad.passed)
+        self.assertEqual(guar_bad, Guarantee.UNVERIFIED)
+
+        # Parametric definite integral: verified via independent FTC antiderivative check
+        ver_param, guar_param = verify_integral(
+            2 * x, a**2, x, limits=(sp.Integer(0), a)
+        )
+        self.assertTrue(ver_param.passed)
+        self.assertEqual(ver_param.kind, "ftc-antiderivative-check")
+        self.assertEqual(guar_param, Guarantee.EXACT_SYMBOLIC)
+
+        # Wrong parametric definite integral must be rejected as UNVERIFIED
+        ver_param_bad, guar_param_bad = verify_integral(
+            2 * x, a**3, x, limits=(sp.Integer(0), a)
+        )
+        self.assertFalse(ver_param_bad.passed)
+        self.assertEqual(guar_param_bad, Guarantee.UNVERIFIED)
+
+        # Unevaluated integral must return UNVERIFIED
+        uneval = sp.Integral(sp.exp(x**3), x)
+        ver_un, guar_un = verify_integral(sp.exp(x**3), uneval, x)
+        self.assertFalse(ver_un.passed)
+        self.assertEqual(guar_un, Guarantee.UNVERIFIED)
+
+        # Oscillatory limit (AccumBounds) must be rejected as UNVERIFIED
+        ver_lim, guar_lim = verify_limit(
+            sp.sin(x), x, sp.oo, "+-", sp.AccumBounds(-1, 1)
+        )
+        self.assertFalse(ver_lim.passed)
+        self.assertEqual(guar_lim, Guarantee.UNVERIFIED)
+
+        # Derivative that fails evaluation everywhere must return UNVERIFIED
+        undef_fn = sp.Function("undef_fn")(x)
+        ver_d, guar_d = verify_derivative(undef_fn, sp.Integer(0), x)
+        self.assertFalse(ver_d.passed)
+        self.assertEqual(guar_d, Guarantee.UNVERIFIED)
+
+    def test_python310_fstring_compatibility(self) -> None:
+        import ast
+
+        repo_root = Path(__file__).resolve().parent.parent
+        for py_file in repo_root.rglob("*.py"):
+            src = py_file.read_text(encoding="utf-8")
+            tree = ast.parse(src, filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FormattedValue):
+                    seg = ast.get_source_segment(src, node) or ""
+                    self.assertNotIn(
+                        "\\",
+                        seg,
+                        f"Python 3.10 incompatible backslash inside f-string at {py_file}:{node.lineno}",
+                    )
 
     def test_cli_box_and_json_output(self) -> None:
         buf = io.StringIO()
@@ -544,8 +682,51 @@ class TestAxiom(unittest.TestCase):
             ).verified
         )
 
+    def test_mcp_stdio_subprocess_roundtrip(self) -> None:
+        import subprocess
+        import sys
+
+        requests = "\n".join(
+            [
+                json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
+                json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "math_solve",
+                            "arguments": {"expression": "x^2 - 5*x + 6 = 0"},
+                        },
+                    }
+                ),
+            ]
+        ) + "\n"
+
+        proc = subprocess.run(
+            [sys.executable, "-m", "axiom.mcp_server"],
+            input=requests,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=True,
+        )
+        lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+        self.assertEqual(len(lines), 3)
+        r_init = json.loads(lines[0])
+        r_list = json.loads(lines[1])
+        r_call = json.loads(lines[2])
+        self.assertEqual(r_init["result"]["serverInfo"]["name"], "axiom")
+        self.assertEqual(len(r_list["result"]["tools"]), 21)
+        self.assertEqual(
+            r_call["result"]["structuredContent"]["guarantee"],
+            "verified-substitution",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

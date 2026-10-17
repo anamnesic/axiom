@@ -535,6 +535,7 @@ class Axiom:
         ver, guar = verify_equivalence(lhs, rhs, sym_vars)
         diff = sp.simplify(lhs - rhs)
         equivalent = ver.passed
+        relation = "=" if equivalent else r"\neq"
         return MathResult(
             kind="compare",
             input=combined,
@@ -546,7 +547,7 @@ class Axiom:
                 "simplified_difference": str(diff),
             },
             value_str="equivalent" if equivalent else f"not equivalent (diff = {diff})",
-            latex=f"{sp.latex(lhs)} {'=' if equivalent else r'\\neq'} {sp.latex(rhs)}",
+            latex=f"{sp.latex(lhs)} {relation} {sp.latex(rhs)}",
             variables=[str(v) for v in sym_vars],
             guarantee=guar,
             evidence=Evidence(
@@ -898,31 +899,39 @@ class Axiom:
 
         kernel_ok = bool(ans.raw.get("kernel_verified"))
         has_hole = bool(ans.raw.get("has_hole"))
-        if kernel_ok and not has_hole:
+        untrusted = list(ans.raw.get("untrusted_axioms") or [])
+        axioms_used = list(ans.raw.get("axioms_used") or [])
+
+        if kernel_ok and not has_hole and not untrusted:
             guar = Guarantee.FORMAL_PROOF
+            ax_desc = ", ".join(axioms_used) if axioms_used else "none (constructive)"
             ver = Verification(
-                kind="lean4-kernel",
+                kind="lean4-kernel-axiom-audit",
                 passed=True,
-                detail="Typechecked by the Lean 4 kernel with no sorry/admit axioms",
-                checks=1,
+                detail=f"Typechecked by Lean 4 kernel and audited via #print axioms (axioms: {ax_desc})",
+                checks=2,
+                data={"axioms_used": axioms_used, "untrusted_axioms": []},
             )
         else:
             guar = Guarantee.UNVERIFIED
-            detail = (
-                "Incomplete proof (contains 'sorry' or 'admit')"
-                if has_hole
-                else (
-                    ans.limitations[0]
-                    if ans.limitations
-                    else "Lean 4 kernel verification did not pass"
-                )
-            )
+            if has_hole:
+                detail = "Incomplete proof (contains 'sorry', 'admit', or 'sorryAx')"
+            elif untrusted:
+                detail = f"Proof depends on untrusted/user-declared axiom(s): {', '.join(untrusted)}"
+            elif ans.limitations:
+                detail = ans.limitations[0]
+            else:
+                detail = "Lean 4 kernel verification did not pass"
             ver = Verification(
-                kind="lean4-kernel",
+                kind="lean4-kernel-axiom-audit",
                 passed=False,
                 detail=detail,
                 checks=1,
-                data={"diagnostics": ans.raw.get("diagnostics", [])},
+                data={
+                    "diagnostics": ans.raw.get("diagnostics", []),
+                    "axioms_used": axioms_used,
+                    "untrusted_axioms": untrusted,
+                },
             )
 
         return _wrap_answer(

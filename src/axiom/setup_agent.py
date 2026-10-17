@@ -38,8 +38,36 @@ def client_config_paths(home: Path | None = None) -> dict[str, Path]:
         "claude-code": base / ".claude.json",
         "cursor": base / ".cursor" / "mcp.json",
         "gemini": base / ".gemini" / "settings.json",
-        "codex": base / ".codex" / "mcp.json",
+        "codex": base / ".codex" / "config.toml",
     }
+
+
+def _format_codex_toml_section(server_cfg: dict[str, Any]) -> str:
+    """Format the ``[mcp_servers.axiom]`` TOML table for OpenAI Codex ``config.toml``."""
+    cmd_escaped = json.dumps(str(server_cfg["command"]))
+    args_escaped = ", ".join(json.dumps(str(a)) for a in server_cfg.get("args", []))
+    return (
+        "[mcp_servers.axiom]\n"
+        f"command = {cmd_escaped}\n"
+        f"args = [{args_escaped}]\n"
+    )
+
+
+def _upsert_codex_toml(existing_text: str, server_cfg: dict[str, Any]) -> str:
+    """Insert or replace ``[mcp_servers.axiom]`` inside a TOML configuration string."""
+    import re
+
+    block = _format_codex_toml_section(server_cfg)
+    pattern = re.compile(
+        r"(?ms)^\[mcp_servers\.axiom\]\s*\n(?:^(?!\[).*?\n)*"
+    )
+    if pattern.search(existing_text):
+        updated = pattern.sub(block, existing_text)
+        return updated if updated.endswith("\n") else updated + "\n"
+    trimmed = existing_text.rstrip()
+    if not trimmed:
+        return block
+    return f"{trimmed}\n\n{block}"
 
 
 def configure_clients(
@@ -75,13 +103,39 @@ def configure_clients(
         backup_path: str | None = None
 
         if not apply:
+            entry_info: dict[str, Any] = {
+                "client": name,
+                "config_path": str(cfg_path),
+                "exists": existing_exists,
+                "status": "dry-run",
+                "proposed_mcpServers_axiom": server_cfg,
+            }
+            if name == "codex":
+                entry_info["cli_command"] = (
+                    f'codex mcp add axiom -- "{server_cfg["command"]}" '
+                    + " ".join(server_cfg["args"])
+                )
+            actions.append(entry_info)
+            continue
+
+        if name == "codex":
+            raw_toml = ""
+            if existing_exists:
+                raw_toml = cfg_path.read_text(encoding="utf-8")
+                bak = cfg_path.with_suffix(cfg_path.suffix + ".axiom.bak")
+                shutil.copy2(cfg_path, bak)
+                backup_path = str(bak)
+            cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            new_toml = _upsert_codex_toml(raw_toml, server_cfg)
+            cfg_path.write_text(new_toml, encoding="utf-8")
             actions.append(
                 {
                     "client": name,
                     "config_path": str(cfg_path),
-                    "exists": existing_exists,
-                    "status": "dry-run",
-                    "proposed_mcpServers_axiom": server_cfg,
+                    "backup_path": backup_path,
+                    "status": "configured",
+                    "format": "toml",
+                    "mcp_servers_axiom": server_cfg,
                 }
             )
             continue
@@ -119,6 +173,7 @@ def configure_clients(
                 "config_path": str(cfg_path),
                 "backup_path": backup_path,
                 "status": "configured",
+                "format": "json",
                 "mcpServers_axiom": server_cfg,
             }
         )

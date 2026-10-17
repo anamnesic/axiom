@@ -20,7 +20,40 @@ from typing import Any
 
 from axiom.engines.base import Answer, Engine
 
-_INCOMPLETE_TOKENS = re.compile(r"\b(sorry|admit)\b")
+_INCOMPLETE_TOKENS = re.compile(r"\b(sorry|admit|sorryAx)\b")
+_CUSTOM_AXIOM_DECL = re.compile(
+    r"(?:^|\n)\s*(?:private\s+|protected\s+|noncomputable\s+)*(?:axiom|unsafe|opaque)\s+([A-Za-z_][A-Za-z0-9_']*)",
+    re.MULTILINE,
+)
+_UNSAFE_ATTR = re.compile(r"@\s*\[\s*(?:implemented_by|extern|csimp)\b")
+_THEOREM_DECL = re.compile(
+    r"(?:^|\n)\s*(?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\s+([A-Za-z_][A-Za-z0-9_'.]*)",
+    re.MULTILINE,
+)
+_ANON_EXAMPLE_DECL = re.compile(
+    r"(^|\n)(\s*(?:private\s+|protected\s+|noncomputable\s+)*)example(\s*[:({\s])",
+    re.MULTILINE,
+)
+_AXIOMS_LINE = re.compile(r"^'([^']+)'\s+depends on axioms:\s*\[([^\]]*)\]")
+_NO_AXIOMS_LINE = re.compile(r"^'([^']+)'\s+does not depend on any axioms")
+
+# Standard foundational axioms trusted in Lean 4 / Mathlib 4
+STANDARD_LEAN4_AXIOMS: frozenset[str] = frozenset(
+    {
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "Lean.ofReduceBool",
+        "Lean.trustCompiler",
+    }
+)
+
+
+def _strip_lean_comments(source: str) -> str:
+    """Remove Lean 4 line comments (--) and block comments (/- ... -/)."""
+    without_block = re.sub(r"/\-.*?\-/", "", source, flags=re.DOTALL)
+    return re.sub(r"--[^\n]*", "", without_block)
+
 
 # Curated offline Mathlib4 & Lean 4 Core theorem catalog for zero-network resilience
 _MATHLIB_CATALOG: tuple[dict[str, str], ...] = (
@@ -230,20 +263,161 @@ class LeanEngine(Engine):
     def available(self) -> bool:
         return self.lean_bin is not None
 
+    @staticmethod
+    def prepare_audited_source(
+        source: str,
+    ) -> tuple[str, list[str], list[str], bool]:
+        """Prepare Lean 4 source for kernel + ``#print axioms`` verification.
+
+        * Strips comments before scanning for ``sorry``/``admit``/``sorryAx`` and
+          user-declared ``axiom``/``unsafe``/``opaque``/``@[implemented_by]`` constructs.
+        * Rewrites anonymous ``example`` headers into named theorems so their
+          axiom dependencies can also be inspected via ``#print axioms``.
+        * Appends ``#print axioms <name>`` for every theorem/lemma in the file.
+        """
+        stripped = _strip_lean_comments(source)
+        has_hole = bool(_INCOMPLETE_TOKENS.search(stripped))
+
+        custom_axioms: list[str] = [
+            m.group(1) for m in _CUSTOM_AXIOM_DECL.finditer(stripped)
+        ]
+        if _UNSAFE_ATTR.search(stripped):
+            custom_axioms.append("@[implemented_by/extern/csimp]")
+
+        # Convert anonymous `example` declarations into named theorems for #print axioms
+        counter = 0
+
+        def _name_anon(match: re.Match[str]) -> str:
+            nonlocal counter
+            counter += 1
+            return f"{match.group(1)}{match.group(2)}theorem _axiom_example_{counter}{match.group(3)}"
+
+        rewritten = _ANON_EXAMPLE_DECL.sub(_name_anon, source)
+        rewritten_stripped = _strip_lean_comments(rewritten)
+        theorem_names: list[str] = []
+        for match in _THEOREM_DECL.finditer(rewritten_stripped):
+            thm_name = match.group(1)
+            if thm_name not in theorem_names:
+                theorem_names.append(thm_name)
+
+        audit_lines = [
+            f"#print axioms {name}"
+            for name in theorem_names
+            if f"#print axioms {name}" not in rewritten_stripped
+        ]
+        if audit_lines:
+            audited_source = rewritten.rstrip() + "\n\n" + "\n".join(audit_lines) + "\n"
+        else:
+            audited_source = rewritten
+
+        return audited_source, theorem_names, custom_axioms, has_hole
+
+    @staticmethod
+    def parse_axiom_audit(
+        diagnostics: list[str],
+        declared_custom_axioms: list[str] | None = None,
+    ) -> tuple[list[str], list[str], bool]:
+        """Parse ``#print axioms`` output lines from Lean 4 stdout/stderr.
+
+        Returns ``(axioms_used, untrusted_axioms, has_sorry_ax)``.
+        """
+        axioms_used: list[str] = []
+        untrusted: list[str] = list(declared_custom_axioms or [])
+        has_sorry_ax = False
+
+        for line in diagnostics:
+            clean = line.strip()
+            m_dep = _AXIOMS_LINE.match(clean)
+            if m_dep:
+                raw_list = [
+                    ax.strip() for ax in m_dep.group(2).split(",") if ax.strip()
+                ]
+                for ax in raw_list:
+                    if ax not in axioms_used:
+                        axioms_used.append(ax)
+                    if ax == "sorryAx":
+                        has_sorry_ax = True
+                    elif ax not in STANDARD_LEAN4_AXIOMS and ax not in untrusted:
+                        untrusted.append(ax)
+                continue
+            _NO_AXIOMS_LINE.match(clean)
+
+        return axioms_used, untrusted, has_sorry_ax
+
+    @staticmethod
+    def find_lake_project_root(start_dir: Path | None = None) -> Path | None:
+        """Locate the nearest ancestor directory containing ``lakefile.lean`` or ``lakefile.toml``."""
+        candidates: list[Path] = []
+        if start_dir is not None:
+            candidates.append(start_dir if start_dir.is_dir() else start_dir.parent)
+        candidates.append(Path.cwd())
+
+        seen: set[Path] = set()
+        for base in candidates:
+            try:
+                resolved = base.resolve()
+            except Exception:
+                continue
+            for directory in (resolved, *resolved.parents):
+                if directory in seen:
+                    continue
+                seen.add(directory)
+                if (directory / "lakefile.lean").exists() or (
+                    directory / "lakefile.toml"
+                ).exists():
+                    return directory
+        return None
+
+    def build_lean_command(
+        self, target_file: Path, *, origin_path: Path | None = None
+    ) -> tuple[list[str], str | None]:
+        """Build the subprocess command and working directory for Lean 4 verification.
+
+        Uses ``lake env lean <file>`` inside the detected Lake project root when
+        both ``lake`` and a ``lakefile`` are available, enabling Mathlib imports.
+        """
+        lake_root = self.find_lake_project_root(origin_path)
+        if self.lake_bin and lake_root is not None:
+            return [self.lake_bin, "env", "lean", str(target_file)], str(lake_root)
+        return [self.lean_bin or "lean", str(target_file)], None
+
     def prove(self, statement_or_path: str, proof: str = "") -> Answer:
-        """Check a Lean 4 theorem file or inline snippet."""
+        """Check a Lean 4 theorem file or inline snippet with ``#print axioms`` auditing."""
         source, origin = self._load_source(statement_or_path, proof)
-        has_hole = bool(_INCOMPLETE_TOKENS.search(source))
+        audited_source, theorem_names, custom_axioms, has_hole = (
+            self.prepare_audited_source(source)
+        )
         warnings: list[str] = []
         if has_hole:
-            warnings.append("proof contains 'sorry' or 'admit' (incomplete proof)")
+            warnings.append(
+                "proof contains 'sorry', 'admit', or 'sorryAx' (incomplete proof)"
+            )
+        if custom_axioms:
+            warnings.append(
+                f"source declares custom/unsafe axiom construct(s): {', '.join(custom_axioms)}"
+            )
+
+        origin_path = (
+            Path(origin)
+            if origin not in ("inline snippet", "auto-formalized equality")
+            else None
+        )
 
         if not self.lean_bin:
             return Answer(
-                value={"checked": False, "complete": not has_hole, "source": source},
-                value_str="Lean 4 binary not found on host; syntax recorded only",
-                method="lean4 kernel check (unavailable)",
-                steps=[f"loaded Lean source from {origin}"],
+                value={
+                    "checked": False,
+                    "complete": not has_hole and not custom_axioms,
+                    "theorems": theorem_names,
+                    "untrusted_axioms": custom_axioms,
+                    "source": source,
+                },
+                value_str="Lean 4 binary not found on host; syntax and axiom declarations audited only",
+                method="lean4 kernel + #print axioms audit (toolchain unavailable)",
+                steps=[
+                    f"loaded Lean source from {origin}",
+                    f"audited declarations: {theorem_names or ['none']}",
+                ],
                 warnings=warnings,
                 limitations=[
                     "Lean 4 toolchain (lean/elan) is not installed on this machine; "
@@ -252,6 +426,8 @@ class LeanEngine(Engine):
                 raw={
                     "kernel_verified": False,
                     "has_hole": has_hole,
+                    "axioms_used": [],
+                    "untrusted_axioms": custom_axioms,
                     "diagnostics": ["lean binary not found in PATH or ~/.elan/bin"],
                 },
             )
@@ -259,12 +435,14 @@ class LeanEngine(Engine):
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".lean", encoding="utf-8", delete=False
         ) as tmp:
-            tmp.write(source)
+            tmp.write(audited_source)
             tmp_path = Path(tmp.name)
 
         try:
+            cmd, cwd = self.build_lean_command(tmp_path, origin_path=origin_path)
             proc = subprocess.run(
-                [self.lean_bin, str(tmp_path)],
+                cmd,
+                cwd=cwd,
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -275,30 +453,60 @@ class LeanEngine(Engine):
                 for line in (proc.stdout + "\n" + proc.stderr).splitlines()
                 if line.strip()
             ]
-            kernel_ok = proc.returncode == 0 and not has_hole
-            status_str = (
-                "verified by Lean 4 kernel"
-                if kernel_ok
-                else "rejected by Lean 4 kernel"
+            axioms_used, untrusted_axioms, has_sorry_ax = self.parse_axiom_audit(
+                diagnostics, declared_custom_axioms=custom_axioms
             )
+            if has_sorry_ax:
+                has_hole = True
+                warnings.append("proof depends on 'sorryAx' via #print axioms audit")
+            if untrusted_axioms:
+                warnings.append(
+                    f"proof depends on untrusted axiom(s): {', '.join(untrusted_axioms)}"
+                )
+
+            kernel_ok = (
+                proc.returncode == 0
+                and not has_hole
+                and len(untrusted_axioms) == 0
+            )
+            status_str = (
+                "verified by Lean 4 kernel (#print axioms clean)"
+                if kernel_ok
+                else "rejected by Lean 4 kernel or axiom audit"
+            )
+            runner_label = "lake env lean" if cwd else "lean"
             return Answer(
                 value={
                     "checked": True,
                     "verified": kernel_ok,
                     "returncode": proc.returncode,
+                    "theorems": theorem_names,
+                    "axioms_used": axioms_used,
+                    "untrusted_axioms": untrusted_axioms,
                     "diagnostics": diagnostics,
                 },
                 value_str=status_str,
-                method="Lean 4 typechecker kernel",
+                method=f"Lean 4 typechecker kernel + #print axioms ({runner_label})",
                 steps=[
                     f"source: {origin}",
-                    f"lean exit code: {proc.returncode}",
+                    f"runner: {runner_label} (exit code: {proc.returncode})",
+                    f"axioms used: {axioms_used or ['none (constructive)']}",
                 ],
                 warnings=warnings,
-                limitations=[] if kernel_ok else diagnostics[:5],
+                limitations=(
+                    []
+                    if kernel_ok
+                    else (
+                        [f"untrusted axioms: {', '.join(untrusted_axioms)}"]
+                        if untrusted_axioms
+                        else diagnostics[:5]
+                    )
+                ),
                 raw={
                     "kernel_verified": kernel_ok,
                     "has_hole": has_hole,
+                    "axioms_used": axioms_used,
+                    "untrusted_axioms": untrusted_axioms,
                     "diagnostics": diagnostics,
                 },
             )

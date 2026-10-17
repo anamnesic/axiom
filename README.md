@@ -149,18 +149,18 @@ axiom verify solution.json
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0006`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0007`).
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
 - **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `sympy-mcp`, `fermat-mcp`, `Wolfram-MCP`, and `lean-lsp-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Roadmap
 
-- [x] **v0.1 — Foundation**: CLI, MCP server, safe AST expression parser, SymPy engine, equation solving, and independent verification.
-- [x] **v0.2 — Numerical & Expanded Domains**: Arbitrary-precision `mpmath`, matrices, ODEs, number theory, optimization, statistics, and tensor calculus.
-- [x] **v0.3 — Verification & Formal**: Independent verifiers across all 12 domains, Lean 4 integration, auto-formalization, and Mathlib 4 search.
-- [x] **v0.4 — Visualization**: Zero-dependency vector SVG plots, ASCII curve previews, and Matplotlib export.
-- [x] **v1.0 — Research**: Persistent multi-step research sessions (`math_session`), weakest-link guarantee tracking, and conjecture auditing.
+- [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, hardened independent verifiers (never elevating guarantees without evidence), Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix (Python 3.10 & 3.12 on Ubuntu, Windows, macOS).
+- [ ] **v0.2 — Numerical & Scientific Scale**: Deep SciPy / Julia solvers, PDE stencils, large-scale numerical linear algebra, and certified interval arithmetic (`mpmath.iv`).
+- [ ] **v0.3 — Interactive Formal Verification**: Persistent Lean 4 Lake/Mathlib workspace, automated tactic synthesis loop, and step-by-step goal inspection.
+- [ ] **v0.4 — Interactive Visualization**: 2D/3D Plotly & Manim scene generation, vector fields, and phase-portrait rendering.
+- [ ] **v1.0 — Autonomous Mathematical Research**: Multi-agent conjecture discovery, counterexample search, and automated theorem formalization pipelines.
 
 ## Repository Layout
 
