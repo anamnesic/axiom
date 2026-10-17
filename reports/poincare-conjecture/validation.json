@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T22:46:10.929625+00:00",
+  "timestamp_utc": "2026-10-17T23:04:07.513702+00:00",
   "axiom_version": "0.2.3",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/poincare-conjecture/validate.py": "309463bd66658b3e3065ff9ebb54d8b78c2fe627430dbf2239e1f3635892be8c",
     "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
     "reports/poincare-conjecture/REPORT.md": "43b44e347f43e4e2f7f16dc6b8ed1e53a6533d032effde30bd0cc35e0810dd4d",
-    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "16b930acc46ad6fb6d6ff8564ade7dc111c7e3944ae591d312f42f5f9100db2b"
+    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
+    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
   },
   "runs": {
     "doctor": {
@@ -763,7 +763,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {

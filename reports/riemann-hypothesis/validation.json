@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-17T22:44:51.055957+00:00",
+  "generated_at_utc": "2026-10-17T23:03:13.425278+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -10,8 +10,8 @@
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
     "src/axiom/parsing.py": "86b5d3d41679dc838c7e932fe5965c41a1f0c9e3ce0cb3f3ad6d3024100b812a",
-    "src/axiom/core.py": "16b930acc46ad6fb6d6ff8564ade7dc111c7e3944ae591d312f42f5f9100db2b",
-    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf",
+    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
     "src/axiom/engines/lean_engine.py": "b5ffc481396d7d0ebd7b8c10edc981467d011c6efbf560a95c536433ef87758b",
     "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
     "src/axiom/mcp_server.py": "cec0b71df0781322c71fa9a7cee4e4c618d07ec47d60ee8aa32b4caab651d8b7",
@@ -208,7 +208,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -250,7 +250,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -292,7 +292,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -334,7 +334,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -376,7 +376,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -418,7 +418,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -470,7 +470,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -520,9 +520,9 @@
           "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/8\""
         },
         "verification": {
-          "kind": "equivalence",
+          "kind": "constant-exact-disproof",
           "passed": false,
-          "detail": "constant values differ by 4.112e-01",
+          "detail": "Exact constant expressions are not equal (difference pi**2/24 != 0)",
           "checks": 1,
           "max_error": 0.4112335167120566,
           "data": {
@@ -573,7 +573,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -1039,7 +1039,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -2517,7 +2517,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"evaluate\",\n  \"input\": \"zeta(2) - pi^2/6\",\n  \"ok\": true,\n  \"value\": \"0\",\n  \"value_str\": \"0\",\n  \"latex\": \"0\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact evaluation (nsimplify) / simplify\",\n    \"steps\": [\n      \"evaluate 0\",\n      \"result 0\"\n    ],\n    \"reproducible_with\": \"axiom evaluate \\\"zeta(2) - pi^2/6\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+              "text": "{\n  \"kind\": \"evaluate\",\n  \"input\": \"zeta(2) - pi^2/6\",\n  \"ok\": true,\n  \"value\": \"0\",\n  \"value_str\": \"0\",\n  \"latex\": \"0\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact evaluation (nsimplify) / simplify\",\n    \"steps\": [\n      \"evaluate 0\",\n      \"result 0\"\n    ],\n    \"reproducible_with\": \"axiom evaluate \\\"zeta(2) - pi^2/6\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
             }
           ],
           "structuredContent": {
@@ -2541,7 +2541,7 @@
             "verification": {
               "kind": "symbolic-identity",
               "passed": true,
-              "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+              "detail": "Symbolic difference reduces to 0",
               "checks": 1,
               "max_error": 0.0,
               "data": {

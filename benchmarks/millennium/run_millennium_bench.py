@@ -23,6 +23,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -63,9 +64,30 @@ def run_problem_suite(name: str, folder: str) -> dict:
     if validation_json.exists():
         try:
             validation_json.unlink()
-        except Exception:
-            pass
+        except Exception as exc:
+            try:
+                stale_backup = REPORTS / folder / f"validation.stale.{time.time_ns()}.json"
+                validation_json.rename(stale_backup)
+            except Exception as ren_exc:
+                return {
+                    "name": name,
+                    "folder": folder,
+                    "ok": False,
+                    "error": f"Failed to remove stale validation.json: {exc}; rename: {ren_exc}",
+                    "evaluations": 0,
+                    "passed": 0,
+                    "positive_claims_count": 0,
+                    "true_positives_count": 0,
+                    "negative_controls_count": 0,
+                    "fail_closed_count": 0,
+                    "false_positives_count": 0,
+                    "fail_closed_rate": 0.0,
+                    "false_positive_rate": 0.0,
+                    "true_positive_rate": 0.0,
+                    "failed_criteria": ["stale_validation_not_removable"],
+                }
 
+    start_time = time.time()
     cmd = [sys.executable, str(validate_script)]
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
 
@@ -102,6 +124,32 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "stdout": proc.stdout,
             "stderr": proc.stderr,
         }
+
+    try:
+        mtime = validation_json.stat().st_mtime
+        if mtime < start_time - 1.0:
+            return {
+                "name": name,
+                "folder": folder,
+                "ok": False,
+                "returncode": proc.returncode,
+                "error": f"validation.json is stale (mtime {mtime} < start_time {start_time})",
+                "evaluations": 0,
+                "passed": 0,
+                "positive_claims_count": 0,
+                "true_positives_count": 0,
+                "negative_controls_count": 0,
+                "fail_closed_count": 0,
+                "false_positives_count": 0,
+                "fail_closed_rate": 0.0,
+                "false_positive_rate": 0.0,
+                "true_positive_rate": 0.0,
+                "failed_criteria": ["stale_mtime_validation_json"],
+                "stdout": proc.stdout,
+                "stderr": proc.stderr,
+            }
+    except Exception:
+        pass
 
     try:
         data = json.loads(validation_json.read_text(encoding="utf-8"))
@@ -146,7 +194,15 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "stderr": proc.stderr,
         }
 
-    suite_ok = (proc.returncode == 0) and (passed_count == eval_count) and (fp_count == 0)
+    if eval_count == 0:
+        failed_criteria.append("empty_evaluation_suite")
+
+    suite_ok = (
+        (proc.returncode == 0)
+        and (eval_count > 0)
+        and (passed_count == eval_count)
+        and (fp_count == 0)
+    )
 
     return {
         "name": name,

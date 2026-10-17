@@ -41,6 +41,34 @@ OPERATIONAL_GUARANTEES = {
 }
 
 
+KNOWN_OPTIONS_WITH_ARG = {
+    "-A", "--assumptions",
+    "-v", "--variable",
+    "-e", "--engine",
+    "-n", "--order",
+    "--from",
+    "--to",
+    "--dir",
+    "--at",
+    "-p", "--precision",
+    "-s", "--solutions",
+    "-o", "--operation",
+    "--output",
+    "--samples",
+    "-r", "--range",
+    "--proof",
+    "--op",
+    "--clients",
+}
+KNOWN_FLAGS_NO_ARG = {
+    "--json",
+    "--plain",
+    "--apply",
+    "--preview",
+    "--dry-run",
+}
+
+
 def cli(*args: str) -> dict:
     subcmd = args[0] if args else "doctor"
     rest = list(args[1:])
@@ -49,12 +77,12 @@ def cli(*args: str) -> dict:
     i = 0
     while i < len(rest):
         arg = rest[i]
-        if arg in ("-A", "--assumptions", "-v", "--variable", "-e", "--engine", "-o", "--operation", "--from", "--to", "-n", "--order", "-p", "--precision"):
+        if arg in KNOWN_OPTIONS_WITH_ARG:
             flags.append(arg)
             if i + 1 < len(rest):
                 flags.append(rest[i + 1])
                 i += 1
-        elif arg.startswith("-") and not (arg.startswith("-") and any(c.isdigit() or c in "nuptxyz" for c in arg[1:2])):
+        elif arg in KNOWN_FLAGS_NO_ARG:
             flags.append(arg)
         else:
             positionals.append(arg)

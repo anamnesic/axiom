@@ -727,6 +727,49 @@ class TestAxiom(unittest.TestCase):
         self.assertEqual(payload["value"]["status"], "disproven")
         self.assertFalse(payload["value"]["equivalent"])
 
+    def test_constant_equality_soundness_exact_vs_approximate(self) -> None:
+        """Ensure non-zero exact constants (e.g. 1/10^30) are NEVER promoted to 'proven' via numerical tolerance."""
+        ax = Axiom()
+
+        # 1. Exact non-zero constants vs 0: must be disproven, NOT proven
+        res_rational = ax.compare("1/10^30", "0")
+        self.assertTrue(res_rational.ok)
+        self.assertEqual(res_rational.value["status"], "disproven")
+        self.assertFalse(res_rational.value["equivalent"])
+        self.assertEqual(res_rational.guarantee.value, "unverified")
+        self.assertFalse(res_rational.verification.passed)
+
+        res_tiny = ax.compare("1/10^50", "0")
+        self.assertEqual(res_tiny.value["status"], "disproven")
+        self.assertFalse(res_tiny.value["equivalent"])
+
+        # 2. Exact identical constants: must be proven with exact-symbolic guarantee
+        res_equal = ax.compare("1/2", "2/4")
+        self.assertTrue(res_equal.ok)
+        self.assertEqual(res_equal.value["status"], "proven")
+        self.assertTrue(res_equal.value["equivalent"])
+        self.assertEqual(res_equal.guarantee.value, "exact-symbolic")
+        self.assertTrue(res_equal.verification.passed)
+
+        # 3. Approximate float literals within tolerance: approximately_equal, NOT proven
+        res_float = ax.compare("1.0*10^(-25)", "0")
+        self.assertTrue(res_float.ok)
+        self.assertEqual(res_float.value["status"], "approximately_equal")
+        self.assertFalse(res_float.value["equivalent"])
+        self.assertTrue(res_float.value.get("approximately_equal"))
+        self.assertIn("approx", res_float.latex)
+        self.assertEqual(res_float.guarantee.value, "unverified")
+
+        # 4. CLI end-to-end check for 1/10^30 != 0
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = cli_main(["compare", "--json", "1/10^30", "0"])
+        self.assertEqual(rc, 0)
+        payload = json.loads(buf.getvalue())
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["value"]["status"], "disproven")
+        self.assertFalse(payload["value"]["equivalent"])
+
     def test_mcp_all_21_tools_and_jsonrpc(self) -> None:
         self.assertEqual(len(TOOL_DEFINITIONS), 21)
         names = {t["name"] for t in TOOL_DEFINITIONS}

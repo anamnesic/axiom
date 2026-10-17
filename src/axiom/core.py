@@ -758,17 +758,29 @@ class Axiom:
         if not status:
             if ver.passed:
                 status = "proven"
-            elif ver.kind in ("counterexample-search", "domain-mismatch"):
+            elif ver.kind in (
+                "counterexample-search",
+                "domain-mismatch",
+                "constant-exact-disproof",
+                "approximate-disproof",
+            ):
                 status = "disproven"
+            elif ver.kind == "numerical-approximation":
+                status = "approximately_equal"
             else:
                 status = "inconclusive"
 
         equivalent = (status == "proven")
+        approximately_equal = bool(
+            status == "approximately_equal" or ver.data.get("approximately_equal")
+        )
         consistent_with_samples = bool(
             status == "proven" or ver.data.get("consistent_with_samples")
         )
         if status == "proven":
             relation = "="
+        elif status == "approximately_equal":
+            relation = r"\approx"
         elif status == "disproven":
             relation = r"\neq"
         else:
@@ -801,11 +813,23 @@ class Axiom:
             "right": str(rhs),
             "simplified_difference": str(diff),
         }
+        if approximately_equal:
+            val_dict["approximately_equal"] = True
+            if ver.max_error is not None:
+                val_dict["max_error"] = ver.max_error
+            if "tolerance" in ver.data:
+                val_dict["tolerance"] = ver.data["tolerance"]
         if "counterexample" in ver.data:
             val_dict["counterexample"] = ver.data["counterexample"]
 
         if status == "proven":
             value_str = "equivalent"
+        elif status == "approximately_equal":
+            tol_val = ver.data.get("tolerance", 1e-20)
+            value_str = (
+                f"approximately equal within tolerance {tol_val:.1e} "
+                f"(max error: {ver.max_error:.2e}, exact equality not proven)"
+            )
         elif status == "disproven":
             ce = ver.data.get("counterexample")
             if ce:

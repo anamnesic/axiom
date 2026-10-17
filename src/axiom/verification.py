@@ -543,66 +543,169 @@ def verify_equivalence(
                 )
 
     if not free:
-        try:
-            err = abs(complex(diff.evalf(40)))
-            checks = 1
-            max_error = err
+        data_out = dict(domain_meta)
+        if symbolic_ok:
+            data_out["status"] = "proven"
+            data_out["proven"] = True
+            return (
+                Verification(
+                    kind="symbolic-identity",
+                    passed=True,
+                    detail="Symbolic difference reduces to 0",
+                    checks=1,
+                    max_error=0.0,
+                    data=data_out,
+                ),
+                Guarantee.EXACT_SYMBOLIC,
+            )
+
+        # Check if either expression involves inexact floating-point numbers
+        has_float = (
+            (isinstance(diff, sp.Basic) and diff.has(sp.Float))
+            or (isinstance(left, sp.Basic) and left.has(sp.Float))
+            or (isinstance(right, sp.Basic) and right.has(sp.Float))
+        )
+
+        if has_float:
+            try:
+                err = abs(complex(diff.evalf(40)))
+            except Exception:
+                err = 1.0
             if err > tol:
-                data_out = dict(domain_meta)
                 data_out["status"] = "disproven"
                 data_out["proven"] = False
                 return (
                     Verification(
-                        kind="equivalence",
+                        kind="approximate-disproof",
                         passed=False,
-                        detail=f"constant values differ by {err:.3e}",
+                        detail=f"approximate constant values differ by {err:.3e} (exceeds tolerance {tol:.1e})",
                         checks=1,
                         max_error=err,
                         data=data_out,
                     ),
                     Guarantee.UNVERIFIED,
                 )
+            # Within numerical tolerance: numerical agreement does NOT prove exact equality
+            data_out["status"] = "approximately_equal"
+            data_out["proven"] = False
+            data_out["approximately_equal"] = True
+            data_out["tolerance"] = tol
+            data_out["max_error"] = err
+            return (
+                Verification(
+                    kind="numerical-approximation",
+                    passed=False,
+                    detail=(
+                        f"Constant values are approximately equal within tolerance {tol:.1e} "
+                        f"(|diff| = {err:.2e}), exact equality not proven"
+                    ),
+                    checks=1,
+                    max_error=err,
+                    data=data_out,
+                ),
+                Guarantee.UNVERIFIED,
+            )
+
+        # Exact constant expressions (no sp.Float): comparison MUST be exact.
+        # Numerical closeness within tolerance can NEVER prove exact equality.
+        is_exact_nonzero = False
+        try:
+            if diff.is_zero is False or diff.is_nonzero is True:
+                is_exact_nonzero = True
+            elif diff.is_positive is True or diff.is_negative is True:
+                is_exact_nonzero = True
+            elif isinstance(diff, (sp.Rational, sp.Integer)) and diff != 0:
+                is_exact_nonzero = True
         except Exception:
             pass
-    else:
-        probe_lists = [_build_probe_sequence(sym, k) for k, sym in enumerate(free)]
-        max_len = min((len(pl) for pl in probe_lists), default=0)
-        target_checks = max(10, (poly_obj.total_degree() + 2) if is_poly and poly_obj is not None else 8)
-        for idx in range(max_len):
-            subs = {sym: probe_lists[k][idx] for k, sym in enumerate(free)}
-            if any(str(subs[sym]) in merged_excluded.get(str(sym), []) for sym in free):
-                continue
+
+        err_val = None
+        if not is_exact_nonzero:
             try:
-                sub_expr = diff.subs(subs)
-                if sub_expr.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
-                    continue
-                val = sub_expr.evalf(35)
-                if val.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
-                    continue
-                err = abs(complex(val))
+                v60 = diff.evalf(60)
+                v120 = diff.evalf(120)
+                c120 = complex(v120)
+                mag = abs(c120)
+                err_val = mag
+                # If high-precision evaluation is clearly non-zero and stable
+                if mag > 1e-100 and not v120.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
+                    is_exact_nonzero = True
             except Exception:
+                pass
+
+        if is_exact_nonzero:
+            data_out["status"] = "disproven"
+            data_out["proven"] = False
+            if err_val is None:
+                try:
+                    err_val = abs(complex(diff.evalf(40)))
+                except Exception:
+                    err_val = 1.0
+            return (
+                Verification(
+                    kind="constant-exact-disproof",
+                    passed=False,
+                    detail=f"Exact constant expressions are not equal (difference {diff} != 0)",
+                    checks=1,
+                    max_error=err_val,
+                    data=data_out,
+                ),
+                Guarantee.UNVERIFIED,
+            )
+
+        # If it cannot be established zero symbolically or non-zero numerically: fail-closed
+        data_out["status"] = "inconclusive"
+        data_out["proven"] = False
+        return (
+            Verification(
+                kind="constant-exact-inconclusive",
+                passed=False,
+                detail="Exact constant difference could not be proved zero symbolically or refuted numerically (inconclusive)",
+                checks=1,
+                max_error=err_val or 0.0,
+                data=data_out,
+            ),
+            Guarantee.UNVERIFIED,
+        )
+
+    probe_lists = [_build_probe_sequence(sym, k) for k, sym in enumerate(free)]
+    max_len = min((len(pl) for pl in probe_lists), default=0)
+    target_checks = max(10, (poly_obj.total_degree() + 2) if is_poly and poly_obj is not None else 8)
+    for idx in range(max_len):
+        subs = {sym: probe_lists[k][idx] for k, sym in enumerate(free)}
+        if any(str(subs[sym]) in merged_excluded.get(str(sym), []) for sym in free):
+            continue
+        try:
+            sub_expr = diff.subs(subs)
+            if sub_expr.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
                 continue
-            checks += 1
-            max_error = max(max_error, err)
-            if err > tol:
-                counterexample = {str(k): str(v) for k, v in subs.items()}
-                data_out = dict(domain_meta)
-                data_out["counterexample"] = counterexample
-                data_out["status"] = "disproven"
-                data_out["proven"] = False
-                return (
-                    Verification(
-                        kind="counterexample-search",
-                        passed=False,
-                        detail=f"counterexample found at {counterexample} (|diff| = {err:.3e})",
-                        checks=checks,
-                        max_error=err,
-                        data=data_out,
-                    ),
-                    Guarantee.UNVERIFIED,
-                )
-            if checks >= target_checks:
-                break
+            val = sub_expr.evalf(35)
+            if val.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
+                continue
+            err = abs(complex(val))
+        except Exception:
+            continue
+        checks += 1
+        max_error = max(max_error, err)
+        if err > tol:
+            counterexample = {str(k): str(v) for k, v in subs.items()}
+            data_out = dict(domain_meta)
+            data_out["counterexample"] = counterexample
+            data_out["status"] = "disproven"
+            data_out["proven"] = False
+            return (
+                Verification(
+                    kind="counterexample-search",
+                    passed=False,
+                    detail=f"counterexample found at {counterexample} (|diff| = {err:.3e})",
+                    checks=checks,
+                    max_error=err,
+                    data=data_out,
+                ),
+                Guarantee.UNVERIFIED,
+            )
+        if checks >= target_checks:
+            break
 
     if symbolic_ok:
         data_out = dict(domain_meta)
@@ -621,22 +724,6 @@ def verify_equivalence(
                 data=data_out,
             ),
             Guarantee.EXACT_SYMBOLIC,
-        )
-
-    if not free and max_error <= tol:
-        data_out = dict(domain_meta)
-        data_out["status"] = "proven"
-        data_out["proven"] = True
-        return (
-            Verification(
-                kind="constant-equality-probe",
-                passed=True,
-                detail=f"Constant values agree within {max_error:.2e}",
-                checks=1,
-                max_error=max_error,
-                data=data_out,
-            ),
-            Guarantee.NUMERICAL_APPROXIMATION,
         )
 
     # Universal identity with free variables: numerical sampling alone CANNOT establish

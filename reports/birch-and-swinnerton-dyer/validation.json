@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T22:45:33.588559+00:00",
+  "timestamp_utc": "2026-10-17T23:03:42.040341+00:00",
   "axiom_version": "0.2.3",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -201,8 +201,8 @@
     "reports/birch-and-swinnerton-dyer/validate.py": "f1a1539068efdf7fff1d8a40fd62ed5b9535cc910627185b355b2f32aaea77ed",
     "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
     "reports/birch-and-swinnerton-dyer/REPORT.md": "85d560e8ff66b5b16b1a80daec34c738e8a41adcbd38646c72d678ea1ad51784",
-    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "16b930acc46ad6fb6d6ff8564ade7dc111c7e3944ae591d312f42f5f9100db2b"
+    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
+    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
   },
   "runs": {
     "doctor": {
@@ -344,7 +344,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -396,7 +396,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -448,7 +448,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -498,9 +498,9 @@
           "reproducible_with": "axiom compare \"-16 * (4 * (-3)^3 + 27 * 2^2)\" \"64\""
         },
         "verification": {
-          "kind": "equivalence",
+          "kind": "constant-exact-disproof",
           "passed": false,
-          "detail": "constant values differ by 6.400e+01",
+          "detail": "Exact constant expressions are not equal (difference -64 != 0)",
           "checks": 1,
           "max_error": 64.0,
           "data": {
@@ -625,7 +625,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -677,7 +677,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -726,9 +726,9 @@
           "reproducible_with": "axiom compare \"5^2\" \"(-4)^3 - 25*(-4)\""
         },
         "verification": {
-          "kind": "equivalence",
+          "kind": "constant-exact-disproof",
           "passed": false,
-          "detail": "constant values differ by 1.100e+01",
+          "detail": "Exact constant expressions are not equal (difference -11 != 0)",
           "checks": 1,
           "max_error": 11.0,
           "data": {
@@ -780,7 +780,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -822,7 +822,7 @@
         "verification": {
           "kind": "symbolic-identity",
           "passed": true,
-          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "detail": "Symbolic difference reduces to 0",
           "checks": 1,
           "max_error": 0.0,
           "data": {
@@ -872,9 +872,9 @@
           "reproducible_with": "axiom compare \"10\" \"2*sqrt(5)\""
         },
         "verification": {
-          "kind": "equivalence",
+          "kind": "constant-exact-disproof",
           "passed": false,
-          "detail": "constant values differ by 5.528e+00",
+          "detail": "Exact constant expressions are not equal (difference 10 - 2*sqrt(5) != 0)",
           "checks": 1,
           "max_error": 5.52786404500042,
           "data": {
@@ -933,7 +933,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"6^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"36\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"36 = 36\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 36\",\n      \"rhs = 36\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"6^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"36\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"36 = 36\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 36\",\n      \"rhs = 36\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -966,7 +966,7 @@
           "verification": {
             "kind": "symbolic-identity",
             "passed": true,
-            "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+            "detail": "Symbolic difference reduces to 0",
             "checks": 1,
             "max_error": 0.0,
             "data": {
@@ -985,7 +985,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"equivalence\",\n    \"passed\": false,\n    \"detail\": \"constant values differ by 1.100e+01\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -11 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -1016,9 +1016,9 @@
             "reproducible_with": "axiom compare \"5^2\" \"(-4)^3 - 25*(-4)\""
           },
           "verification": {
-            "kind": "equivalence",
+            "kind": "constant-exact-disproof",
             "passed": false,
-            "detail": "constant values differ by 1.100e+01",
+            "detail": "Exact constant expressions are not equal (difference -11 != 0)",
             "checks": 1,
             "max_error": 11.0,
             "data": {
