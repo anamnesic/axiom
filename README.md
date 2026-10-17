@@ -151,7 +151,7 @@ axiom verify solution.json
 
 - **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0008`).
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
-- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `sympy-mcp`, `fermat-mcp`, `Wolfram-MCP`, and `lean-lsp-mcp`.
+- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Roadmap
