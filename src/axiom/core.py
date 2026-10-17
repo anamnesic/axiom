@@ -737,17 +737,23 @@ class Axiom:
             )
         except ParseError as exc:
             return error_result("compare", combined, str(exc))
+        except Exception as exc:
+            return error_result("compare", combined, str(exc))
 
-        left_domain = left_parser.domain_info(sym_vars)
-        right_domain = right_parser.domain_info(sym_vars)
-        ver, guar = verify_equivalence(
-            lhs,
-            rhs,
-            sym_vars,
-            left_domain=left_domain,
-            right_domain=right_domain,
-        )
-        diff = sp.simplify(lhs - rhs)
+        try:
+            left_domain = left_parser.domain_info(sym_vars)
+            right_domain = right_parser.domain_info(sym_vars)
+            ver, guar = verify_equivalence(
+                lhs,
+                rhs,
+                sym_vars,
+                left_domain=left_domain,
+                right_domain=right_domain,
+            )
+            diff = sp.simplify(lhs - rhs)
+        except Exception as exc:
+            return error_result("compare", combined, str(exc))
+
         status = str(ver.data.get("status") or "")
         if not status:
             if ver.passed:

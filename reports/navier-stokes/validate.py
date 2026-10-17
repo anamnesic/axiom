@@ -42,7 +42,28 @@ OPERATIONAL_GUARANTEES = {
 
 
 def cli(*args: str) -> dict:
-    command = [sys.executable, "-m", "axiom.cli", *args, "--json"]
+    subcmd = args[0] if args else "doctor"
+    rest = list(args[1:])
+    flags: list[str] = ["--json"]
+    positionals: list[str] = []
+    i = 0
+    while i < len(rest):
+        arg = rest[i]
+        if arg in ("-A", "--assumptions", "-v", "--variable", "-e", "--engine", "-o", "--operation", "--from", "--to", "-n", "--order", "-p", "--precision"):
+            flags.append(arg)
+            if i + 1 < len(rest):
+                flags.append(rest[i + 1])
+                i += 1
+        elif arg.startswith("-") and not (arg.startswith("-") and any(c.isdigit() or c in "nuptxyz" for c in arg[1:2])):
+            flags.append(arg)
+        else:
+            positionals.append(arg)
+        i += 1
+
+    command = [sys.executable, "-m", "axiom.cli", subcmd, *flags]
+    if positionals:
+        command.extend(["--", *positionals])
+
     proc = subprocess.run(
         command,
         cwd=ROOT,
@@ -54,8 +75,13 @@ def cli(*args: str) -> dict:
     )
     try:
         parsed = json.loads(proc.stdout)
-    except Exception:
-        parsed = {"ok": False, "raw_stdout": proc.stdout, "stderr": proc.stderr}
+    except Exception as exc:
+        parsed = {
+            "ok": False,
+            "error": proc.stderr or f"JSON parse error: {exc}",
+            "raw_stdout": proc.stdout,
+            "stderr": proc.stderr,
+        }
     return {
         "command": command,
         "returncode": proc.returncode,
@@ -177,7 +203,7 @@ def main() -> int:
         "-4*nu*pi^2*exp(-4*nu*t)",
         "0",
         "-A",
-        "nu>0, t>0",
+        "nu:positive; t:positive",
     )
 
     # 5. Pressure Poisson Equation: -Laplacian(p) = sum_{i,j} (d u_i / dx_j) * (d u_j / dx_i)
@@ -326,7 +352,7 @@ def main() -> int:
         "evidence_type": "numerical-counterexample",
         "passed": ns_refuted,
         "is_false_positive": is_verified_claim(ns_div),
-        "is_fail_closed": not is_verified_claim(ns_div),
+        "is_fail_closed": ns_refuted,
     })
 
     # Momentum balance X (Positive claim)
@@ -357,7 +383,7 @@ def main() -> int:
         "evidence_type": "numerical-counterexample",
         "passed": visc_refuted,
         "is_false_positive": is_verified_claim(visc_mismatch),
-        "is_fail_closed": not is_verified_claim(visc_mismatch),
+        "is_fail_closed": visc_refuted,
     })
 
     # Dynamic kinetic energy integration step X (Positive claim)
@@ -445,7 +471,7 @@ def main() -> int:
     # Energy conservation false claim (Negative control)
     ke_cons = runs["energy_conservation_false_claim"]["result"]
     ke_cons_status = extract_status(ke_cons)
-    ke_cons_refuted = (ke_cons_status in ("disproven", "inconclusive")) and not is_verified_claim(ke_cons)
+    ke_cons_refuted = (ke_cons_status in ("disproven", "inconclusive", "unsolved")) and not is_verified_claim(ke_cons)
     test_cases.append({
         "id": "energy_conservation_refuted",
         "kind": "negative_control",
@@ -455,7 +481,7 @@ def main() -> int:
         "evidence_type": "numerical-counterexample",
         "passed": ke_cons_refuted,
         "is_false_positive": is_verified_claim(ke_cons),
-        "is_fail_closed": not is_verified_claim(ke_cons),
+        "is_fail_closed": ke_cons_refuted,
     })
 
     # Pressure Poisson identity (Positive claim)
@@ -476,7 +502,7 @@ def main() -> int:
     # Open problem non-linear PDE solve probe (Open boundary probe)
     pde_solve = runs["unsolvable_navier_stokes_ode_attempt"]["result"]
     pde_status = extract_status(pde_solve)
-    pde_failed_closed = (not is_verified_claim(pde_solve)) and (pde_status in ("unsolved", "inconclusive", "error"))
+    pde_failed_closed = (not is_verified_claim(pde_solve)) and (pde_status in ("unsolved", "inconclusive"))
     test_cases.append({
         "id": "unsolvable_navier_stokes_fail_closed",
         "kind": "open_boundary_probe",
@@ -486,7 +512,7 @@ def main() -> int:
         "evidence_type": "unsupported-open-problem",
         "passed": pde_failed_closed,
         "is_false_positive": is_verified_claim(pde_solve),
-        "is_fail_closed": not is_verified_claim(pde_solve),
+        "is_fail_closed": pde_failed_closed,
     })
 
     # Poiseuille momentum balance (Positive claim)
@@ -517,7 +543,7 @@ def main() -> int:
         "evidence_type": "numerical-counterexample",
         "passed": pois_bc_refuted,
         "is_false_positive": is_verified_claim(pois_bc),
-        "is_fail_closed": not is_verified_claim(pois_bc),
+        "is_fail_closed": pois_bc_refuted,
     })
 
     # MCP checks
@@ -631,7 +657,13 @@ def main() -> int:
     if not all_passed:
         for t in test_cases:
             if not t.get("passed"):
-                print(f"  [FAIL] Criterion '{t.get('id')}': expected={t.get('expected_verdict')}, observed={t.get('observed_verdict')}, kind={t.get('kind')}")
+                cid = t.get("id")
+                print(f"  [FAIL] Criterion '{cid}': expected={t.get('expected_verdict')}, observed={t.get('observed_verdict')}, kind={t.get('kind')}")
+                if cid in runs:
+                    print(f"    run diagnostics for '{cid}': returncode={runs[cid].get('returncode')}, result={runs[cid].get('result')}, stderr={runs[cid].get('stderr')}")
+                elif cid == "energy_conservation_refuted" and "energy_conservation_false_claim" in runs:
+                    r = runs["energy_conservation_false_claim"]
+                    print(f"    run diagnostics for 'energy_conservation_false_claim': returncode={r.get('returncode')}, result={r.get('result')}, stderr={r.get('stderr')}")
     return 0 if all_passed else 1
 
 

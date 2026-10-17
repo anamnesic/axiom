@@ -16,6 +16,16 @@ O avanço do raciocínio matemático em inteligência artificial tem sido impuls
 - **AlphaGeometry e AlphaGeometry 2 (Trinh et al., Nature 2024)**: Combina um modelo de linguagem que sugere construções geométricas auxiliares com um motor dedutivo simbólico baseado em álgebra de ângulos e áreas. Essa divisão — o LLM como gerador heurístico e o motor simbólico como verificador formal — inspira diretamente a filosofia do AXIOM. Diferencial do AXIOM: O AXIOM atua de forma multipropósito em múltiplos ramos da matemática (álgebra, cálculo, EDOs, tensores, teoria dos números, matrizes) e integra o kernel de tipos dependentes do Lean 4.
 - **FunSearch (Romera-Paredes et al., Nature 2024)**: Utiliza LLMs para evoluir algoritmos em código Python, avaliados e ranqueados por um ambiente determinístico para problemas combinatórios abertos (como o problema do conjunto de cap). O AXIOM opera em direção análoga ao fornecer um ambiente com auditoria rigorosa de hipóteses e limites, garantindo que soluções propostas não violem restrições de domínio.
 
+### 1.3. IA para EDPs, Operadores Neurais e o Desafio Navier-Stokes (2026)
+A resolução e análise de equações diferenciais parciais (EDPs) por inteligência artificial avançou em duas direções complementares:
+- **Operadores Neurais e Modelagem Física Contínua (PINNs e FNO)**:
+  - *Physics-Informed Neural Networks (PINNs, Raissi et al., JCP 2019)*: Incorporam o resíduo da EDP diretamente na função de perda via diferenciação automática. São eficazes para problemas diretos e inversos, mas não fornecem certificados matemáticos estritos nem garantias de convergência uniforme.
+  - *Fourier Neural Operators (FNO, Li et al., ICLR 2021; repositório `neuraloperator/neuraloperator`)* e *PDEBench (Takamoto et al., NeurIPS 2022)*: Aprendem mapeamentos entre espaços funcionais em malha independente via convoluções no domínio da frequência, acelerando em ordens de magnitude a evolução temporal de Navier-Stokes.
+- **Provas Assistidas por IA e o Fenômeno de Desvio de Especificação (*Specification Drift*, 2026)**:
+  - Em setembro de 2026, a OpenAI divulgou uma prova com formação de singularidade em tempo finito para Navier-Stokes tridimensional sob uma força externa suave, acompanhada de formalização em Lean 4 (`openai/NavierStokesAndEuler`).
+  - Análises críticas independentes (arXiv:2610.08144, outubro de 2026) identificaram discrepâncias entre a prova escrita e o código formal, evidenciando o fenômeno de **desvio de especificação** (*specification drift*): formulações em que a tradução formal enfraquece inadvertidamente o teorema ou adiciona hipóteses implícitas (como derivadas adicionais de regularidade) sem sinalização aos revisores.
+  - **Diferencial e Resposta do AXIOM**: O AXIOM foi desenhado especificamente contra o *specification drift*. Ao exigir que cada afirmação matemática passe por amostragem adversária, preservação de restrições de domínio e certificação formal independente com checagem de axiomas (`#print axioms`) e controle contra tautologias (`rfl`), o AXIOM impede que hipóteses implícitas ou relaxamentos silenciosos de enunciados passem como demonstrações válidas.
+
 ---
 
 ## 2. Ecossistema de Ferramentas MCP e Concorrentes

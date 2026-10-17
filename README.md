@@ -74,7 +74,7 @@ Every result carries structured `Evidence` metadata: `engine`, `engine_version`,
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │  AI Agents                                               │
-│  Codex · Claude Code · Cursor · Gemini CLI · MCP clients │
+│  Antigravity · Codex · Claude Code · Cursor · Gemini CLI │
 └────────────────────────┬─────────────────────────────────┘
                          │  MCP (21 tools) / CLI
 ┌────────────────────────▼─────────────────────────────────┐
@@ -99,7 +99,7 @@ pip install -e .
 # Run environment & verification diagnostics
 axiom doctor
 
-# Auto-configure Claude Code, Cursor, Gemini CLI, and Codex
+# Auto-configure Antigravity, Claude Code, Cursor, Gemini CLI, and Codex
 axiom setup --apply
 
 # Start the MCP stdio server

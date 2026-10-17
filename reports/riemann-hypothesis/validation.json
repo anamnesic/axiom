@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-17T20:37:30.734401+00:00",
+  "generated_at_utc": "2026-10-17T22:44:51.055957+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -10,7 +10,7 @@
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
     "src/axiom/parsing.py": "86b5d3d41679dc838c7e932fe5965c41a1f0c9e3ce0cb3f3ad6d3024100b812a",
-    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c",
+    "src/axiom/core.py": "16b930acc46ad6fb6d6ff8564ade7dc111c7e3944ae591d312f42f5f9100db2b",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/engines/lean_engine.py": "b5ffc481396d7d0ebd7b8c10edc981467d011c6efbf560a95c536433ef87758b",
     "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",

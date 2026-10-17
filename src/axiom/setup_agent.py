@@ -5,8 +5,8 @@ Inspired by ``npx rea-agents setup`` in REA:
 * ``axiom doctor`` checks the host environment, registered engines, optional
   scientific/formal toolchains, and runs a live verification self-test.
 * ``axiom setup`` generates or installs the AXIOM MCP server entry for popular
-  MCP clients (Claude Code, Cursor, Gemini CLI, Codex) with automatic backup of
-  any existing configuration file.
+  MCP clients (Google Antigravity, Claude Code, Cursor, Gemini CLI, Codex) with
+  automatic backup of any existing configuration file.
 """
 
 from __future__ import annotations
@@ -35,6 +35,8 @@ def client_config_paths(home: Path | None = None) -> dict[str, Path]:
     """Return default MCP configuration file paths for supported AI agents."""
     base = home or Path.home()
     return {
+        "antigravity": base / ".gemini" / "config" / "mcp_config.json",
+        "agy": base / ".gemini" / "config" / "mcp_config.json",
         "claude-code": base / ".claude.json",
         "cursor": base / ".cursor" / "mcp.json",
         "gemini": base / ".gemini" / "settings.json",

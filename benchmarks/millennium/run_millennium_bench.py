@@ -59,9 +59,15 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "true_positive_rate": 0.0,
         }
 
+    validation_json = REPORTS / folder / "validation.json"
+    if validation_json.exists():
+        try:
+            validation_json.unlink()
+        except Exception:
+            pass
+
     cmd = [sys.executable, str(validate_script)]
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
-    validation_json = REPORTS / folder / "validation.json"
 
     eval_count = 0
     passed_count = 0
@@ -75,49 +81,70 @@ def run_problem_suite(name: str, folder: str) -> dict:
     true_pos_rate = 1.0
 
     failed_criteria: list[str] = []
-    if validation_json.exists():
-        try:
-            data = json.loads(validation_json.read_text(encoding="utf-8"))
-            checks_dict = data.get("evaluations") or data.get("checks") or {}
-            if isinstance(checks_dict, dict) and checks_dict:
-                eval_count = len(checks_dict)
-                passed_count = sum(1 for v in checks_dict.values() if v is True)
-                failed_criteria = [k for k, v in checks_dict.items() if not v]
-            else:
-                eval_count = data.get("total_evaluations", 0)
-                passed_count = data.get("passed_evaluations", 0)
-                if isinstance(data.get("test_cases"), list):
-                    failed_criteria = [t.get("id", "unknown") for t in data["test_cases"] if not t.get("passed")]
+    if not validation_json.exists():
+        return {
+            "name": name,
+            "folder": folder,
+            "ok": False,
+            "returncode": proc.returncode,
+            "error": "validation.json was not generated in current execution",
+            "evaluations": 0,
+            "passed": 0,
+            "positive_claims_count": 0,
+            "true_positives_count": 0,
+            "negative_controls_count": 0,
+            "fail_closed_count": 0,
+            "false_positives_count": 0,
+            "fail_closed_rate": 0.0,
+            "false_positive_rate": 0.0,
+            "true_positive_rate": 0.0,
+            "failed_criteria": ["missing_fresh_validation_json"],
+            "stdout": proc.stdout,
+            "stderr": proc.stderr,
+        }
 
-            pos_count = data.get("positive_claims_count", 0)
-            tp_count = data.get("true_positives_count", 0)
-            neg_count = data.get("negative_controls_count", 0)
-            fc_count = data.get("fail_closed_count", 0)
-            fp_count = data.get("false_positives_count", 0)
+    try:
+        data = json.loads(validation_json.read_text(encoding="utf-8"))
+        checks_dict = data.get("evaluations") or data.get("checks") or {}
+        if isinstance(checks_dict, dict) and checks_dict:
+            eval_count = len(checks_dict)
+            passed_count = sum(1 for v in checks_dict.values() if v is True)
+            failed_criteria = [k for k, v in checks_dict.items() if not v]
+        else:
+            eval_count = data.get("total_evaluations", 0)
+            passed_count = data.get("passed_evaluations", 0)
+            if isinstance(data.get("test_cases"), list):
+                failed_criteria = [t.get("id", "unknown") for t in data["test_cases"] if not t.get("passed")]
 
-            fail_closed_rate = data.get("fail_closed_rate", (fc_count / neg_count) if neg_count > 0 else 1.0)
-            false_pos_rate = data.get("false_positive_rate", (fp_count / neg_count) if neg_count > 0 else 0.0)
-            true_pos_rate = data.get("true_positive_rate", (tp_count / pos_count) if pos_count > 0 else 1.0)
-        except Exception as exc:
-            return {
-                "name": name,
-                "folder": folder,
-                "ok": False,
-                "error": f"Failed to parse validation.json: {exc}",
-                "evaluations": eval_count,
-                "passed": passed_count,
-                "positive_claims_count": pos_count,
-                "true_positives_count": tp_count,
-                "negative_controls_count": neg_count,
-                "fail_closed_count": fc_count,
-                "false_positives_count": fp_count,
-                "fail_closed_rate": fail_closed_rate,
-                "false_positive_rate": false_pos_rate,
-                "true_positive_rate": true_pos_rate,
-                "failed_criteria": failed_criteria,
-                "stdout": proc.stdout,
-                "stderr": proc.stderr,
-            }
+        pos_count = data.get("positive_claims_count", 0)
+        tp_count = data.get("true_positives_count", 0)
+        neg_count = data.get("negative_controls_count", 0)
+        fc_count = data.get("fail_closed_count", 0)
+        fp_count = data.get("false_positives_count", 0)
+
+        fail_closed_rate = data.get("fail_closed_rate", (fc_count / neg_count) if neg_count > 0 else 1.0)
+        false_pos_rate = data.get("false_positive_rate", (fp_count / neg_count) if neg_count > 0 else 0.0)
+        true_pos_rate = data.get("true_positive_rate", (tp_count / pos_count) if pos_count > 0 else 1.0)
+    except Exception as exc:
+        return {
+            "name": name,
+            "folder": folder,
+            "ok": False,
+            "error": f"Failed to parse validation.json: {exc}",
+            "evaluations": eval_count,
+            "passed": passed_count,
+            "positive_claims_count": pos_count,
+            "true_positives_count": tp_count,
+            "negative_controls_count": neg_count,
+            "fail_closed_count": fc_count,
+            "false_positives_count": fp_count,
+            "fail_closed_rate": fail_closed_rate,
+            "false_positive_rate": false_pos_rate,
+            "true_positive_rate": true_pos_rate,
+            "failed_criteria": failed_criteria,
+            "stdout": proc.stdout,
+            "stderr": proc.stderr,
+        }
 
     suite_ok = (proc.returncode == 0) and (passed_count == eval_count) and (fp_count == 0)
 

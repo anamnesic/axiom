@@ -54,6 +54,14 @@ No escoamento estacionário entre placas paralelas em $y \in [-h, h]$, a velocid
 ### 1.5. Sonda de Fronteira do Problema Aberto
 A tentativa de resolver uma equação diferencial parcial não-linear geral de Navier-Stokes em forma fechada (`solve u*diff(u, x) - nu*diff(u, x, 2) = 0`) resultou em recusa fail-closed (`observed: unsolved`, `evidence_type: unsupported-open-problem`). Essa falha fechada é classificada como sonda de fronteira de problema aberto e não como contraexemplo falso, garantindo a integridade epistemológica do benchmark.
 
+### 1.6. Fronteira 2026: Alongamento de Vorticidade, IA e Prevenção de *Specification Drift*
+A evolução da vorticidade $\boldsymbol{\omega} = \nabla \times \mathbf{u}$ revela a disparidade fundamental entre duas e três dimensões:
+$$\frac{D\boldsymbol{\omega}}{Dt} = (\boldsymbol{\omega}\cdot\nabla)\mathbf{u} + \nu\nabla^2\boldsymbol{\omega}$$
+
+- **Em 2D**: $(\boldsymbol{\omega}\cdot\nabla)\mathbf{u} \equiv 0$, pois a vorticidade é ortogonal ao plano de movimento. Não há alongamento de vórtices (*vortex stretching*), a enstrofia $\Omega(t) = \frac{1}{2}\int |\boldsymbol{\omega}|^2 dx$ dissipa monotonicamente e a existência global suave é assegurada (Leray, Ladyzhenskaya).
+- **Em 3D**: O termo $(\boldsymbol{\omega}\cdot\nabla)\mathbf{u} \neq 0$ permite a amplificação local da vorticidade, constituindo o principal obstáculo analítico à regularidade global no problema do Clay Institute.
+- **O Contexto da IA e Lean 4 (Setembro–Outubro de 2026)**: A divulgação recente de provas assistidas por IA com formação de singularidade sob força externa suave (`openai/NavierStokesAndEuler`), seguida da identificação de discrepâncias entre texto e formalização (arXiv:2610.08144), destaca o risco de **desvio silencioso de especificação** (*specification drift*). O AXIOM posiciona-se como laboratório de integridade epistêmica: ao exigir verificação cruzada simbólica, numérica e formal sem oráculos opacos, protege o pesquisador contra teoremas relaxados ou hipóteses omitidas.
+
 ---
 
 ## 2. Resumo da Execução de Controle e Métricas Dinâmicas

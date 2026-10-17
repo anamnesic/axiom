@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T22:09:41.804351+00:00",
+  "timestamp_utc": "2026-10-17T22:45:17.346833+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -210,11 +210,11 @@
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "6af82b70e43e65cdb9abd4635dc1d622607aa31669342fa398ff12577d597333",
+    "reports/navier-stokes/validate.py": "ca68a93fbd9dde8e9452d5f7d5de88c9fefa10a399ef12415bca9f5f99dc2752",
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
-    "reports/navier-stokes/REPORT.md": "cbe9545b2ddc4c467aa2c0dc1969a264843f5bdd2c6982252aa3aa9b4010ca28",
+    "reports/navier-stokes/REPORT.md": "ae38a51060953b03e10ac2f5c17800dd80099dd0df19ccd45b26b48b5e031154",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
-    "src/axiom/core.py": "a69fb204dbb05956d94510418ee104de8a9c63217554394d0db0c84261024f6c"
+    "src/axiom/core.py": "16b930acc46ad6fb6d6ff8564ade7dc111c7e3944ae591d312f42f5f9100db2b"
   },
   "runs": {
     "doctor": {
@@ -320,9 +320,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t)",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -378,9 +379,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "2*x + 2*y",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -442,9 +444,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) + (1/2)*sin(2*x)*exp(-4*nu*t) - (1/2)*sin(2*x)*exp(-4*nu*t) - (-2*nu*sin(x)*cos(y)*exp(-2*nu*t))",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -500,9 +503,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) - (-4*nu*sin(x)*cos(y)*exp(-2*nu*t))",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -570,14 +574,15 @@
         "-m",
         "axiom.cli",
         "integrate",
-        "sin(x)^2",
+        "--json",
         "--variable",
         "x",
         "--from",
         "0",
         "--to",
         "2*pi",
-        "--json"
+        "--",
+        "sin(x)^2"
       ],
       "returncode": 0,
       "stderr": "",
@@ -617,14 +622,15 @@
         "-m",
         "axiom.cli",
         "integrate",
-        "cos(y)^2",
+        "--json",
         "--variable",
         "y",
         "--from",
         "0",
         "--to",
         "2*pi",
-        "--json"
+        "--",
+        "cos(y)^2"
       ],
       "returncode": 0,
       "stderr": "",
@@ -664,10 +670,11 @@
         "-m",
         "axiom.cli",
         "differentiate",
-        "pi^2 * exp(-4*nu*t)",
+        "--json",
         "--variable",
         "t",
-        "--json"
+        "--",
+        "pi^2 * exp(-4*nu*t)"
       ],
       "returncode": 0,
       "stderr": "",
@@ -707,9 +714,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -763,11 +771,12 @@
         "-m",
         "axiom.cli",
         "compare",
-        "-4*nu*pi^2*exp(-4*nu*t)",
-        "0",
+        "--json",
         "-A",
-        "nu>0, t>0",
-        "--json"
+        "nu:positive; t:positive",
+        "--",
+        "-4*nu*pi^2*exp(-4*nu*t)",
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -803,13 +812,9 @@
             "rhs = 0",
             "status = disproven",
             "simplify(lhs - rhs) -> -4*pi**2*nu*exp(-4*nu*t)",
-            "assumptions: {'nu': {'real': True, 'positive': True}, 't': {'real': True, 'positive': True}}",
-            "Domain constraint(s): nu > 0, t > 0"
+            "assumptions: {'nu': {'positive': True}, 't': {'positive': True}}"
           ],
-          "limitations": [
-            "Domain constraint(s): nu > 0, t > 0"
-          ],
-          "reproducible_with": "axiom compare \"-4*nu*pi^2*exp(-4*nu*t)\" \"0\" --assumptions \"nu>0, t>0\""
+          "reproducible_with": "axiom compare \"-4*nu*pi^2*exp(-4*nu*t)\" \"0\" --assumptions \"nu:positive; t:positive\""
         },
         "verification": {
           "kind": "counterexample-search",
@@ -818,10 +823,6 @@
           "checks": 1,
           "max_error": 2.8336190997732714e-06,
           "data": {
-            "domain_constraints": [
-              "nu > 0",
-              "t > 0"
-            ],
             "counterexample": {
               "nu": "2",
               "t": "15/7"
@@ -838,9 +839,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
         "-(cos(2*x) + cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t)",
-        "0",
-        "--json"
+        "--",
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -896,10 +898,11 @@
         "-m",
         "axiom.cli",
         "solve",
-        "u*diff(u, x) - nu*diff(u, x, 2) = 0",
+        "--json",
         "--variable",
         "u",
-        "--json"
+        "--",
+        "u*diff(u, x) - nu*diff(u, x, 2) = 0"
       ],
       "returncode": 1,
       "stderr": "",
@@ -920,11 +923,12 @@
         "-m",
         "axiom.cli",
         "compare",
-        "mu * (-P / mu) + P",
-        "0",
+        "--json",
         "-A",
         "mu>0",
-        "--json"
+        "--",
+        "mu * (-P / mu) + P",
+        "0"
       ],
       "returncode": 0,
       "stderr": "",
@@ -987,9 +991,10 @@
         "-m",
         "axiom.cli",
         "compare",
+        "--json",
+        "--",
         "(P / (2*mu)) * (h^2 - h^2) + 1",
-        "0",
-        "--json"
+        "0"
       ],
       "returncode": 0,
       "stderr": "",

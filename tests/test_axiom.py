@@ -398,7 +398,7 @@ class TestAxiom(unittest.TestCase):
             self.assertIn("codex mcp add axiom", dry["clients"][1]["cli_command"])
 
             applied = configure_clients(
-                clients=["claude-code", "cursor", "codex"], apply=True, home=fake_home
+                clients=["claude-code", "cursor", "codex", "antigravity", "agy"], apply=True, home=fake_home
             )
             self.assertTrue(applied["applied"])
             self.assertTrue((fake_home / ".claude.json.axiom.bak").exists())
@@ -406,6 +406,11 @@ class TestAxiom(unittest.TestCase):
             merged = json.loads(claude_cfg.read_text(encoding="utf-8"))
             self.assertTrue(merged["existing"])
             self.assertIn("axiom", merged["mcpServers"])
+
+            agy_cfg = fake_home / ".gemini" / "config" / "mcp_config.json"
+            self.assertTrue(agy_cfg.exists())
+            agy_data = json.loads(agy_cfg.read_text(encoding="utf-8"))
+            self.assertIn("axiom", agy_data["mcpServers"])
 
             toml_text = codex_cfg.read_text(encoding="utf-8")
             self.assertIn('model = "o3"', toml_text)
@@ -700,6 +705,27 @@ class TestAxiom(unittest.TestCase):
         self.assertIn("VERIFIED-SUBSTITUTION", box)
         self.assertIn("┌─", box)
         self.assertIn("└─", box)
+
+    def test_cli_negative_expression_leading_dash(self) -> None:
+        """Ensure expressions with leading '-' can be passed to CLI without argparse option confusion."""
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = cli_main(
+                [
+                    "compare",
+                    "--json",
+                    "-A",
+                    "nu:positive; t:positive",
+                    "--",
+                    "-4*nu*pi^2*exp(-4*nu*t)",
+                    "0",
+                ]
+            )
+        self.assertEqual(rc, 0)
+        payload = json.loads(buf.getvalue())
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["value"]["status"], "disproven")
+        self.assertFalse(payload["value"]["equivalent"])
 
     def test_mcp_all_21_tools_and_jsonrpc(self) -> None:
         self.assertEqual(len(TOOL_DEFINITIONS), 21)
