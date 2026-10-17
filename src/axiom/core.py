@@ -393,7 +393,12 @@ class Axiom:
                 if variable
                 else None
             )
-            return self.solve_system(parts, variables=vars_list, engine=engine)
+            return self.solve_system(
+                parts,
+                variables=vars_list,
+                assumptions=assumptions,
+                engine=engine,
+            )
 
         try:
             parser = Parser(assumptions=assumptions)
@@ -458,9 +463,10 @@ class Axiom:
         equations: list[str],
         *,
         variables: list[str] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
+        parser = Parser(assumptions=assumptions)
         joined = "; ".join(equations)
         try:
             parsed_eqs = [parser.parse_equation(eq) for eq in equations]
@@ -481,6 +487,14 @@ class Axiom:
         ver, guar = verify_system_solutions(
             parsed_eqs, sym_vars, ans.raw["solutions"]
         )
+        dom = parser.domain_info(sym_vars)
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
+        if dom["domain_constraints"]:
+            ver.data["domain_constraints"] = dom["domain_constraints"]
+        if dom["excluded_points"]:
+            ver.data["excluded_points"] = dom["excluded_points"]
+        assump_cli = _format_assumptions_cli(assumptions)
         return _wrap_answer(
             kind="solve_system",
             expression=joined,
@@ -488,8 +502,9 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f'axiom solve "{joined}"',
+            reproducible_with=f'axiom solve "{joined}"{assump_cli}',
         )
+
 
     # -------------------------------------------------------------- calculus
 
@@ -733,11 +748,30 @@ class Axiom:
             right_domain=right_domain,
         )
         diff = sp.simplify(lhs - rhs)
-        equivalent = ver.passed
-        relation = "=" if equivalent else r"\neq"
+        status = str(ver.data.get("status") or "")
+        if not status:
+            if ver.passed:
+                status = "proven"
+            elif ver.kind in ("counterexample-search", "domain-mismatch"):
+                status = "disproven"
+            else:
+                status = "inconclusive"
+
+        equivalent = (status == "proven")
+        consistent_with_samples = bool(
+            status == "proven" or ver.data.get("consistent_with_samples")
+        )
+        if status == "proven":
+            relation = "="
+        elif status == "disproven":
+            relation = r"\neq"
+        else:
+            relation = r"\stackrel{?}{=}"
+
         steps = [
             f"lhs = {lhs}",
             f"rhs = {rhs}",
+            f"status = {status}",
             f"simplify(lhs - rhs) -> {diff}",
         ]
         limitations: list[str] = []
@@ -752,17 +786,38 @@ class Axiom:
             c_msg = f"Domain constraint(s): {', '.join(combined_constraints)}"
             steps.append(c_msg)
             limitations.append(c_msg)
+
+        val_dict: dict[str, Any] = {
+            "status": status,
+            "equivalent": equivalent,
+            "consistent_with_samples": consistent_with_samples,
+            "left": str(lhs),
+            "right": str(rhs),
+            "simplified_difference": str(diff),
+        }
+        if "counterexample" in ver.data:
+            val_dict["counterexample"] = ver.data["counterexample"]
+
+        if status == "proven":
+            value_str = "equivalent"
+        elif status == "disproven":
+            ce = ver.data.get("counterexample")
+            if ce:
+                value_str = f"not equivalent (counterexample: {ce})"
+            else:
+                value_str = f"not equivalent (diff = {diff})"
+        else:
+            value_str = (
+                f"inconclusive (consistent with {ver.checks} sample(s), "
+                f"universal identity not proven symbolically)"
+            )
+
         return MathResult(
             kind="compare",
             input=combined,
             ok=True,
-            value={
-                "equivalent": equivalent,
-                "left": str(lhs),
-                "right": str(rhs),
-                "simplified_difference": str(diff),
-            },
-            value_str="equivalent" if equivalent else f"not equivalent (diff = {diff})",
+            value=val_dict,
+            value_str=value_str,
             latex=f"{sp.latex(lhs)} {relation} {sp.latex(rhs)}",
             variables=[str(v) for v in sym_vars],
             guarantee=guar,
@@ -776,6 +831,7 @@ class Axiom:
             ),
             verification=ver,
         )
+
 
     def verify(
         self,

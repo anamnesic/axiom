@@ -12,6 +12,7 @@ import sympy as sp
 from sympy.ntheory.modular import crt as sympy_crt
 
 from axiom.engines.base import Answer, Engine, EngineError
+from axiom.parsing import _root_matches_symbol_assumptions
 
 
 def _fmt(obj) -> str:
@@ -223,27 +224,51 @@ class SymPyEngine(Engine):
         )
 
     def solve_system(self, equations: list, variables: list) -> Answer:
-        result = sp.linsolve(equations, variables)
+        try:
+            result = sp.linsolve(equations, variables)
+            method = "linear system solver (sympy.linsolve)"
+        except Exception:
+            try:
+                result = sp.nonlinsolve(equations, variables)
+                method = "nonlinear system solver (sympy.nonlinsolve)"
+            except Exception as exc:
+                raise EngineError(f"could not solve system: {exc}") from exc
+
+        # Filter solution tuples that violate declared symbol assumptions
+        valid_tuples: list[tuple] = []
+        if result != sp.EmptySet and getattr(result, "args", None):
+            for sol in result.args:
+                is_valid = True
+                for v, val in zip(variables, sol):
+                    if hasattr(val, "is_number") and val.is_number:
+                        if not _root_matches_symbol_assumptions(v, val):
+                            is_valid = False
+                            break
+                if is_valid:
+                    valid_tuples.append(sol)
+
+        filtered_result = sp.FiniteSet(*valid_tuples) if valid_tuples else sp.EmptySet
         solutions = [
             {str(v): str(val) for v, val in zip(variables, sol)}
-            for sol in (result.args if result != sp.EmptySet else [])
+            for sol in (filtered_result.args if filtered_result != sp.EmptySet else [])
         ]
         return Answer(
             value=solutions,
             value_str=str(solutions),
-            latex=_latex(result),
-            method="linear system solver (sympy.linsolve)",
+            latex=_latex(filtered_result),
+            method=method,
             steps=[
                 f"system with {len(equations)} equations",
                 f"solutions: {len(solutions)}",
             ],
             variables=[str(v) for v in variables],
             raw={
-                "solutions": result,
+                "solutions": filtered_result,
                 "vars": variables,
                 "equations": equations,
             },
         )
+
 
     # ------------------------------------------------------------- calculus
 

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-17T18:18:57.497998+00:00",
+  "generated_at_utc": "2026-10-17T18:45:37.751791+00:00",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.0 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
   "sources": [
@@ -8,11 +8,11 @@
   ],
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
-    "src/axiom/parsing.py": "4da5889d6719a5d07b2db20d9cf95b66217853dbaa9e0abc1fc1cb5b048146e7",
-    "src/axiom/core.py": "de59a578b13cba7e10da4d0ff5ee9cdea8ef1038dbd575eb3cc16cc57ce44006",
-    "src/axiom/verification.py": "5c2764066b0870fb2ec1bb605d7c522b5168a62d7e91b7cb462baefc3c546b78",
+    "src/axiom/parsing.py": "86b5d3d41679dc838c7e932fe5965c41a1f0c9e3ce0cb3f3ad6d3024100b812a",
+    "src/axiom/core.py": "daff807d1608d95d560c35a462ef6a6160381ba1d9beb37cd61cd8d881ac24f2",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/engines/lean_engine.py": "b5ffc481396d7d0ebd7b8c10edc981467d011c6efbf560a95c536433ef87758b",
-    "src/axiom/engines/sympy_engine.py": "12cbb118d2855be6b21b163b1bb7f81c789dfa40ec3dca0167dcf7f7c5903a23",
+    "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
     "src/axiom/mcp_server.py": "cec0b71df0781322c71fa9a7cee4e4c618d07ec47d60ee8aa32b4caab651d8b7",
     "src/axiom/cli.py": "a9e790b80eb82b0976b04b9c70119f8b8ebc0b06143a909c5f79d32f4fee9436",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
@@ -209,7 +209,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -247,7 +251,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -285,7 +293,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -323,7 +335,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -361,7 +377,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -399,7 +419,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -420,7 +444,9 @@
         "input": "zeta(2) == pi^2/6",
         "ok": true,
         "value": {
+          "status": "proven",
           "equivalent": true,
+          "consistent_with_samples": true,
           "left": "pi**2/6",
           "right": "pi**2/6",
           "simplified_difference": "0"
@@ -435,6 +461,7 @@
           "steps": [
             "lhs = pi**2/6",
             "rhs = pi**2/6",
+            "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
           "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/6\""
@@ -444,7 +471,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -465,7 +496,9 @@
         "input": "zeta(2) == pi^2/8",
         "ok": true,
         "value": {
+          "status": "disproven",
           "equivalent": false,
+          "consistent_with_samples": false,
           "left": "pi**2/6",
           "right": "pi**2/8",
           "simplified_difference": "pi**2/24"
@@ -480,6 +513,7 @@
           "steps": [
             "lhs = pi**2/6",
             "rhs = pi**2/8",
+            "status = disproven",
             "simplify(lhs - rhs) -> pi**2/24"
           ],
           "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/8\""
@@ -489,7 +523,11 @@
           "passed": false,
           "detail": "constant values differ by 4.112e-01",
           "checks": 1,
-          "max_error": 0.4112335167120566
+          "max_error": 0.4112335167120566,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
         }
       }
     },
@@ -509,7 +547,9 @@
         "input": "zeta(2) == pi^2/6",
         "ok": true,
         "value": {
+          "status": "proven",
           "equivalent": true,
+          "consistent_with_samples": true,
           "left": "pi**2/6",
           "right": "pi**2/6",
           "simplified_difference": "0"
@@ -524,6 +564,7 @@
           "steps": [
             "lhs = pi**2/6",
             "rhs = pi**2/6",
+            "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
           "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/6\""
@@ -533,7 +574,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -746,17 +791,19 @@
         "input": "zeta(s) == 2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
         "ok": true,
         "value": {
-          "equivalent": true,
+          "status": "inconclusive",
+          "equivalent": false,
+          "consistent_with_samples": true,
           "left": "zeta(s)",
           "right": "2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
           "simplified_difference": "-2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s) + zeta(s)"
         },
-        "value_str": "equivalent",
-        "latex": "\\zeta\\left(s\\right) = 2^{s} \\pi^{s - 1} \\sin{\\left(\\frac{\\pi s}{2} \\right)} \\Gamma\\left(1 - s\\right) \\zeta\\left(1 - s\\right)",
+        "value_str": "inconclusive (consistent with 10 sample(s), universal identity not proven symbolically)",
+        "latex": "\\zeta\\left(s\\right) \\stackrel{?}{=} 2^{s} \\pi^{s - 1} \\sin{\\left(\\frac{\\pi s}{2} \\right)} \\Gamma\\left(1 - s\\right) \\zeta\\left(1 - s\\right)",
         "variables": [
           "s"
         ],
-        "guarantee": "numerical-approximation",
+        "guarantee": "unverified",
         "evidence": {
           "engine": "sympy",
           "engine_version": "1.14.0",
@@ -764,16 +811,22 @@
           "steps": [
             "lhs = zeta(s)",
             "rhs = 2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
+            "status = inconclusive",
             "simplify(lhs - rhs) -> -2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s) + zeta(s)"
           ],
           "reproducible_with": "axiom compare \"zeta(s)\" \"2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)\""
         },
         "verification": {
           "kind": "numerical-spot-check",
-          "passed": true,
-          "detail": "Agreed across 6 test points within 2.11e-154 (symbolic reduction inconclusive)",
-          "checks": 6,
-          "max_error": 2.1095373229726e-154
+          "passed": false,
+          "detail": "Agreed across 10 test points within 3.44e-41, but universal identity could not be established symbolically (inconclusive)",
+          "checks": 10,
+          "max_error": 3.4408516076333197e-41,
+          "data": {
+            "status": "inconclusive",
+            "proven": false,
+            "consistent_with_samples": true
+          }
         }
       }
     },
@@ -987,7 +1040,11 @@
           "passed": true,
           "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
           "checks": 1,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
         }
       }
     },
@@ -2342,7 +2399,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"equivalent\": false,\n    \"left\": \"sqrt(x**2)\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"-x + sqrt(x**2)\"\n  },\n  \"value_str\": \"not equivalent (diff = -x + sqrt(x**2))\",\n  \"latex\": \"\\\\sqrt{x^{2}} \\\\neq x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = sqrt(x**2)\",\n      \"rhs = x\",\n      \"simplify(lhs - rhs) -> -x + sqrt(x**2)\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\"\n      }\n    }\n  }\n}"
+              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"sqrt(x**2)\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"-x + sqrt(x**2)\",\n    \"counterexample\": {\n      \"x\": \"-1\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'x': '-1'})\",\n  \"latex\": \"\\\\sqrt{x^{2}} \\\\neq x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = sqrt(x**2)\",\n      \"rhs = x\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -x + sqrt(x**2)\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
             }
           ],
           "structuredContent": {
@@ -2350,12 +2407,17 @@
             "input": "sqrt(x^2) == x",
             "ok": true,
             "value": {
+              "status": "disproven",
               "equivalent": false,
+              "consistent_with_samples": false,
               "left": "sqrt(x**2)",
               "right": "x",
-              "simplified_difference": "-x + sqrt(x**2)"
+              "simplified_difference": "-x + sqrt(x**2)",
+              "counterexample": {
+                "x": "-1"
+              }
             },
-            "value_str": "not equivalent (diff = -x + sqrt(x**2))",
+            "value_str": "not equivalent (counterexample: {'x': '-1'})",
             "latex": "\\sqrt{x^{2}} \\neq x",
             "variables": [
               "x"
@@ -2368,6 +2430,7 @@
               "steps": [
                 "lhs = sqrt(x**2)",
                 "rhs = x",
+                "status = disproven",
                 "simplify(lhs - rhs) -> -x + sqrt(x**2)"
               ],
               "reproducible_with": "axiom compare \"sqrt(x^2)\" \"x\""
@@ -2381,7 +2444,9 @@
               "data": {
                 "counterexample": {
                   "x": "-1"
-                }
+                },
+                "status": "disproven",
+                "proven": false
               }
             }
           },
@@ -2395,7 +2460,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"equivalent\": true,\n    \"left\": \"x\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"x = x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = x\",\n      \"rhs = x\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'x': {'positive': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\" --assumptions \\\"x:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 6 numerical sample(s) agree\",\n    \"checks\": 6,\n    \"max_error\": 0.0\n  }\n}"
+              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"x\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"x = x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = x\",\n      \"rhs = x\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'x': {'positive': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\" --assumptions \\\"x:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
             }
           ],
           "structuredContent": {
@@ -2403,7 +2468,9 @@
             "input": "sqrt(x^2) == x",
             "ok": true,
             "value": {
+              "status": "proven",
               "equivalent": true,
+              "consistent_with_samples": true,
               "left": "x",
               "right": "x",
               "simplified_difference": "0"
@@ -2421,6 +2488,7 @@
               "steps": [
                 "lhs = x",
                 "rhs = x",
+                "status = proven",
                 "simplify(lhs - rhs) -> 0",
                 "assumptions: {'x': {'positive': True}}"
               ],
@@ -2429,9 +2497,13 @@
             "verification": {
               "kind": "symbolic-identity",
               "passed": true,
-              "detail": "Symbolic difference reduces to 0 and 6 numerical sample(s) agree",
-              "checks": 6,
-              "max_error": 0.0
+              "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+              "checks": 10,
+              "max_error": 0.0,
+              "data": {
+                "status": "proven",
+                "proven": true
+              }
             }
           },
           "isError": false
@@ -2444,7 +2516,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"evaluate\",\n  \"input\": \"zeta(2) - pi^2/6\",\n  \"ok\": true,\n  \"value\": \"0\",\n  \"value_str\": \"0\",\n  \"latex\": \"0\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact evaluation (nsimplify) / simplify\",\n    \"steps\": [\n      \"evaluate 0\",\n      \"result 0\"\n    ],\n    \"reproducible_with\": \"axiom evaluate \\\"zeta(2) - pi^2/6\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0\n  }\n}"
+              "text": "{\n  \"kind\": \"evaluate\",\n  \"input\": \"zeta(2) - pi^2/6\",\n  \"ok\": true,\n  \"value\": \"0\",\n  \"value_str\": \"0\",\n  \"latex\": \"0\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact evaluation (nsimplify) / simplify\",\n    \"steps\": [\n      \"evaluate 0\",\n      \"result 0\"\n    ],\n    \"reproducible_with\": \"axiom evaluate \\\"zeta(2) - pi^2/6\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
             }
           ],
           "structuredContent": {
@@ -2470,7 +2542,11 @@
               "passed": true,
               "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
               "checks": 1,
-              "max_error": 0.0
+              "max_error": 0.0,
+              "data": {
+                "status": "proven",
+                "proven": true
+              }
             }
           },
           "isError": false

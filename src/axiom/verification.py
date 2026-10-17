@@ -346,11 +346,48 @@ def verify_system_solutions(
     checks = 0
     for tuple_sol in solutions_set.args:
         subs_map = dict(zip(variables, tuple_sol))
+        for var_sym, sol_val in subs_map.items():
+            if sol_val.is_number and not _respects_symbol_assumptions(var_sym, sol_val):
+                return (
+                    Verification(
+                        kind="assumption-violation",
+                        passed=False,
+                        detail=f"candidate solution {var_sym} = {sol_val} violates domain assumptions on {var_sym}",
+                        checks=checks,
+                    ),
+                    Guarantee.UNVERIFIED,
+                )
         if any(v in val.free_symbols for v in variables for val in tuple_sol):
             # Parametric family of solutions: still check symbolic substitution
             pass
         for eq in equations:
             checks += 1
+            try:
+                lhs_sub = eq.lhs.subs(subs_map)
+                rhs_sub = eq.rhs.subs(subs_map)
+                if lhs_sub.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or rhs_sub.has(
+                    sp.nan, sp.zoo, sp.oo, -sp.oo
+                ):
+                    return (
+                        Verification(
+                            kind="substitution-domain-error",
+                            passed=False,
+                            detail=f"solution {subs_map} hits a pole or singularity in equation {eq}",
+                            checks=checks,
+                        ),
+                        Guarantee.UNVERIFIED,
+                    )
+            except Exception as exc:
+                return (
+                    Verification(
+                        kind="substitution-domain-error",
+                        passed=False,
+                        detail=f"domain error substituting {subs_map} into {eq}: {exc}",
+                        checks=checks,
+                    ),
+                    Guarantee.UNVERIFIED,
+                )
+
             res = (eq.lhs - eq.rhs).subs(subs_map)
             if not _is_symbolic_zero(res):
                 return (
@@ -373,6 +410,7 @@ def verify_system_solutions(
         ),
         Guarantee.VERIFIED_SUBSTITUTION,
     )
+
 
 
 def verify_equivalence(
@@ -442,33 +480,38 @@ def verify_equivalence(
 
     symbolic_ok = _is_symbolic_zero(diff)
 
-    # Also perform independent numerical spot-checks (starting with clean rational & complex probes)
-    checks = 0
-    max_error = 0.0
-    if not free:
+    # Polynomial check: if diff is a polynomial in free variables
+    is_poly = False
+    poly_obj = None
+    if free:
         try:
-            err = abs(complex(diff.evalf(40)))
-            checks = 1
-            max_error = err
-            if err > tol:
-                return (
-                    Verification(
-                        kind="equivalence",
-                        passed=False,
-                        detail=f"constant values differ by {err:.3e}",
-                        checks=1,
-                        max_error=err,
-                        data=dict(domain_meta),
-                    ),
-                    Guarantee.UNVERIFIED,
-                )
+            poly_obj = diff.as_poly(*free)
+            if poly_obj is not None:
+                is_poly = True
+                if poly_obj.is_zero:
+                    symbolic_ok = True
         except Exception:
             pass
-    else:
-        probe_lists = [_build_probe_sequence(sym, k) for k, sym in enumerate(free)]
-        max_len = min((len(pl) for pl in probe_lists), default=0)
-        for idx in range(max_len):
-            subs = {sym: probe_lists[k][idx] for k, sym in enumerate(free)}
+
+    checks = 0
+    max_error = 0.0
+
+    # If diff is a non-zero polynomial, it CANNOT be identically zero.
+    # Actively probe to locate an explicit counterexample point (guaranteed by Fundamental Theorem of Algebra).
+    if is_poly and poly_obj is not None and not poly_obj.is_zero:
+        deg = poly_obj.total_degree()
+        var_sym = free[0]
+        cand_list: list[sp.Expr] = [sp.Integer(i) for i in range(-2, deg + 7)]
+        cand_list.extend([sp.Integer(i) * sp.I for i in range(1, 4)])
+        cand_list.extend([sp.Rational(i, 2) for i in range(1, 6)])
+        for pt in cand_list:
+            if str(pt) in merged_excluded.get(str(var_sym), []):
+                continue
+            if not _respects_symbol_assumptions(var_sym, pt):
+                continue
+            subs = {var_sym: pt}
+            for other_sym in free[1:]:
+                subs[other_sym] = sp.Integer(2)
             try:
                 sub_expr = diff.subs(subs)
                 if sub_expr.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
@@ -485,6 +528,8 @@ def verify_equivalence(
                 counterexample = {str(k): str(v) for k, v in subs.items()}
                 data_out = dict(domain_meta)
                 data_out["counterexample"] = counterexample
+                data_out["status"] = "disproven"
+                data_out["proven"] = False
                 return (
                     Verification(
                         kind="counterexample-search",
@@ -496,10 +541,73 @@ def verify_equivalence(
                     ),
                     Guarantee.UNVERIFIED,
                 )
-            if checks >= 6:
+
+    if not free:
+        try:
+            err = abs(complex(diff.evalf(40)))
+            checks = 1
+            max_error = err
+            if err > tol:
+                data_out = dict(domain_meta)
+                data_out["status"] = "disproven"
+                data_out["proven"] = False
+                return (
+                    Verification(
+                        kind="equivalence",
+                        passed=False,
+                        detail=f"constant values differ by {err:.3e}",
+                        checks=1,
+                        max_error=err,
+                        data=data_out,
+                    ),
+                    Guarantee.UNVERIFIED,
+                )
+        except Exception:
+            pass
+    else:
+        probe_lists = [_build_probe_sequence(sym, k) for k, sym in enumerate(free)]
+        max_len = min((len(pl) for pl in probe_lists), default=0)
+        target_checks = max(10, (poly_obj.total_degree() + 2) if is_poly and poly_obj is not None else 8)
+        for idx in range(max_len):
+            subs = {sym: probe_lists[k][idx] for k, sym in enumerate(free)}
+            if any(str(subs[sym]) in merged_excluded.get(str(sym), []) for sym in free):
+                continue
+            try:
+                sub_expr = diff.subs(subs)
+                if sub_expr.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
+                    continue
+                val = sub_expr.evalf(35)
+                if val.has(sp.nan, sp.oo, -sp.oo, sp.zoo):
+                    continue
+                err = abs(complex(val))
+            except Exception:
+                continue
+            checks += 1
+            max_error = max(max_error, err)
+            if err > tol:
+                counterexample = {str(k): str(v) for k, v in subs.items()}
+                data_out = dict(domain_meta)
+                data_out["counterexample"] = counterexample
+                data_out["status"] = "disproven"
+                data_out["proven"] = False
+                return (
+                    Verification(
+                        kind="counterexample-search",
+                        passed=False,
+                        detail=f"counterexample found at {counterexample} (|diff| = {err:.3e})",
+                        checks=checks,
+                        max_error=err,
+                        data=data_out,
+                    ),
+                    Guarantee.UNVERIFIED,
+                )
+            if checks >= target_checks:
                 break
 
     if symbolic_ok:
+        data_out = dict(domain_meta)
+        data_out["status"] = "proven"
+        data_out["proven"] = True
         return (
             Verification(
                 kind="symbolic-identity",
@@ -510,37 +618,48 @@ def verify_equivalence(
                 ),
                 checks=max(checks, 1),
                 max_error=max_error,
-                data=dict(domain_meta),
+                data=data_out,
             ),
             Guarantee.EXACT_SYMBOLIC,
         )
 
-    if checks >= 3 and max_error <= tol:
+    if not free and max_error <= tol:
+        data_out = dict(domain_meta)
+        data_out["status"] = "proven"
+        data_out["proven"] = True
         return (
             Verification(
-                kind="numerical-spot-check",
+                kind="constant-equality-probe",
                 passed=True,
-                detail=(
-                    f"Agreed across {checks} test points within {max_error:.2e} "
-                    "(symbolic reduction inconclusive)"
-                ),
-                checks=checks,
+                detail=f"Constant values agree within {max_error:.2e}",
+                checks=1,
                 max_error=max_error,
-                data=dict(domain_meta),
+                data=data_out,
             ),
             Guarantee.NUMERICAL_APPROXIMATION,
         )
 
+    # Universal identity with free variables: numerical sampling alone CANNOT establish
+    # universal equivalence. Fail-closed: marks inconclusive and passed=False.
+    data_out = dict(domain_meta)
+    data_out["status"] = "inconclusive"
+    data_out["proven"] = False
+    data_out["consistent_with_samples"] = bool(checks >= 3 and max_error <= tol)
     return (
         Verification(
-            kind="equivalence",
+            kind="numerical-spot-check",
             passed=False,
-            detail="could not confirm symbolic or numerical equivalence",
+            detail=(
+                f"Agreed across {checks} test points within {max_error:.2e}, "
+                "but universal identity could not be established symbolically (inconclusive)"
+            ),
             checks=checks,
-            data=dict(domain_meta),
+            max_error=max_error,
+            data=data_out,
         ),
         Guarantee.UNVERIFIED,
     )
+
 
 
 def verify_derivative(

@@ -295,10 +295,11 @@ def main() -> int:
             is False
         ),
         "functional_equation_spot_checked_numerical": (
-            is_verified_claim(runs["functional_equation_compare"]["result"])
-            and runs["functional_equation_compare"]["result"].get("guarantee")
-            == "numerical-approximation"
+            runs["functional_equation_compare"]["result"].get("value", {}).get("consistent_with_samples") is True
+            and runs["functional_equation_compare"]["result"].get("value", {}).get("status") == "inconclusive"
+            and runs["functional_equation_compare"]["result"].get("guarantee") == "unverified"
         ),
+
         "mellin_integral_s2_verified": (
             is_verified_claim(runs["mellin_integral_s2"]["result"])
             and runs["mellin_integral_s2"]["result"].get("value") == "pi**2/6"

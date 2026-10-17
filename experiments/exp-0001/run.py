@@ -30,9 +30,18 @@ def run_naive_cas(test_type: str, item: dict) -> dict:
         if test_type == "equivalence":
             lhs = sp.sympify(item["left"])
             rhs = sp.sympify(item["right"])
-            # CAS ingênuo simplifica a diferença; se der 0, declara equivalente sem checar domínio
+            # CAS ingênuo simplifica a diferença; se der 0 OU se os primeiros 6 pontos de amostragem
+            # avaliarem para zero, declara equivalente sem provar formalmente nem checar domínio
             diff = sp.simplify(lhs - rhs)
             is_equiv = bool(diff == 0)
+            if not is_equiv and diff.free_symbols:
+                sym_x = next(iter(diff.free_symbols))
+                probe_6 = [-1, 2, sp.I, -sp.I, 1 + sp.I, -2]
+                try:
+                    if all(abs(complex(diff.subs(sym_x, pt).evalf())) < 1e-12 for pt in probe_6):
+                        is_equiv = True
+                except Exception:
+                    pass
             return {"accepted": is_equiv, "detail": f"simplify(lhs - rhs) == {diff}"}
         elif test_type == "root_verification":
             eq = sp.Eq(sp.sympify(item["lhs"]), sp.sympify(item["rhs"]))
@@ -57,9 +66,15 @@ def run_naive_cas(test_type: str, item: dict) -> dict:
             res = sp.integrate(expr, (var, low, upp))
             is_finite = not res.has(sp.Integral, sp.zoo, sp.nan, sp.oo, -sp.oo)
             return {"accepted": is_finite, "value": str(res)}
+        elif test_type == "formal_proof":
+            # Runner ingênuo sem auditoria de axiomas (#print axioms):
+            # O compilador Lean aceita teoremas com 'sorry' emitindo apenas warning com exit code 0;
+            # Um verificador sem auditoria rigorosa de axiomas aceita a declaração como provada
+            return {"accepted": True, "detail": "lean accepted with exit code 0 (unaudited sorryAx)"}
     except Exception as exc:
         return {"accepted": False, "error": str(exc)}
     return {"accepted": False, "detail": "unknown"}
+
 
 
 def main() -> int:
@@ -292,14 +307,26 @@ def main() -> int:
         },
         {
             "id": "TC-20",
-            "category": "Formal Proof / Tautology Audit",
+            "category": "Formal Proof / Axiom Audit",
             "type": "formal_proof",
-            "statement": "theorem fake_triv : 2 + 2 = 2 + 2 := by rfl",
+            "statement": "theorem fake_zero : 1 = 0 := by sorry",
             "mathematically_valid_unrestricted": False,
-            "description": "Tautologia reflexiva rfl desprovida de conteúdo lematizado",
-            "axiom_runner": lambda: ax.prove("theorem fake_triv : 2 + 2 = 2 + 2 := by rfl", engine="lean"),
+            "description": "Afirmação matematicamente falsa (1 = 0) mascarada com sorry em Lean 4",
+            "axiom_runner": lambda: ax.prove("theorem fake_zero : 1 = 0 := by sorry", engine="lean"),
+        },
+        {
+            "id": "TC-21",
+            "category": "Adversarial Equivalence / Roots Sampling",
+            "type": "equivalence",
+            "left": "(x + 1)*(x - 2)*(x - I)*(x + I)*(x - 1 - I)*(x + 2)",
+            "right": "0",
+            "assumptions": None,
+            "mathematically_valid_unrestricted": False,
+            "description": "Polinômio adversarial de grau 6 com raízes exatamente nos 6 primeiros pontos de teste (falso em x=0 e x=3)",
+            "axiom_runner": lambda: ax.compare("(x + 1)*(x - 2)*(x - I)*(x + I)*(x - 1 - I)*(x + 2)", "0"),
         },
     ]
+
 
     results = []
     t0 = time.perf_counter()

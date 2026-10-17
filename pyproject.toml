@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "axiom-math"
-version = "0.2.1"
+version = "0.2.2"
 description = "AXIOM — Mathematical Reasoning Engine. One MCP for mathematical computation, exploration, and verification."
 readme = "README.md"
 requires-python = ">=3.10"

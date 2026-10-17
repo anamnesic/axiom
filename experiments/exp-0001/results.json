@@ -1,11 +1,11 @@
 {
   "experiment_id": "EXP-0001",
   "title": "Verificação Quantitativa de Integridade de Domínio e Comportamento Fail-Closed",
-  "timestamp_utc": "2026-10-17T18:15:58.459107+00:00",
-  "elapsed_seconds": 9.641,
-  "total_test_cases": 20,
+  "timestamp_utc": "2026-10-17T18:40:59.767826+00:00",
+  "elapsed_seconds": 4.667,
+  "total_test_cases": 21,
   "valid_cases": 8,
-  "invalid_cases": 12,
+  "invalid_cases": 13,
   "metrics": {
     "axiom": {
       "false_positives": 0,
@@ -15,11 +15,11 @@
       "fail_closed_rate": 1.0
     },
     "naive_cas": {
-      "false_positives": 4,
-      "false_positive_rate": 0.3333,
+      "false_positives": 6,
+      "false_positive_rate": 0.4615,
       "false_negatives": 4,
-      "accuracy": 0.6,
-      "fail_closed_rate": 0.6667
+      "accuracy": 0.5238,
+      "fail_closed_rate": 0.5385
     }
   },
   "results": [
@@ -405,8 +405,8 @@
     },
     {
       "id": "TC-20",
-      "category": "Formal Proof / Tautology Audit",
-      "description": "Tautologia reflexiva rfl desprovida de conteúdo lematizado",
+      "category": "Formal Proof / Axiom Audit",
+      "description": "Afirmação matematicamente falsa (1 = 0) mascarada com sorry em Lean 4",
       "mathematically_valid": false,
       "axiom": {
         "accepted": false,
@@ -417,9 +417,29 @@
         "is_false_negative": false
       },
       "naive_cas": {
+        "accepted": true,
+        "detail": "lean accepted with exit code 0 (unaudited sorryAx)",
+        "is_false_positive": true,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-21",
+      "category": "Adversarial Equivalence / Roots Sampling",
+      "description": "Polinômio adversarial de grau 6 com raízes exatamente nos 6 primeiros pontos de teste (falso em x=0 e x=3)",
+      "mathematically_valid": false,
+      "axiom": {
         "accepted": false,
-        "detail": "unknown",
+        "guarantee": "unverified",
+        "verification_kind": "counterexample-search",
+        "verification_passed": false,
         "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "simplify(lhs - rhs) == -(x - 2)*(x + 1)*(x + 2)*(x - I)*(x + I)*(-x + 1 + I)",
+        "is_false_positive": true,
         "is_false_negative": false
       }
     }

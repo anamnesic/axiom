@@ -1259,7 +1259,81 @@ class TestAxiom(unittest.TestCase):
         assert isp.evidence is not None
         self.assertEqual(isp.evidence.reproducible_with, "axiom number-theory isprime --n 17")
 
+    def test_adversarial_polynomial_counterexample_and_ternary_soundness(self) -> None:
+        ax = Axiom()
+
+        # P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) zeroes out on the first 6 fixed sample points,
+        # but is not identically zero (e.g. P(0) = 4 + 4i != 0 and P(3) = 400 - 200i != 0).
+        adv_expr = "(x + 1)*(x - 2)*(x - I)*(x + I)*(x - 1 - I)*(x + 2)"
+        res = ax.compare(adv_expr, "0")
+        self.assertTrue(res.ok)
+        self.assertFalse(res.verified)
+        self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+        self.assertEqual(res.value["status"], "disproven")
+        self.assertIs(res.value["equivalent"], False)
+        self.assertIn("counterexample", res.value)
+        self.assertIn("counterexample", res.value_str)
+
+        # Exact symbolic identity gets status='proven', equivalent=True
+        proven_res = ax.compare("(x + 1)^2", "x^2 + 2*x + 1")
+        self.assertTrue(proven_res.ok and proven_res.verified)
+        self.assertEqual(proven_res.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(proven_res.value["status"], "proven")
+        self.assertIs(proven_res.value["equivalent"], True)
+
+        # Transcendental equation where numerical samples agree but symbolic proof is inconclusive
+        # must fail-closed: status='inconclusive', equivalent=False, consistent_with_samples=True, Guarantee.UNVERIFIED
+        zeta_func = ax.compare(
+            "zeta(s)",
+            "2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+        )
+        self.assertTrue(zeta_func.ok)
+        self.assertFalse(zeta_func.verified)
+        self.assertEqual(zeta_func.guarantee, Guarantee.UNVERIFIED)
+        self.assertEqual(zeta_func.value["status"], "inconclusive")
+        self.assertIs(zeta_func.value["equivalent"], False)
+        self.assertIs(zeta_func.value["consistent_with_samples"], True)
+        self.assertIn("inconclusive", zeta_func.value_str)
+
+    def test_relational_assumptions_and_domain_preservation(self) -> None:
+        ax = Axiom()
+
+        # Format 'x!=1' is recognized and enables proving equivalence without domain mismatch
+        res_rel = ax.compare("(x - 1)/(x - 1)", "1", assumptions="x!=1")
+        self.assertTrue(res_rel.ok and res_rel.verified)
+        self.assertEqual(res_rel.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(res_rel.value["status"], "proven")
+        self.assertIs(res_rel.value["equivalent"], True)
+
+        # Relational format 'x>0' sets real + positive
+        res_gt = ax.compare("sqrt(x^2)", "x", assumptions="x>0")
+        self.assertTrue(res_gt.ok and res_gt.verified)
+        self.assertEqual(res_gt.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(res_gt.value["status"], "proven")
+
+        # Relational format 'x<=0' sets real + nonpositive
+        res_le = ax.compare("sqrt(x^2)", "-x", assumptions="x<=0")
+        self.assertTrue(res_le.ok and res_le.verified)
+        self.assertEqual(res_le.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(res_le.value["status"], "proven")
+
+    def test_solve_system_with_assumptions(self) -> None:
+        ax = Axiom()
+
+        # Non-linear system x^2 + y^2 = 25 and x - y = 1 has solutions (4, 3) and (-3, -4)
+        # Declaring assumptions="x:positive,y:positive" must filter out (-3, -4) and verify (4, 3)
+        res = ax.solve("x^2 + y^2 = 25; x - y = 1", assumptions="x:positive,y:positive")
+        self.assertTrue(res.ok and res.verified)
+        self.assertEqual(res.guarantee, Guarantee.VERIFIED_SUBSTITUTION)
+        self.assertEqual(res.value, [{"x": "4", "y": "3"}])
+        assert res.verification is not None
+        self.assertIn("assumptions", res.verification.data)
+        self.assertIn("x", res.verification.data["assumptions"])
+        self.assertIn("y", res.verification.data["assumptions"])
+        self.assertEqual(res.evidence.reproducible_with, 'axiom solve "x^2 + y^2 = 25; x - y = 1" --assumptions "x:positive,y:positive"')
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

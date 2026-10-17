@@ -129,6 +129,10 @@ _CONTRADICTORY_PAIRS = (
     ("even", "odd"),
 )
 
+_RELATIONAL_PATTERN = re.compile(
+    r"^([A-Za-z_]\w*)\s*(!=|<=|>=|<|>)\s*([+-]?\d+(?:\.\d+)?|[+-]?[A-Za-z_]\w*)$"
+)
+
 
 def _parse_assumption_spec(spec: object) -> dict[str, bool]:
     """Normalize an assumption specification (string, list, or dict) into SymPy keyword flags."""
@@ -229,6 +233,7 @@ class Parser:
         self.locals: dict[str, object] = dict(locals_ or {})
         self.default_assumptions: dict[str, bool] = {}
         self.symbol_assumptions: dict[str, dict[str, bool]] = {}
+        self.symbol_excluded_points: dict[str, list[str]] = {}
         self.denominators: list[sp.Expr] = []
         self.domain_constraints: list[str] = []
         self._load_assumptions(assumptions)
@@ -237,6 +242,33 @@ class Parser:
             for name in _FUNCTIONS
             if getattr(sp, name, None) is not None
         }
+
+    def _apply_relational_constraint(self, sym_name: str, op: str, val_str: str) -> None:
+        c_str = f"{sym_name} {op} {val_str}"
+        if c_str not in self.domain_constraints:
+            self.domain_constraints.append(c_str)
+        if op == "!=":
+            bucket = self.symbol_excluded_points.setdefault(sym_name, [])
+            if val_str not in bucket:
+                bucket.append(val_str)
+            if val_str in ("0", "+0", "-0"):
+                self.symbol_assumptions.setdefault(sym_name, {})["nonzero"] = True
+        elif op == ">":
+            self.symbol_assumptions.setdefault(sym_name, {})["real"] = True
+            if val_str in ("0", "+0", "-0"):
+                self.symbol_assumptions[sym_name]["positive"] = True
+        elif op == ">=":
+            self.symbol_assumptions.setdefault(sym_name, {})["real"] = True
+            if val_str in ("0", "+0", "-0"):
+                self.symbol_assumptions[sym_name]["nonnegative"] = True
+        elif op == "<":
+            self.symbol_assumptions.setdefault(sym_name, {})["real"] = True
+            if val_str in ("0", "+0", "-0"):
+                self.symbol_assumptions[sym_name]["negative"] = True
+        elif op == "<=":
+            self.symbol_assumptions.setdefault(sym_name, {})["real"] = True
+            if val_str in ("0", "+0", "-0"):
+                self.symbol_assumptions[sym_name]["nonpositive"] = True
 
     def _load_assumptions(self, assumptions: dict[str, object] | str | None) -> None:
         if assumptions is None:
@@ -255,28 +287,76 @@ class Parser:
                         return
                 except Exception as exc:
                     raise ParseError(f"invalid JSON assumptions: {exc}") from exc
-            if ":" in raw:
-                segments = re.split(r";|,(?=\s*[A-Za-z_]\w*\s*:)", raw)
-                for seg in segments:
-                    seg = seg.strip()
-                    if not seg:
-                        continue
-                    if ":" in seg:
-                        sym_name, spec_str = seg.split(":", 1)
-                        self.symbol_assumptions[sym_name.strip()] = _parse_assumption_spec(
-                            spec_str.strip()
-                        )
-                    else:
-                        self.default_assumptions.update(_parse_assumption_spec(seg))
-                return
-            self.default_assumptions = _parse_assumption_spec(raw)
+
+            # Handles formats: "x:real, x!=1", "x!=1; y>0", "x!=1", "x:positive"
+            segments = [
+                s.strip()
+                for s in re.split(
+                    r";|,(?=\s*[A-Za-z_]\w*(?:\s*:|\s*!=|\s*<=|\s*>=|\s*<|\s*>))",
+                    raw,
+                )
+                if s.strip()
+            ]
+            for seg in segments:
+                rel_m = _RELATIONAL_PATTERN.match(seg)
+                if rel_m:
+                    self._apply_relational_constraint(
+                        rel_m.group(1), rel_m.group(2), rel_m.group(3)
+                    )
+                elif ":" in seg:
+                    sym_name, spec_str = seg.split(":", 1)
+                    sym_name = sym_name.strip()
+                    sub_toks = [
+                        t.strip() for t in re.split(r"[,&]+", spec_str) if t.strip()
+                    ]
+                    flags_toks: list[str] = []
+                    for stok in sub_toks:
+                        stok_rel = _RELATIONAL_PATTERN.match(stok)
+                        if stok_rel:
+                            self._apply_relational_constraint(
+                                stok_rel.group(1), stok_rel.group(2), stok_rel.group(3)
+                            )
+                        elif _RELATIONAL_PATTERN.match(f"{sym_name} {stok}"):
+                            stok_rel2 = _RELATIONAL_PATTERN.match(f"{sym_name} {stok}")
+                            assert stok_rel2 is not None
+                            self._apply_relational_constraint(
+                                stok_rel2.group(1), stok_rel2.group(2), stok_rel2.group(3)
+                            )
+                        else:
+                            flags_toks.append(stok)
+                    if flags_toks:
+                        flags = _parse_assumption_spec(" ".join(flags_toks))
+                        self.symbol_assumptions.setdefault(sym_name, {}).update(flags)
+                else:
+                    self.default_assumptions.update(_parse_assumption_spec(seg))
             return
         if isinstance(assumptions, dict):
-            for sym_name, spec in assumptions.items():
-                if sym_name in _ALLOWED_ASSUMPTIONS and isinstance(spec, bool):
-                    self.default_assumptions[sym_name] = spec
+            for k, spec in assumptions.items():
+                k_str = str(k).strip()
+                rel_m = _RELATIONAL_PATTERN.match(k_str)
+                if rel_m:
+                    self._apply_relational_constraint(
+                        rel_m.group(1), rel_m.group(2), rel_m.group(3)
+                    )
+                    continue
+                if k_str in _ALLOWED_ASSUMPTIONS and isinstance(spec, bool):
+                    self.default_assumptions[k_str] = spec
+                elif isinstance(spec, str):
+                    spec_str = spec.strip()
+                    rel_m2 = _RELATIONAL_PATTERN.match(spec_str)
+                    rel_m3 = _RELATIONAL_PATTERN.match(f"{k_str} {spec_str}")
+                    if rel_m2:
+                        self._apply_relational_constraint(
+                            rel_m2.group(1), rel_m2.group(2), rel_m2.group(3)
+                        )
+                    elif rel_m3:
+                        self._apply_relational_constraint(
+                            rel_m3.group(1), rel_m3.group(2), rel_m3.group(3)
+                        )
+                    else:
+                        self.symbol_assumptions[k_str] = _parse_assumption_spec(spec)
                 else:
-                    self.symbol_assumptions[str(sym_name)] = _parse_assumption_spec(spec)
+                    self.symbol_assumptions[k_str] = _parse_assumption_spec(spec)
 
     def describe_assumptions(self) -> dict[str, object]:
         """Return a human-readable dictionary of declared domain assumptions."""
@@ -285,6 +365,8 @@ class Parser:
             out["*"] = dict(self.default_assumptions)
         for name, flags in sorted(self.symbol_assumptions.items()):
             out[name] = dict(flags)
+        for name, pts in sorted(self.symbol_excluded_points.items()):
+            out.setdefault(name, {})["excluded_points"] = list(pts)
         for name, sym in sorted(self.symbols.items()):
             if name not in out and self.default_assumptions:
                 out[name] = dict(self.default_assumptions)
@@ -299,6 +381,14 @@ class Parser:
         """Compute syntactic domain constraints and excluded points captured before simplification."""
         excluded_points: dict[str, list[str]] = {}
         active_constraints: list[str] = []
+        for sym_name, pts in self.symbol_excluded_points.items():
+            bucket = excluded_points.setdefault(sym_name, [])
+            for p in pts:
+                if p not in bucket:
+                    bucket.append(p)
+                c_str = f"{sym_name} != {p}"
+                if c_str not in active_constraints:
+                    active_constraints.append(c_str)
         for denom in self.denominators:
             c_str = f"{denom} != 0"
             if len(denom.free_symbols) == 1:

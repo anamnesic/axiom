@@ -23,10 +23,13 @@ compatibilidade pode ser consultada. As duas chamadas retornaram
 Ambos os valores também coincidiram exatamente com `math.comb` da biblioteca
 padrão do Python, uma implementação distinta da `sympy.binomial` usada pelo AXIOM.
 
-A revisão do código mostrou que o verificador interno de teoria dos números
-termina em uma aprovação genérica para operações como `binomial`, sem recalcular
-o coeficiente. Portanto, o rótulo do AXIOM isoladamente não constitui essa segunda
+A revisão do código na versão preliminar avaliada mostrou que o verificador interno de teoria dos números
+terminava em uma aprovação genérica para operações como `binomial`, sem recalcular
+o coeficiente. Portanto, o rótulo do AXIOM isoladamente não constituía essa segunda
 conferência; ela foi executada explicitamente neste trabalho.
+
+> **Nota de Versão (v0.2.1 / v0.2.2)**: Esta limitação histórica foi superada a partir da v0.2.1. O verificador interno `verify_number_theory` agora executa recálculo ortogonal mandatório contra `math.comb` da biblioteca padrão e a identidade da recorrência de Pascal (`kind = binomial-comb-and-pascal-check`), conferindo garantia exata e reprodutível diretamente pelo motor.
+
 
 Não foi fornecida uma lista concreta de incompatibilidades. Não se determinou
 quais grupos são válidos nem se existe um grupo válido para uma instância
