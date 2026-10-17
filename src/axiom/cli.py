@@ -94,12 +94,18 @@ def build_parser() -> argparse.ArgumentParser:
     # parse
     p_parse = sub.add_parser("parse", help="Parse an expression or equation into a canonical AST.")
     p_parse.add_argument("expression")
+    p_parse.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_parse.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # solve
     p_solve = sub.add_parser("solve", help="Solve an equation or ';'-separated system and verify roots.")
     p_solve.add_argument("expression")
     p_solve.add_argument("-v", "--variable", help="Variable(s) to solve for.")
+    p_solve.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_solve.add_argument("-e", "--engine", help="Engine name (sympy, numeric).")
     p_solve.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -111,6 +117,9 @@ def build_parser() -> argparse.ArgumentParser:
     ):
         p_alg = sub.add_parser(cmd_name, help=help_text)
         p_alg.add_argument("expression")
+        p_alg.add_argument(
+            "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+        )
         p_alg.add_argument("-e", "--engine", help="Engine name.")
         p_alg.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -119,6 +128,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_diff.add_argument("expression")
     p_diff.add_argument("-v", "--variable", help="Differentiation variable (default: x).")
     p_diff.add_argument("-n", "--order", type=int, default=1, help="Derivative order (default: 1).")
+    p_diff.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_diff.add_argument("-e", "--engine", help="Engine name.")
     p_diff.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -128,6 +140,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_int.add_argument("-v", "--variable", help="Integration variable (default: x).")
     p_int.add_argument("--from", dest="lower", help="Lower limit for definite integral.")
     p_int.add_argument("--to", dest="upper", help="Upper limit for definite integral.")
+    p_int.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_int.add_argument("-e", "--engine", help="Engine name (sympy, numeric).")
     p_int.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -137,6 +152,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_lim.add_argument("-v", "--variable", help="Variable (default: x).")
     p_lim.add_argument("--to", dest="point", default="0", help="Point approached (default: 0).")
     p_lim.add_argument("--dir", dest="direction", default="+-", choices=["+-", "+", "-"])
+    p_lim.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_lim.add_argument("-e", "--engine", help="Engine name.")
     p_lim.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -152,6 +170,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval = sub.add_parser("evaluate", aliases=["eval"], help="Evaluate an expression symbolically or numerically.")
     p_eval.add_argument("expression")
     p_eval.add_argument("-p", "--precision", type=int, help="Decimal digits of precision.")
+    p_eval.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_eval.add_argument("-e", "--engine", help="Engine name.")
     p_eval.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -159,6 +180,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_cmp = sub.add_parser("compare", help="Check whether two expressions are mathematically equivalent.")
     p_cmp.add_argument("left")
     p_cmp.add_argument("right")
+    p_cmp.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_cmp.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # verify
@@ -166,6 +190,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_ver.add_argument("target", help="Equation, 'lhs = rhs' identity, or path to result.json.")
     p_ver.add_argument("-s", "--solutions", help="Comma-separated candidate roots to verify.")
     p_ver.add_argument("-v", "--variable", help="Variable name.")
+    p_ver.add_argument(
+        "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
     p_ver.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # explain
@@ -395,21 +422,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     cmd = args.command
+    assump = getattr(args, "assumptions", None)
     if cmd == "parse":
-        res = ax.parse(args.expression)
+        res = ax.parse(args.expression, assumptions=assump)
     elif cmd == "solve":
-        res = ax.solve(args.expression, variable=args.variable, engine=args.engine)
+        res = ax.solve(
+            args.expression, variable=args.variable, assumptions=assump, engine=args.engine
+        )
     elif cmd == "simplify":
-        res = ax.simplify(args.expression, engine=args.engine)
+        res = ax.simplify(args.expression, assumptions=assump, engine=args.engine)
     elif cmd == "factor":
-        res = ax.factor(args.expression, engine=args.engine)
+        res = ax.factor(args.expression, assumptions=assump, engine=args.engine)
     elif cmd == "expand":
-        res = ax.expand(args.expression, engine=args.engine)
+        res = ax.expand(args.expression, assumptions=assump, engine=args.engine)
     elif cmd in ("differentiate", "diff"):
         res = ax.differentiate(
             args.expression,
             variable=args.variable,
             order=args.order,
+            assumptions=assump,
             engine=args.engine,
         )
     elif cmd == "integrate":
@@ -418,6 +449,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             variable=args.variable,
             lower=args.lower,
             upper=args.upper,
+            assumptions=assump,
             engine=args.engine,
         )
     elif cmd == "limit":
@@ -426,6 +458,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             variable=args.variable,
             point=args.point,
             direction=args.direction,
+            assumptions=assump,
             engine=args.engine,
         )
     elif cmd == "series":
@@ -439,15 +472,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         res = ax.evaluate(
             args.expression,
             precision=args.precision,
+            assumptions=assump,
             engine=args.engine,
         )
     elif cmd == "compare":
-        res = ax.compare(args.left, args.right)
+        res = ax.compare(args.left, args.right, assumptions=assump)
     elif cmd == "verify":
         res = ax.verify(
             args.target,
             candidate=args.solutions,
             variable=args.variable,
+            assumptions=assump,
         )
     elif cmd == "explain":
         res = ax.explain(

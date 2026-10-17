@@ -1,0 +1,427 @@
+{
+  "experiment_id": "EXP-0001",
+  "title": "Verificação Quantitativa de Integridade de Domínio e Comportamento Fail-Closed",
+  "timestamp_utc": "2026-10-17T18:15:58.459107+00:00",
+  "elapsed_seconds": 9.641,
+  "total_test_cases": 20,
+  "valid_cases": 8,
+  "invalid_cases": 12,
+  "metrics": {
+    "axiom": {
+      "false_positives": 0,
+      "false_positive_rate": 0.0,
+      "false_negatives": 0,
+      "accuracy": 1.0,
+      "fail_closed_rate": 1.0
+    },
+    "naive_cas": {
+      "false_positives": 4,
+      "false_positive_rate": 0.3333,
+      "false_negatives": 4,
+      "accuracy": 0.6,
+      "fail_closed_rate": 0.6667
+    }
+  },
+  "results": [
+    {
+      "id": "TC-01",
+      "category": "Branch Cut / Complex Domain",
+      "description": "sqrt(x^2) = x sem hipóteses (falso em x = -1)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "counterexample-search",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "simplify(lhs - rhs) == -x + sqrt(x**2)",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-02",
+      "category": "Branch Cut / Complex Domain",
+      "description": "sqrt(x^2) = x com hipótese x > 0 (verdadeiro)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "exact-symbolic",
+        "verification_kind": "symbolic-identity",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "simplify(lhs - rhs) == -x + sqrt(x**2)",
+        "is_false_positive": false,
+        "is_false_negative": true
+      }
+    },
+    {
+      "id": "TC-03",
+      "category": "Branch Cut / Complex Domain",
+      "description": "sqrt(x^2) = |x| sobre C sem hipóteses (falso em x = I)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "counterexample-search",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "simplify(lhs - rhs) == sqrt(x**2) - Abs(x)",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-04",
+      "category": "Branch Cut / Complex Domain",
+      "description": "sqrt(x^2) = |x| com hipótese x real (verdadeiro)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "exact-symbolic",
+        "verification_kind": "symbolic-identity",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "simplify(lhs - rhs) == sqrt(x**2) - Abs(x)",
+        "is_false_positive": false,
+        "is_false_negative": true
+      }
+    },
+    {
+      "id": "TC-05",
+      "category": "Domain Integrity / Rational",
+      "description": "(x - 1)/(x - 1) = 1 irrestrito (falso em x = 1)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "domain-mismatch",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "simplify(lhs - rhs) == 0",
+        "is_false_positive": true,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-06",
+      "category": "Domain Integrity / Rational",
+      "description": "x/x = 1 com hipótese x != 0 (verdadeiro)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "exact-symbolic",
+        "verification_kind": "symbolic-identity",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "simplify(lhs - rhs) == 0",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-07",
+      "category": "Domain Integrity / Rational",
+      "description": "(x^2 - 1)/(x - 1) = x + 1 irrestrito (falso em x = 1)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "domain-mismatch",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "simplify(lhs - rhs) == 0",
+        "is_false_positive": true,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-08",
+      "category": "Root Verification / Extraneous Pole",
+      "description": "Verificação de raiz espúria x = 1 em (x^2 - 1)/(x - 1) = 0",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "substitution-domain-error",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "sub = nan",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-09",
+      "category": "Root Verification / Genuine Root",
+      "description": "Verificação de raiz legítima x = -1 em (x^2 - 1)/(x - 1) = 0",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "verified-substitution",
+        "verification_kind": "exact-substitution",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "sub = 0",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-10",
+      "category": "Limits / Jump Discontinuity",
+      "description": "lim_{x->0} |x|/x bilateral (não existe: -1 != +1)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "two-sided-or-oscillatory-limit-check",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "1",
+        "is_false_positive": true,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-11",
+      "category": "Limits / Essential Pole",
+      "description": "lim_{x->0} 1/x bilateral (não existe: -oo != +oo)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "two-sided-or-oscillatory-limit-check",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "oo",
+        "is_false_positive": true,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-12",
+      "category": "Limits / Even Pole",
+      "description": "lim_{x->0} 1/x^2 bilateral (diverge para +oo em ambos os lados)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "numerical-approximation",
+        "verification_kind": "numerical-limit-probe",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "oo",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-13",
+      "category": "Limits / Riemann Pole",
+      "description": "lim_{s->1} zeta(s) bilateral (não existe no eixo real: -oo != +oo)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "two-sided-or-oscillatory-limit-check",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "zoo",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-14",
+      "category": "Limits / Residue",
+      "description": "Resíduo lim_{s->1} (s-1)*zeta(s) = 1 (removível)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "numerical-approximation",
+        "verification_kind": "numerical-limit-probe",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "Limit(s*zeta(s) - zeta(s), s, 1, dir='+')",
+        "is_false_positive": false,
+        "is_false_negative": true
+      }
+    },
+    {
+      "id": "TC-15",
+      "category": "Integrals / Interior Pole",
+      "description": "integral_{-1}^{1} 1/x^2 dx (divergente por polo interno em 0; FTC ingênuo dá -2)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "divergent-integral",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "oo",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-16",
+      "category": "Integrals / Interior Pole",
+      "description": "integral_{-1}^{1} 1/x dx (divergente por polo não integrável em 0)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "divergent-integral",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "nan",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-17",
+      "category": "Integrals / Convergent Improper",
+      "description": "integral_{0}^{1} 1/sqrt(x) dx = 2 (imprópria convergente)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "exact-symbolic",
+        "verification_kind": "ftc-antiderivative-check",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": true,
+        "detail": "2",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-18",
+      "category": "Integrals / Mellin Riemann",
+      "description": "integral_{0}^{oo} x/(exp(x) - 1) dx = pi^2/6 (integral de Bose-Einstein)",
+      "mathematically_valid": true,
+      "axiom": {
+        "accepted": true,
+        "guarantee": "numerical-approximation",
+        "verification_kind": "numerical-quadrature",
+        "verification_passed": true,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "Integral(x/(exp(x) - 1), (x, 0, oo))",
+        "is_false_positive": false,
+        "is_false_negative": true
+      }
+    },
+    {
+      "id": "TC-19",
+      "category": "Arithmetic / Truth Audit",
+      "description": "zeta(2) == pi^2/8 (afirmação falsa)",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "equivalence",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "simplify(lhs - rhs) == pi**2/24",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    },
+    {
+      "id": "TC-20",
+      "category": "Formal Proof / Tautology Audit",
+      "description": "Tautologia reflexiva rfl desprovida de conteúdo lematizado",
+      "mathematically_valid": false,
+      "axiom": {
+        "accepted": false,
+        "guarantee": "unverified",
+        "verification_kind": "lean4-kernel-axiom-audit",
+        "verification_passed": false,
+        "is_false_positive": false,
+        "is_false_negative": false
+      },
+      "naive_cas": {
+        "accepted": false,
+        "detail": "unknown",
+        "is_false_positive": false,
+        "is_false_negative": false
+      }
+    }
+  ]
+}

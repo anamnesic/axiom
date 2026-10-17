@@ -22,7 +22,7 @@ from axiom.contract import (
     error_result,
 )
 from axiom.engines.base import Answer, Engine, EngineError
-from axiom.parsing import ParseError, Parser
+from axiom.parsing import ParseError, Parser, extract_expression_excluded_points
 from axiom.registry import EngineRegistry
 from axiom.verification import (
     verify_derivative,
@@ -38,6 +38,26 @@ from axiom.verification import (
     verify_system_solutions,
     verify_tensor_op,
 )
+
+
+def _format_assumptions_cli(assumptions: dict[str, Any] | str | None) -> str:
+    if not assumptions:
+        return ""
+    if isinstance(assumptions, str):
+        return f' --assumptions "{assumptions}"'
+    parts: list[str] = []
+    for k, v in assumptions.items():
+        if isinstance(v, str):
+            parts.append(f"{k}:{v}")
+        elif isinstance(v, (list, tuple, set)):
+            parts.append(f"{k}:{','.join(str(x) for x in v)}")
+        elif isinstance(v, dict):
+            flags = [fk if fv else f"!{fk}" for fk, fv in v.items()]
+            parts.append(f"{k}:{','.join(flags)}")
+        elif isinstance(v, bool):
+            parts.append(k if v else f"!{k}")
+    return f' --assumptions "{";".join(parts)}"' if parts else ""
+
 
 
 def _pick_variable(obj: sp.Basic, variable: str | None, parser: Parser) -> sp.Symbol:
@@ -83,6 +103,30 @@ def _wrap_answer(
     )
 
 
+def _split_top_level_equality(text: str) -> tuple[str, str] | None:
+    """Split an equality string `lhs = rhs` or `lhs == rhs` at top-level parentheses."""
+    depth = 0
+    n = len(text)
+    i = 0
+    while i < n:
+        ch = text[i]
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth = max(0, depth - 1)
+        elif depth == 0 and ch == "=":
+            prev_ch = text[i - 1] if i > 0 else ""
+            next_ch = text[i + 1] if i + 1 < n else ""
+            if prev_ch in ("<", ">", "!"):
+                i += 1
+                continue
+            if next_ch == "=":
+                return text[:i].strip(), text[i + 2 :].strip()
+            return text[:i].strip(), text[i + 1 :].strip()
+        i += 1
+    return None
+
+
 class Axiom:
     """Facade for mathematical computation, exploration, and verification."""
 
@@ -95,7 +139,7 @@ class Axiom:
         self,
         expression: str,
         *,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
     ) -> MathResult:
         """Parse an expression or equation and inspect its mathematical structure."""
         try:
@@ -106,7 +150,9 @@ class Axiom:
 
         is_eq = isinstance(obj, sp.Equality)
         is_rel = isinstance(obj, sp.Rel)
-        free = sorted((str(s) for s in obj.free_symbols))
+        free_syms = sorted(parser.seen_symbols | obj.free_symbols, key=lambda s: s.name)
+        free = [s.name for s in free_syms]
+        dom = parser.domain_info(free_syms)
         structure = (
             "equation" if is_eq else ("relation" if is_rel else "expression")
         )
@@ -119,7 +165,7 @@ class Axiom:
         except Exception:
             roundtrip_ok = False
 
-        info = {
+        info: dict[str, Any] = {
             "structure": structure,
             "canonical": str(obj),
             "srepr": sp.srepr(obj),
@@ -129,7 +175,23 @@ class Axiom:
                 if is_eq
                 else bool(getattr(obj, "is_polynomial", lambda: False)())
             ),
+            "domain_constraints": dom["domain_constraints"],
+            "excluded_points": dom["excluded_points"],
+            "assumptions": dom["assumptions"],
         }
+        limitations: list[str] = []
+        warnings: list[str] = []
+        steps = [f"input: {expression}", f"parsed ({structure}): {obj}"]
+        if dom["domain_constraints"]:
+            c_msg = f"Domain constraint(s): {', '.join(dom['domain_constraints'])}"
+            if dom["excluded_points"]:
+                c_msg += f" (excluded: {dom['excluded_points']})"
+            limitations.append(c_msg)
+            warnings.append(c_msg)
+            steps.append(c_msg)
+        if dom["assumptions"]:
+            steps.append(f"assumptions: {dom['assumptions']}")
+
         return MathResult(
             kind="parse",
             input=expression,
@@ -143,17 +205,24 @@ class Axiom:
             ),
             evidence=Evidence(
                 engine="axiom-parser",
-                engine_version="0.2.0",
+                engine_version="0.2.1",
                 method="AST allowlist parser -> SymPy expression tree",
-                steps=[f"input: {expression}", f"parsed ({structure}): {obj}"],
-                reproducible_with=f'axiom parse "{expression}"',
+                steps=steps,
+                limitations=limitations,
+                reproducible_with=f'axiom parse "{expression}"{_format_assumptions_cli(assumptions)}',
             ),
             verification=Verification(
                 kind="ast-roundtrip",
                 passed=roundtrip_ok,
                 detail=f"Canonical AST ({structure}) verified by deterministic re-parse round-trip",
                 checks=1,
+                data={
+                    k: v
+                    for k, v in dom.items()
+                    if v
+                },
             ),
+            warnings=warnings,
         )
 
     # -------------------------------------------------------------- algebra
@@ -164,7 +233,7 @@ class Axiom:
         *,
         precision: int | None = None,
         substitutions: dict[str, Any] | None = None,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         try:
@@ -180,6 +249,7 @@ class Axiom:
         if subs_sym:
             expr = expr.subs(subs_sym)
 
+        assump_cli = _format_assumptions_cli(assumptions)
         if precision is not None or engine == "numeric":
             dps = precision or 50
             try:
@@ -199,7 +269,7 @@ class Axiom:
                     detail=f"Evaluated with {dps} digits of working precision",
                     checks=1,
                 ),
-                reproducible_with=f'axiom evaluate "{expression}" --precision {dps}',
+                reproducible_with=f'axiom evaluate "{expression}" --precision {dps}{assump_cli}',
             )
 
         try:
@@ -208,7 +278,15 @@ class Axiom:
         except EngineError as exc:
             return error_result("evaluate", expression, str(exc), engine=engine)
 
-        ver, guar = verify_equivalence(expr, ans.raw["object"])
+        free = sorted(parser.seen_symbols | expr.free_symbols, key=str)
+        dom = parser.domain_info(free)
+        ver, guar = verify_equivalence(expr, ans.raw["object"], free)
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
+        if dom["domain_constraints"]:
+            ver.data["domain_constraints"] = dom["domain_constraints"]
+        if dom["excluded_points"]:
+            ver.data["excluded_points"] = dom["excluded_points"]
         return _wrap_answer(
             kind="evaluate",
             expression=expression,
@@ -216,14 +294,14 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f'axiom evaluate "{expression}"',
+            reproducible_with=f'axiom evaluate "{expression}"{assump_cli}',
         )
 
     def simplify(
         self,
         expression: str,
         *,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         return self._algebraic_transform(
@@ -234,7 +312,7 @@ class Axiom:
         self,
         expression: str,
         *,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         return self._algebraic_transform(
@@ -245,7 +323,7 @@ class Axiom:
         self,
         expression: str,
         *,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         return self._algebraic_transform(
@@ -257,7 +335,7 @@ class Axiom:
         op: str,
         expression: str,
         *,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         try:
@@ -269,9 +347,24 @@ class Axiom:
         except (ParseError, EngineError) as exc:
             return error_result(op, expression, str(exc), engine=engine)
 
-        free = sorted(expr.free_symbols, key=str)
+        free = sorted(parser.seen_symbols | expr.free_symbols, key=str)
         ans.variables = [str(s) for s in free]
+        dom = parser.domain_info(free)
         ver, guar = verify_equivalence(expr, ans.raw["object"], free)
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
+            ans.steps.append(f"assumptions: {dom['assumptions']}")
+        if dom["domain_constraints"]:
+            ver.data["domain_constraints"] = dom["domain_constraints"]
+            if dom["excluded_points"]:
+                ver.data["excluded_points"] = dom["excluded_points"]
+            c_msg = f"Domain constraint(s): {', '.join(dom['domain_constraints'])}"
+            if dom["excluded_points"]:
+                c_msg += f" (excluded: {dom['excluded_points']})"
+            ans.limitations.append(c_msg)
+            ans.warnings.append(c_msg)
+            ans.steps.append(c_msg)
+            ver.detail = f"{ver.detail} (subject to {c_msg})"
         return _wrap_answer(
             kind=op,
             expression=expression,
@@ -279,7 +372,7 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f'axiom {op} "{expression}"',
+            reproducible_with=f'axiom {op} "{expression}"{_format_assumptions_cli(assumptions)}',
         )
 
     # --------------------------------------------------------------- solving
@@ -289,7 +382,7 @@ class Axiom:
         expression: str,
         *,
         variable: str | None = None,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
         """Solve an equation or system of equations and verify all solutions."""
@@ -309,6 +402,7 @@ class Axiom:
         except ParseError as exc:
             return error_result("solve", expression, str(exc))
 
+        assump_cli = _format_assumptions_cli(assumptions)
         if engine == "numeric":
             try:
                 num_eng = self.registry.get("numeric")
@@ -323,7 +417,7 @@ class Axiom:
                 answer=ans,
                 guarantee=guar,
                 verification=ver,
-                reproducible_with=f'axiom solve "{expression}" --variable {var} --engine numeric',
+                reproducible_with=f'axiom solve "{expression}" --variable {var} --engine numeric{assump_cli}',
             )
 
         try:
@@ -333,11 +427,22 @@ class Axiom:
             return error_result("solve", expression, str(exc), engine=engine)
 
         ver, guar = verify_solutions(equation, var, ans.raw["solutions"])
+        ver.data["solution_complete"] = bool(ans.raw.get("solution_complete", True))
+        if ans.raw.get("solution_set") is not None:
+            ver.data["solution_set"] = ans.raw.get("solution_set")
+        if ans.raw.get("sample_solutions") is not None:
+            ver.data["sample_solutions"] = ans.raw.get("sample_solutions")
         if ans.raw.get("periodic_family"):
             ver.data["periodic_family"] = True
-            ver.data["solution_set"] = ans.raw.get("solution_set")
         if ans.raw.get("extraneous_roots"):
             ver.data["extraneous_roots"] = ans.raw.get("extraneous_roots")
+        dom = parser.domain_info(sorted(parser.seen_symbols | equation.free_symbols, key=str))
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
+        if dom["domain_constraints"]:
+            ver.data["domain_constraints"] = dom["domain_constraints"]
+        if dom["excluded_points"]:
+            ver.data["excluded_points"] = dom["excluded_points"]
         return _wrap_answer(
             kind="solve",
             expression=expression,
@@ -345,7 +450,7 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f'axiom solve "{expression}"',
+            reproducible_with=f'axiom solve "{expression}"{assump_cli}',
         )
 
     def solve_system(
@@ -394,10 +499,11 @@ class Axiom:
         *,
         variable: str | None = None,
         order: int = 1,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             expr = parser.parse_expression(expression)
             var = _pick_variable(expr, variable, parser)
             if order < 1:
@@ -408,9 +514,13 @@ class Axiom:
             return error_result("differentiate", expression, str(exc), engine=engine)
 
         ver, guar = verify_derivative(expr, ans.raw["object"], var, order=order)
+        dom = parser.domain_info(sorted(parser.seen_symbols | expr.free_symbols, key=str))
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
         cmd = f'axiom differentiate "{expression}" --variable {var}'
         if order != 1:
             cmd += f" --order {order}"
+        cmd += _format_assumptions_cli(assumptions)
         return _wrap_answer(
             kind="differentiate",
             expression=expression,
@@ -428,10 +538,11 @@ class Axiom:
         variable: str | None = None,
         lower: str | float | int | None = None,
         upper: str | float | int | None = None,
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             expr = parser.parse_expression(expression)
             var = _pick_variable(expr, variable, parser)
             limits: tuple[sp.Expr, sp.Expr] | None = None
@@ -445,6 +556,7 @@ class Axiom:
         except ParseError as exc:
             return error_result("integrate", expression, str(exc))
 
+        assump_cli = _format_assumptions_cli(assumptions)
         if engine == "numeric":
             if limits is None:
                 return error_result(
@@ -473,7 +585,7 @@ class Axiom:
                 ),
                 reproducible_with=(
                     f'axiom integrate "{expression}" --variable {var} '
-                    f"--from {lower} --to {upper} --engine numeric"
+                    f"--from {lower} --to {upper} --engine numeric{assump_cli}"
                 ),
             )
 
@@ -484,9 +596,13 @@ class Axiom:
             return error_result("integrate", expression, str(exc), engine=engine)
 
         ver, guar = verify_integral(expr, ans.raw["object"], var, limits=limits)
+        dom = parser.domain_info(sorted(parser.seen_symbols | expr.free_symbols, key=str))
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
         cmd = f'axiom integrate "{expression}" --variable {var}'
         if limits:
             cmd += f" --from {lower} --to {upper}"
+        cmd += assump_cli
         return _wrap_answer(
             kind="integrate",
             expression=expression,
@@ -504,10 +620,11 @@ class Axiom:
         variable: str | None = None,
         point: str | float | int = "0",
         direction: str = "+-",
+        assumptions: dict[str, Any] | str | None = None,
         engine: str | None = None,
     ) -> MathResult:
-        parser = Parser()
         try:
+            parser = Parser(assumptions=assumptions)
             expr = parser.parse_expression(expression)
             var = _pick_variable(expr, variable, parser)
             pt = parser.parse_expression(str(point))
@@ -519,6 +636,9 @@ class Axiom:
             return error_result("limit", expression, str(exc), engine=engine)
 
         ver, guar = verify_limit(expr, var, pt, direction, ans.raw["object"])
+        dom = parser.domain_info(sorted(parser.seen_symbols | expr.free_symbols, key=str))
+        if dom["assumptions"]:
+            ver.data["assumptions"] = dom["assumptions"]
         return _wrap_answer(
             kind="limit",
             expression=expression,
@@ -526,7 +646,10 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f'axiom limit "{expression}" --variable {var} --to {point}',
+            reproducible_with=(
+                f'axiom limit "{expression}" --variable {var} --to {point}'
+                f"{_format_assumptions_cli(assumptions)}"
+            ),
         )
 
     def series(
@@ -575,26 +698,60 @@ class Axiom:
         right: str,
         *,
         variables: list[str] | None = None,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
     ) -> MathResult:
         """Check whether two mathematical expressions are equivalent."""
         combined = f"{left} == {right}"
         try:
-            parser = Parser(assumptions=assumptions)
-            lhs = parser.parse_expression(left)
-            rhs = parser.parse_expression(right)
+            left_parser = Parser(assumptions=assumptions)
+            lhs = left_parser.parse_expression(left)
+            right_parser = Parser(
+                assumptions=assumptions, locals_=dict(left_parser.symbols)
+            )
+            rhs = right_parser.parse_expression(right)
+            all_symbols = (
+                left_parser.seen_symbols
+                | right_parser.seen_symbols
+                | lhs.free_symbols
+                | rhs.free_symbols
+            )
             sym_vars = (
-                [parser.symbol(v) for v in variables]
+                [right_parser.symbol(v) for v in variables]
                 if variables
-                else sorted(lhs.free_symbols | rhs.free_symbols, key=str)
+                else sorted(all_symbols, key=str)
             )
         except ParseError as exc:
             return error_result("compare", combined, str(exc))
 
-        ver, guar = verify_equivalence(lhs, rhs, sym_vars)
+        left_domain = left_parser.domain_info(sym_vars)
+        right_domain = right_parser.domain_info(sym_vars)
+        ver, guar = verify_equivalence(
+            lhs,
+            rhs,
+            sym_vars,
+            left_domain=left_domain,
+            right_domain=right_domain,
+        )
         diff = sp.simplify(lhs - rhs)
         equivalent = ver.passed
         relation = "=" if equivalent else r"\neq"
+        steps = [
+            f"lhs = {lhs}",
+            f"rhs = {rhs}",
+            f"simplify(lhs - rhs) -> {diff}",
+        ]
+        limitations: list[str] = []
+        if left_domain["assumptions"]:
+            steps.append(f"assumptions: {left_domain['assumptions']}")
+        combined_constraints = list(
+            dict.fromkeys(
+                left_domain["domain_constraints"] + right_domain["domain_constraints"]
+            )
+        )
+        if combined_constraints:
+            c_msg = f"Domain constraint(s): {', '.join(combined_constraints)}"
+            steps.append(c_msg)
+            limitations.append(c_msg)
         return MathResult(
             kind="compare",
             input=combined,
@@ -612,13 +769,10 @@ class Axiom:
             evidence=Evidence(
                 engine="sympy",
                 engine_version=sp.__version__,
-                method="symbolic difference reduction + multi-point sampling",
-                steps=[
-                    f"lhs = {lhs}",
-                    f"rhs = {rhs}",
-                    f"simplify(lhs - rhs) -> {diff}",
-                ],
-                reproducible_with=f'axiom compare "{left}" "{right}"',
+                method="symbolic difference reduction + domain & multi-point sampling",
+                steps=steps,
+                limitations=limitations,
+                reproducible_with=f'axiom compare "{left}" "{right}"{_format_assumptions_cli(assumptions)}',
             ),
             verification=ver,
         )
@@ -629,14 +783,14 @@ class Axiom:
         *,
         candidate: str | list[str] | None = None,
         variable: str | None = None,
-        assumptions: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
     ) -> MathResult:
         """Independently verify a mathematical claim, equation root(s), or JSON result."""
         if isinstance(target, MathResult):
-            return self.verify(target.to_dict())
+            return self.verify(target.to_dict(), assumptions=assumptions)
 
         if isinstance(target, dict):
-            return self._verify_dict_payload(target)
+            return self._verify_dict_payload(target, assumptions=assumptions)
 
         # Check if `target` is a path to a JSON file
         target_str = target.strip()
@@ -645,7 +799,7 @@ class Axiom:
             if path.exists():
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
-                    return self._verify_dict_payload(data)
+                    return self._verify_dict_payload(data, assumptions=assumptions)
                 except Exception as exc:
                     return error_result("verify", target_str, f"invalid JSON file: {exc}")
 
@@ -653,7 +807,7 @@ class Axiom:
             try:
                 data = json.loads(target_str)
                 if isinstance(data, dict):
-                    return self._verify_dict_payload(data)
+                    return self._verify_dict_payload(data, assumptions=assumptions)
             except Exception:
                 pass
 
@@ -662,6 +816,7 @@ class Axiom:
         except ParseError as exc:
             return error_result("verify", target_str, str(exc))
 
+        assump_cli = _format_assumptions_cli(assumptions)
         # Case 1: Equation + candidate solutions provided
         if candidate is not None:
             try:
@@ -677,6 +832,9 @@ class Axiom:
                 return error_result("verify", target_str, str(exc))
 
             ver, guar = verify_solutions(equation, var, sols)
+            dom = parser.domain_info(sorted(parser.seen_symbols | equation.free_symbols, key=str))
+            if dom["assumptions"]:
+                ver.data["assumptions"] = dom["assumptions"]
             return MathResult(
                 kind="verify",
                 input=f"{target_str} @ {var} in {[str(s) for s in sols]}",
@@ -696,22 +854,32 @@ class Axiom:
                     ],
                     reproducible_with=(
                         f'axiom verify "{target_str}" --solutions '
-                        f'"{",".join(str(s) for s in sols)}"'
+                        f'"{",".join(str(s) for s in sols)}"{assump_cli}'
                     ),
                 ),
                 verification=ver,
             )
 
-        # Case 2: Identity `lhs = rhs`
+        # Case 2: Identity `lhs = rhs` (split raw strings before SymPy cancels denominators)
+        split_pair = _split_top_level_equality(target_str)
+        if split_pair is not None and split_pair[0] and split_pair[1]:
+            res = self.compare(
+                split_pair[0], split_pair[1], assumptions=assumptions
+            )
+            res.kind = "verify"
+            return res
+
         try:
             parsed = parser.parse(target_str)
         except ParseError as exc:
             return error_result("verify", target_str, str(exc))
 
         if isinstance(parsed, sp.Equality):
-            return self.compare(
+            res = self.compare(
                 str(parsed.lhs), str(parsed.rhs), assumptions=assumptions
             )
+            res.kind = "verify"
+            return res
 
         return error_result(
             "verify",
@@ -719,20 +887,27 @@ class Axiom:
             "provide either an equality 'lhs = rhs', candidate solutions, or a result JSON",
         )
 
-    def _verify_dict_payload(self, payload: dict[str, Any]) -> MathResult:
+    def _verify_dict_payload(
+        self, payload: dict[str, Any], assumptions: dict[str, Any] | str | None = None
+    ) -> MathResult:
         kind = str(payload.get("kind", ""))
         inp = str(payload.get("input", ""))
         val = payload.get("value")
         variables = payload.get("variables") or []
         var = variables[0] if variables else None
+        if assumptions is None:
+            verif_data = (payload.get("verification") or {}).get("data") or {}
+            assumptions = verif_data.get("assumptions")
 
         if kind == "solve" and inp and val is not None:
             candidates = val if isinstance(val, list) else [str(val)]
-            return self.verify(inp, candidate=candidates, variable=var)
+            return self.verify(
+                inp, candidate=candidates, variable=var, assumptions=assumptions
+            )
         if kind in ("simplify", "factor", "expand", "evaluate") and inp and val is not None:
-            return self.compare(inp, str(val))
+            return self.compare(inp, str(val), assumptions=assumptions)
         if kind == "integrate" and inp and val is not None:
-            parser = Parser()
+            parser = Parser(assumptions=assumptions)
             try:
                 integrand = parser.parse_expression(inp)
                 antideriv = parser.parse_expression(str(val))
@@ -1284,6 +1459,19 @@ class Axiom:
             return error_result("number_theory", label, str(exc), engine=engine)
 
         ver, guar = verify_number_theory_op(ans.raw)
+        flags: list[str] = [f"axiom number-theory {operation}"]
+        if n is not None:
+            flags.append(f"--n {n}")
+        if a is not None:
+            flags.append(f"--a {a}")
+        if b is not None:
+            flags.append(f"--b {b}")
+        if k is not None:
+            flags.append(f"--k {k}")
+        if remainders is not None:
+            flags.append(f"--remainders {','.join(str(r) for r in remainders)}")
+        if moduli is not None:
+            flags.append(f"--moduli {','.join(str(m) for m in moduli)}")
         return _wrap_answer(
             kind="number_theory",
             expression=label,
@@ -1291,7 +1479,7 @@ class Axiom:
             answer=ans,
             guarantee=guar,
             verification=ver,
-            reproducible_with=f"axiom number-theory {operation}",
+            reproducible_with=" ".join(flags),
         )
 
     def optimize(

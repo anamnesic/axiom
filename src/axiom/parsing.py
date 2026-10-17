@@ -56,6 +56,7 @@ _CONSTANTS: dict[str, object] = {
 }
 
 _STRING_ARG_FUNCS = {"symbols", "Symbol", "Function"}
+_RAW_STR_ARG_FUNCS = {"Float", "Rational"}
 
 _BINOPS: dict[type, object] = {
     ast.Add: lambda a, b: a + b,
@@ -74,11 +75,12 @@ _COMPARES: dict[type, object] = {
     ast.LtE: sp.LessThan,
     ast.Gt: sp.StrictGreaterThan,
     ast.GtE: sp.GreaterThan,
-    ast.Eq: sp.Eq,
-    ast.NotEq: sp.Ne,
+    ast.Eq: lambda a, b: sp.Eq(a, b, evaluate=False),
+    ast.NotEq: lambda a, b: sp.Ne(a, b, evaluate=False),
 }
 
 _LONE_EQUALS = re.compile(r"(?<![=<>!])=(?!=)")
+_HIGH_PREC_DECIMAL = re.compile(r"(?<![A-Za-z0-9_.'])(\d+\.\d{14,})(?![A-Za-z0-9_.']|[eE])")
 _IMPLICIT_MUL = (
     (re.compile(r"(?<=[0-9])(?=[A-Za-z_(])"), "*"),      # 2x, 2(, 2sin
     (re.compile(r"(?<=\))(?=\()"), "*"),                  # )(
@@ -94,6 +96,10 @@ def _normalize(text: str) -> str:
     text = text.replace("^", "**")
     for pattern, repl in _IMPLICIT_MUL:
         text = pattern.sub(repl, text)
+    text = _HIGH_PREC_DECIMAL.sub(
+        lambda m: f"Float('{m.group(1)}', {len(m.group(1).replace('.', ''))})",
+        text,
+    )
     return text
 
 
@@ -151,6 +157,65 @@ def _parse_assumption_spec(spec: object) -> dict[str, bool]:
     return flags
 
 
+def _root_matches_symbol_assumptions(sym: sp.Symbol, val: sp.Expr) -> bool:
+    """Return True if candidate point ``val`` belongs to the declared domain of ``sym``."""
+    if sym.is_real is True and val.is_real is False:
+        return False
+    if sym.is_positive is True:
+        if val.is_real is False or not bool(val.is_positive):
+            return False
+    if sym.is_negative is True:
+        if val.is_real is False or not bool(val.is_negative):
+            return False
+    if sym.is_nonnegative is True:
+        if val.is_real is False or bool(val.is_negative):
+            return False
+    if sym.is_nonpositive is True:
+        if val.is_real is False or bool(val.is_positive):
+            return False
+    if sym.is_nonzero is True and (val == 0 or val is sp.S.Zero):
+        return False
+    if sym.is_integer is True and not bool(val.is_integer):
+        return False
+    if sym.is_even is True and not (bool(val.is_integer) and int(val) % 2 == 0):
+        return False
+    if sym.is_odd is True and not (bool(val.is_integer) and int(val) % 2 == 1):
+        return False
+    return True
+
+
+def extract_expression_excluded_points(expr: sp.Basic) -> dict[str, list[str]]:
+    """Extract single-variable denominator excluded points still present in a SymPy expression."""
+    excluded: dict[str, list[str]] = {}
+    if not isinstance(expr, sp.Basic):
+        return excluded
+    denoms: list[sp.Expr] = []
+    try:
+        _, d = sp.fraction(expr)
+        if d != 1 and d.free_symbols:
+            denoms.append(d)
+        for sub in sp.preorder_traversal(expr):
+            if isinstance(sub, sp.Pow) and sub.exp.is_number and sub.exp.is_real and sub.exp < 0:
+                if sub.base.free_symbols:
+                    denoms.append(sub.base)
+    except Exception:
+        pass
+    for denom in denoms:
+        if len(denom.free_symbols) == 1:
+            sym = next(iter(denom.free_symbols))
+            try:
+                roots = sp.solve(sp.Eq(denom, 0), sym)
+            except Exception:
+                roots = []
+            for r in roots:
+                if _root_matches_symbol_assumptions(sym, r):
+                    r_str = str(sp.simplify(r))
+                    bucket = excluded.setdefault(str(sym), [])
+                    if r_str not in bucket:
+                        bucket.append(r_str)
+    return excluded
+
+
 class Parser:
     """Converts text into SymPy objects without executing code."""
 
@@ -164,18 +229,103 @@ class Parser:
         self.locals: dict[str, object] = dict(locals_ or {})
         self.default_assumptions: dict[str, bool] = {}
         self.symbol_assumptions: dict[str, dict[str, bool]] = {}
+        self.denominators: list[sp.Expr] = []
+        self.domain_constraints: list[str] = []
+        self._load_assumptions(assumptions)
+        self.functions = {
+            name: getattr(sp, name)
+            for name in _FUNCTIONS
+            if getattr(sp, name, None) is not None
+        }
+
+    def _load_assumptions(self, assumptions: dict[str, object] | str | None) -> None:
+        if assumptions is None:
+            return
         if isinstance(assumptions, str):
-            self.default_assumptions = _parse_assumption_spec(assumptions)
-        elif isinstance(assumptions, dict):
+            raw = assumptions.strip()
+            if not raw:
+                return
+            if raw.startswith("{") and raw.endswith("}"):
+                import json
+
+                try:
+                    parsed_json = json.loads(raw)
+                    if isinstance(parsed_json, dict):
+                        self._load_assumptions(parsed_json)
+                        return
+                except Exception as exc:
+                    raise ParseError(f"invalid JSON assumptions: {exc}") from exc
+            if ":" in raw:
+                segments = re.split(r";|,(?=\s*[A-Za-z_]\w*\s*:)", raw)
+                for seg in segments:
+                    seg = seg.strip()
+                    if not seg:
+                        continue
+                    if ":" in seg:
+                        sym_name, spec_str = seg.split(":", 1)
+                        self.symbol_assumptions[sym_name.strip()] = _parse_assumption_spec(
+                            spec_str.strip()
+                        )
+                    else:
+                        self.default_assumptions.update(_parse_assumption_spec(seg))
+                return
+            self.default_assumptions = _parse_assumption_spec(raw)
+            return
+        if isinstance(assumptions, dict):
             for sym_name, spec in assumptions.items():
                 if sym_name in _ALLOWED_ASSUMPTIONS and isinstance(spec, bool):
                     self.default_assumptions[sym_name] = spec
                 else:
                     self.symbol_assumptions[str(sym_name)] = _parse_assumption_spec(spec)
-        self.functions = {
-            name: getattr(sp, name)
-            for name in _FUNCTIONS
-            if getattr(sp, name, None) is not None
+
+    def describe_assumptions(self) -> dict[str, object]:
+        """Return a human-readable dictionary of declared domain assumptions."""
+        out: dict[str, object] = {}
+        if self.default_assumptions:
+            out["*"] = dict(self.default_assumptions)
+        for name, flags in sorted(self.symbol_assumptions.items()):
+            out[name] = dict(flags)
+        for name, sym in sorted(self.symbols.items()):
+            if name not in out and self.default_assumptions:
+                out[name] = dict(self.default_assumptions)
+        return out
+
+    @property
+    def seen_symbols(self) -> set[sp.Symbol]:
+        """All symbols instantiated or encountered by this parser."""
+        return set(self.symbols.values())
+
+    def domain_info(self, variables: Any = None) -> dict[str, Any]:
+        """Compute syntactic domain constraints and excluded points captured before simplification."""
+        excluded_points: dict[str, list[str]] = {}
+        active_constraints: list[str] = []
+        for denom in self.denominators:
+            c_str = f"{denom} != 0"
+            if len(denom.free_symbols) == 1:
+                sym = next(iter(denom.free_symbols))
+                try:
+                    roots = sp.solve(sp.Eq(denom, 0), sym)
+                except Exception:
+                    roots = []
+                matched_any = False
+                for r in roots:
+                    if _root_matches_symbol_assumptions(sym, r):
+                        matched_any = True
+                        r_str = str(sp.simplify(r))
+                        bucket = excluded_points.setdefault(str(sym), [])
+                        if r_str not in bucket:
+                            bucket.append(r_str)
+                if matched_any or not roots:
+                    if c_str not in active_constraints:
+                        active_constraints.append(c_str)
+            elif denom.free_symbols:
+                if c_str not in active_constraints:
+                    active_constraints.append(c_str)
+        return {
+            "domain_constraints": list(self.domain_constraints),
+            "active_domain_constraints": active_constraints,
+            "excluded_points": excluded_points,
+            "assumptions": self.describe_assumptions(),
         }
 
     # ------------------------------------------------------------------ API
@@ -231,6 +381,13 @@ class Parser:
 
     # ------------------------------------------------------------- internals
 
+    def _record_denominator(self, denom: object) -> None:
+        if isinstance(denom, sp.Basic) and denom.free_symbols:
+            constraint = f"{denom} != 0"
+            if constraint not in self.domain_constraints:
+                self.domain_constraints.append(constraint)
+                self.denominators.append(denom)
+
     def _tree(self, text: str) -> ast.Expression:
         normalized = _normalize(_LONE_EQUALS.sub("==", text))
         try:
@@ -258,7 +415,19 @@ class Parser:
             op = _BINOPS.get(type(node.op))
             if op is None:
                 raise ParseError(f"operator not allowed: {type(node.op).__name__}")
-            return op(self._sym(node.left), self._sym(node.right))
+            left_val = self._sym(node.left)
+            right_val = self._sym(node.right)
+            if isinstance(node.op, ast.Div):
+                self._record_denominator(right_val)
+            elif isinstance(node.op, (ast.Pow, ast.BitXor)):
+                if (
+                    isinstance(right_val, sp.Basic)
+                    and right_val.is_number
+                    and right_val.is_real
+                    and right_val < 0
+                ):
+                    self._record_denominator(left_val)
+            return op(left_val, right_val)
         if isinstance(node, ast.UnaryOp):
             value = self._sym(node.operand)
             if isinstance(node.op, ast.UAdd):
@@ -289,6 +458,12 @@ class Parser:
         args = [self._prepare(self._expr(a), name) for a in node.args]
         kwargs = {kw.arg: self._prepare(self._expr(kw.value), name)
                   for kw in node.keywords if kw.arg}
+        if name in ("tan", "sec") and len(args) == 1:
+            self._record_denominator(sp.cos(args[0]))
+        elif name in ("cot", "csc") and len(args) == 1:
+            self._record_denominator(sp.sin(args[0]))
+        elif name == "log" and len(args) >= 1:
+            self._record_denominator(args[0])
         return func(*args, **kwargs)
 
     def _resolve(self, name: str):
@@ -312,6 +487,8 @@ class Parser:
     def _prepare(self, value, func_name: str):
         if func_name in _STRING_ARG_FUNCS:
             self._validate_symbol_names(value, func_name)
+            return value
+        if func_name in _RAW_STR_ARG_FUNCS and isinstance(value, str):
             return value
         if isinstance(value, str):
             return self.parse_expression(value)
@@ -341,3 +518,4 @@ def parse(text: str, **kwargs):
 def parse_equation(text: str, **kwargs):
     """Parse ``text`` as an equation, defaulting to ``expr = 0``."""
     return Parser(**kwargs).parse_equation(text)
+

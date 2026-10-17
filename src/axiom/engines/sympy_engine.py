@@ -130,18 +130,52 @@ class SymPyEngine(Engine):
         else:
             solutions = list(raw_solutions)
 
-        # Inspect complete solution set via solveset to detect infinite periodic families
+        # Inspect complete solution set via solveset to determine solution_complete and periodic families
         solution_set_str: str | None = None
         periodic_family = False
+        solution_complete = True
         if isinstance(equation, sp.Equality):
             try:
-                domain = sp.S.Reals if var.is_real else sp.S.Complexes
+                if var.is_integer is True:
+                    domain = sp.S.Integers
+                elif var.is_positive is True:
+                    domain = sp.Interval.open(0, sp.oo)
+                elif var.is_negative is True:
+                    domain = sp.Interval.open(-sp.oo, 0)
+                elif var.is_nonnegative is True:
+                    domain = sp.Interval(0, sp.oo)
+                elif var.is_nonpositive is True:
+                    domain = sp.Interval(-sp.oo, 0)
+                elif var.is_real is True:
+                    domain = sp.S.Reals
+                else:
+                    domain = sp.S.Complexes
                 sol_set = sp.solveset(equation, var, domain=domain)
+                solution_set_str = str(sol_set)
                 if sol_set.has(sp.ImageSet):
                     periodic_family = True
-                    solution_set_str = str(sol_set)
+                    solution_complete = False
+                elif sol_set.has(sp.ConditionSet) or not isinstance(
+                    sol_set, (sp.FiniteSet, sp.EmptySet.__class__)
+                ):
+                    solution_complete = False
+                elif isinstance(sol_set, sp.FiniteSet):
+                    valid_set_roots = []
+                    for r in sol_set.args:
+                        try:
+                            l_sub = equation.lhs.subs(var, r)
+                            r_sub = equation.rhs.subs(var, r)
+                            if l_sub.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or r_sub.has(
+                                sp.nan, sp.zoo, sp.oo, -sp.oo
+                            ):
+                                continue
+                        except Exception:
+                            pass
+                        valid_set_roots.append(r)
+                    if len(solutions) < len(valid_set_roots):
+                        solution_complete = False
             except Exception:
-                pass
+                solution_complete = False
 
         warnings: list[str] = []
         if not solutions:
@@ -152,30 +186,36 @@ class SymPyEngine(Engine):
             )
         if periodic_family and solution_set_str:
             warnings.append(
-                f"equation has an infinite periodic solution family; principal branch solutions returned (full set: {solution_set_str})"
+                f"equation has an infinite periodic solution family; principal branch sample solutions returned (full set: {solution_set_str})"
+            )
+        elif not solution_complete and solution_set_str:
+            warnings.append(
+                f"returned roots are sample solutions (solution_complete=False; full solution set: {solution_set_str})"
             )
 
         steps = [
             f"solve {equation} for {var}",
-            f"solutions: {_fmt([str(s) for s in solutions])}",
+            f"solutions: {_fmt([str(s) for s in solutions])} (solution_complete={solution_complete})",
         ]
         if extraneous:
             steps.append(f"rejected extraneous roots (pole/domain violation): {extraneous}")
-        if periodic_family and solution_set_str:
-            steps.append(f"complete periodic solution set (solveset): {solution_set_str}")
+        if solution_set_str:
+            steps.append(f"complete solution set (solveset): {solution_set_str}")
 
         return Answer(
             value=[str(s) for s in solutions],
             value_str=str([str(s) for s in solutions]),
             latex=_latex(solutions),
-            method="algebraic solve (sympy.solve + domain & solveset audit)",
+            method="algebraic solve (sympy.solve + domain & solveset completeness audit)",
             steps=steps,
             warnings=warnings,
             variables=[str(var)],
             raw={
                 "solutions": solutions,
+                "sample_solutions": [str(s) for s in solutions],
                 "extraneous_roots": extraneous,
                 "periodic_family": periodic_family,
+                "solution_complete": solution_complete,
                 "solution_set": solution_set_str,
                 "var": var,
                 "equation": equation,
@@ -229,6 +269,26 @@ class SymPyEngine(Engine):
     ) -> Answer:
         if limits:
             result = sp.integrate(expr, (var, *limits))
+            if isinstance(result, sp.Basic) and result.has(sp.Integral):
+                a, b = limits
+                if a.is_extended_real is not False and b.is_extended_real is not False:
+                    try:
+                        pos_flag = bool(a.is_nonnegative and b.is_positive)
+                        dummy = sp.Symbol(var.name, real=True, positive=pos_flag)
+                        alt = sp.integrate(expr.subs(var, dummy), (dummy, a, b))
+                        if not alt.has(sp.Integral):
+                            result = alt.subs(dummy, var)
+                    except Exception:
+                        pass
+                if result.has(sp.Integral) and a == 0 and b == sp.oo:
+                    try:
+                        u = sp.Symbol("_u", positive=True)
+                        sub_expr = (expr.subs(var, -sp.log(u)) * (1 / u)).simplify()
+                        alt_u = sp.integrate(sub_expr, (u, 0, 1))
+                        if not alt_u.has(sp.Integral):
+                            result = alt_u
+                    except Exception:
+                        pass
             method = "symbolic definite integration (sympy.integrate)"
             label = f"integral from {limits[0]} to {limits[1]} of {expr}"
         else:
@@ -250,6 +310,37 @@ class SymPyEngine(Engine):
             },
         )
 
+    @staticmethod
+    def _directional_limit(
+        expr: sp.Expr, var: sp.Symbol, point: sp.Expr, dir_sign: str
+    ) -> sp.Expr:
+        res = sp.limit(expr, var, point, dir=dir_sign)
+        if (
+            isinstance(res, sp.Basic)
+            and (res.has(sp.Limit) or res == sp.zoo)
+            and point not in (sp.oo, -sp.oo, sp.zoo)
+        ):
+            try:
+                laurent = sp.series(expr, var, point, n=2).removeO()
+                if not laurent.has(sp.Order, sp.Limit):
+                    res_laurent = sp.limit(laurent, var, point, dir=dir_sign)
+                    if not res_laurent.has(sp.Limit):
+                        return res_laurent
+            except Exception:
+                pass
+            try:
+                import mpmath as mp
+                fn = sp.lambdify(var, expr, modules=["mpmath", "sympy"])
+                pt_f = float(point.evalf())
+                mp_lim = mp.limit(fn, pt_f, direction=1 if dir_sign == "+" else -1)
+                if mp.isfinite(mp_lim):
+                    if getattr(mp_lim, "imag", 0) != 0 and abs(mp_lim.imag) < 1e-12:
+                        mp_lim = mp_lim.real
+                    return sp.nsimplify(mp_lim, rational=True)
+            except Exception:
+                pass
+        return res
+
     def limit(
         self,
         expr: sp.Expr,
@@ -264,11 +355,11 @@ class SymPyEngine(Engine):
         two_sided_mismatch = False
 
         if direction == "+":
-            result = sp.limit(expr, var, point, dir="+")
+            result = self._directional_limit(expr, var, point, "+")
             right_lim = result
             steps.append(f"right-hand limit -> {result}")
         elif direction == "-":
-            result = sp.limit(expr, var, point, dir="-")
+            result = self._directional_limit(expr, var, point, "-")
             left_lim = result
             steps.append(f"left-hand limit -> {result}")
         elif point in (sp.oo, -sp.oo, sp.zoo):
@@ -277,14 +368,18 @@ class SymPyEngine(Engine):
         else:
             # SymPy's sp.limit(expr, var, point) defaults to dir="+"!
             # For a genuine two-sided limit (direction="+-"), compute both left and right limits.
-            right_lim = sp.limit(expr, var, point, dir="+")
-            left_lim = sp.limit(expr, var, point, dir="-")
+            right_lim = self._directional_limit(expr, var, point, "+")
+            left_lim = self._directional_limit(expr, var, point, "-")
             steps.append(f"left-hand limit (dir='-') -> {left_lim}")
             steps.append(f"right-hand limit (dir='+') -> {right_lim}")
             same = False
-            if left_lim == right_lim and not left_lim.has(sp.AccumBounds, sp.Limit):
+            if (
+                left_lim == right_lim
+                and left_lim != sp.zoo
+                and not left_lim.has(sp.AccumBounds, sp.Limit)
+            ):
                 same = True
-            else:
+            elif left_lim != sp.zoo and right_lim != sp.zoo:
                 try:
                     diff = sp.simplify(left_lim - right_lim)
                     if diff == 0 and not left_lim.has(sp.AccumBounds, sp.Limit):

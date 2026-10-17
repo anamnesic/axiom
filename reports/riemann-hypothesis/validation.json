@@ -1,0 +1,2509 @@
+{
+  "generated_at_utc": "2026-10-17T18:18:57.497998+00:00",
+  "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.0 contract & edge-case validation",
+  "riemann_hypothesis_proven": false,
+  "sources": [
+    "https://www.claymath.org/millennium/riemann-hypothesis/",
+    "https://www.claymath.org/wp-content/uploads/2022/05/riemann.pdf"
+  ],
+  "source_sha256": {
+    "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
+    "src/axiom/parsing.py": "4da5889d6719a5d07b2db20d9cf95b66217853dbaa9e0abc1fc1cb5b048146e7",
+    "src/axiom/core.py": "de59a578b13cba7e10da4d0ff5ee9cdea8ef1038dbd575eb3cc16cc57ce44006",
+    "src/axiom/verification.py": "5c2764066b0870fb2ec1bb605d7c522b5168a62d7e91b7cb462baefc3c546b78",
+    "src/axiom/engines/lean_engine.py": "b5ffc481396d7d0ebd7b8c10edc981467d011c6efbf560a95c536433ef87758b",
+    "src/axiom/engines/sympy_engine.py": "12cbb118d2855be6b21b163b1bb7f81c789dfa40ec3dca0167dcf7f7c5903a23",
+    "src/axiom/mcp_server.py": "cec0b71df0781322c71fa9a7cee4e4c618d07ec47d60ee8aa32b4caab651d8b7",
+    "src/axiom/cli.py": "a9e790b80eb82b0976b04b9c70119f8b8ebc0b06143a909c5f79d32f4fee9436",
+    "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
+  },
+  "independent_checks": {
+    "euler_product_p_le_13_s2_fraction": "715715/442368",
+    "euler_product_p_le_13_s2_float": 1.6179176613136574,
+    "basel_pi2_over_6_float": 1.6449340668482264,
+    "euler_product_truncation_error_s2": 0.027016405534569028,
+    "mpmath_zeta_half": "-1.46035450880958681288949915252",
+    "mpmath_first_zero_abs_residual": "3.73000179e-31",
+    "totient_30030_product": 5760
+  },
+  "cli_runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "parse_functional_rhs": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "parse",
+        "2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "parse",
+        "input": "2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+        "ok": true,
+        "value": {
+          "structure": "expression",
+          "canonical": "2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
+          "srepr": "Mul(Pow(Integer(2), Symbol('s')), Pow(pi, Add(Symbol('s'), Integer(-1))), sin(Mul(Rational(1, 2), pi, Symbol('s'))), gamma(Add(Integer(1), Mul(Integer(-1), Symbol('s')))), zeta(Add(Integer(1), Mul(Integer(-1), Symbol('s')))))",
+          "free_symbols": [
+            "s"
+          ],
+          "is_polynomial": false,
+          "domain_constraints": [],
+          "excluded_points": {},
+          "assumptions": {}
+        },
+        "value_str": "2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
+        "latex": "2^{s} \\pi^{s - 1} \\sin{\\left(\\frac{\\pi s}{2} \\right)} \\Gamma\\left(1 - s\\right) \\zeta\\left(1 - s\\right)",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "structural-parse",
+        "evidence": {
+          "engine": "axiom-parser",
+          "engine_version": "0.2.1",
+          "method": "AST allowlist parser -> SymPy expression tree",
+          "steps": [
+            "input: 2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+            "parsed (expression): 2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)"
+          ],
+          "reproducible_with": "axiom parse \"2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)\""
+        },
+        "verification": {
+          "kind": "ast-roundtrip",
+          "passed": true,
+          "detail": "Canonical AST (expression) verified by deterministic re-parse round-trip",
+          "checks": 1
+        }
+      }
+    },
+    "zeta_2_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(2)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(2)",
+        "ok": true,
+        "value": "pi**2/6",
+        "value_str": "pi**2/6",
+        "latex": "\\frac{\\pi^{2}}{6}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate pi**2/6",
+            "result pi**2/6"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(2)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "zeta_4_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(4)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(4)",
+        "ok": true,
+        "value": "pi**4/90",
+        "value_str": "pi**4/90",
+        "latex": "\\frac{\\pi^{4}}{90}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate pi**4/90",
+            "result pi**4/90"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(4)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "zeta_0_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(0)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(0)",
+        "ok": true,
+        "value": "-1/2",
+        "value_str": "-1/2",
+        "latex": "- \\frac{1}{2}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate -1/2",
+            "result -1/2"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(0)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "zeta_neg1_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(-1)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(-1)",
+        "ok": true,
+        "value": "-1/12",
+        "value_str": "-1/12",
+        "latex": "- \\frac{1}{12}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate -1/12",
+            "result -1/12"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(-1)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "trivial_zero_neg2": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(-2)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(-2)",
+        "ok": true,
+        "value": "0",
+        "value_str": "0",
+        "latex": "0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate 0",
+            "result 0"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(-2)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "trivial_zero_neg4": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(-4)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(-4)",
+        "ok": true,
+        "value": "0",
+        "value_str": "0",
+        "latex": "0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate 0",
+            "result 0"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(-4)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "compare_basel": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "zeta(2)",
+        "pi^2/6",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "zeta(2) == pi^2/6",
+        "ok": true,
+        "value": {
+          "equivalent": true,
+          "left": "pi**2/6",
+          "right": "pi**2/6",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "\\frac{\\pi^{2}}{6} = \\frac{\\pi^{2}}{6}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = pi**2/6",
+            "rhs = pi**2/6",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/6\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "compare_basel_false": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "zeta(2)",
+        "pi^2/8",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "zeta(2) == pi^2/8",
+        "ok": true,
+        "value": {
+          "equivalent": false,
+          "left": "pi**2/6",
+          "right": "pi**2/8",
+          "simplified_difference": "pi**2/24"
+        },
+        "value_str": "not equivalent (diff = pi**2/24)",
+        "latex": "\\frac{\\pi^{2}}{6} \\neq \\frac{\\pi^{2}}{8}",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = pi**2/6",
+            "rhs = pi**2/8",
+            "simplify(lhs - rhs) -> pi**2/24"
+          ],
+          "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/8\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 4.112e-01",
+          "checks": 1,
+          "max_error": 0.4112335167120566
+        }
+      }
+    },
+    "verify_constant_equality_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "verify",
+        "zeta(2) = pi^2/6",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "verify",
+        "input": "zeta(2) == pi^2/6",
+        "ok": true,
+        "value": {
+          "equivalent": true,
+          "left": "pi**2/6",
+          "right": "pi**2/6",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "\\frac{\\pi^{2}}{6} = \\frac{\\pi^{2}}{6}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = pi**2/6",
+            "rhs = pi**2/6",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"zeta(2)\" \"pi^2/6\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "residue_at_s1": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "limit",
+        "(s - 1)*zeta(s)",
+        "--variable",
+        "s",
+        "--to",
+        "1",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "limit",
+        "input": "(s - 1)*zeta(s)",
+        "ok": true,
+        "value": "1",
+        "value_str": "1",
+        "latex": "1",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic limit with explicit left/right audit (sympy.limit)",
+          "steps": [
+            "limit s -> 1 (dir=+-) of (s - 1)*zeta(s)",
+            "left-hand limit (dir='-') -> 1",
+            "right-hand limit (dir='+') -> 1",
+            "two-sided limit exists -> 1"
+          ],
+          "reproducible_with": "axiom limit \"(s - 1)*zeta(s)\" --variable s --to 1"
+        },
+        "verification": {
+          "kind": "numerical-limit-probe",
+          "passed": true,
+          "detail": "Sequence converges to 1 (error at 1e-8 step: 5.77e-09; numerical evidence only)",
+          "checks": 6,
+          "max_error": 5.772156656296913e-09
+        }
+      }
+    },
+    "pole_right_limit": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "limit",
+        "zeta(s)",
+        "--variable",
+        "s",
+        "--to",
+        "1",
+        "--dir",
+        "+",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "limit",
+        "input": "zeta(s)",
+        "ok": true,
+        "value": "75788848838223/500000000000",
+        "value_str": "75788848838223/500000000000",
+        "latex": "\\frac{75788848838223}{500000000000}",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic limit with explicit left/right audit (sympy.limit)",
+          "steps": [
+            "limit s -> 1 (dir=+) of zeta(s)",
+            "right-hand limit -> 75788848838223/500000000000"
+          ],
+          "reproducible_with": "axiom limit \"zeta(s)\" --variable s --to 1"
+        },
+        "verification": {
+          "kind": "numerical-limit-probe",
+          "passed": false,
+          "detail": "Numerical sequence (+) near 1 diverged from 75788848838223/500000000000 (f ? 100000000.57721566562969131496480563, error 6.60e+05)",
+          "checks": 3,
+          "max_error": 659726.6651521202
+        }
+      }
+    },
+    "pole_left_limit": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "limit",
+        "zeta(s)",
+        "--variable",
+        "s",
+        "--to",
+        "1",
+        "--dir",
+        "-",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "limit",
+        "input": "zeta(s)",
+        "ok": true,
+        "value": "-3760581669291/25000000000",
+        "value_str": "-3760581669291/25000000000",
+        "latex": "- \\frac{3760581669291}{25000000000}",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic limit with explicit left/right audit (sympy.limit)",
+          "steps": [
+            "limit s -> 1 (dir=-) of zeta(s)",
+            "left-hand limit -> -3760581669291/25000000000"
+          ],
+          "reproducible_with": "axiom limit \"zeta(s)\" --variable s --to 1"
+        },
+        "verification": {
+          "kind": "numerical-limit-probe",
+          "passed": false,
+          "detail": "Numerical sequence (-) near 1 diverged from -3760581669291/25000000000 (f ? -99999999.422784335826625594713294608, error 6.65e+05)",
+          "checks": 3,
+          "max_error": 664789.7705301731
+        }
+      }
+    },
+    "pole_two_sided_limit": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "limit",
+        "zeta(s)",
+        "--variable",
+        "s",
+        "--to",
+        "1",
+        "--dir",
+        "+-",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "limit",
+        "input": "zeta(s)",
+        "ok": true,
+        "value": "Limit(zeta(s), s, 1, dir='+-')",
+        "value_str": "DNE (left=-3760581669291/25000000000, right=75788848838223/500000000000)",
+        "latex": "\\lim_{s \\to 1} \\zeta\\left(s\\right)",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic limit with explicit left/right audit (sympy.limit)",
+          "steps": [
+            "limit s -> 1 (dir=+-) of zeta(s)",
+            "left-hand limit (dir='-') -> -3760581669291/25000000000",
+            "right-hand limit (dir='+') -> 75788848838223/500000000000",
+            "two-sided limit DNE (left=-3760581669291/25000000000 != right=75788848838223/500000000000)"
+          ],
+          "reproducible_with": "axiom limit \"zeta(s)\" --variable s --to 1"
+        },
+        "verification": {
+          "kind": "two-sided-or-oscillatory-limit-check",
+          "passed": false,
+          "detail": "Limit does not exist as a single value (two-sided mismatch, unsigned complex infinity zoo, oscillatory AccumBounds, or unevaluated)",
+          "checks": 1
+        },
+        "warnings": [
+          "two-sided limit does not exist: left limit (-3760581669291/25000000000) != right limit (75788848838223/500000000000)"
+        ]
+      }
+    },
+    "functional_equation_compare": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "zeta(s)",
+        "2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "zeta(s) == 2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)",
+        "ok": true,
+        "value": {
+          "equivalent": true,
+          "left": "zeta(s)",
+          "right": "2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
+          "simplified_difference": "-2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s) + zeta(s)"
+        },
+        "value_str": "equivalent",
+        "latex": "\\zeta\\left(s\\right) = 2^{s} \\pi^{s - 1} \\sin{\\left(\\frac{\\pi s}{2} \\right)} \\Gamma\\left(1 - s\\right) \\zeta\\left(1 - s\\right)",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = zeta(s)",
+            "rhs = 2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s)",
+            "simplify(lhs - rhs) -> -2**s*pi**(s - 1)*sin(pi*s/2)*gamma(1 - s)*zeta(1 - s) + zeta(s)"
+          ],
+          "reproducible_with": "axiom compare \"zeta(s)\" \"2^s * pi^(s - 1) * sin(pi*s/2) * gamma(1 - s) * zeta(1 - s)\""
+        },
+        "verification": {
+          "kind": "numerical-spot-check",
+          "passed": true,
+          "detail": "Agreed across 6 test points within 2.11e-154 (symbolic reduction inconclusive)",
+          "checks": 6,
+          "max_error": 2.1095373229726e-154
+        }
+      }
+    },
+    "mellin_integral_s2": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "x/(exp(x) - 1)",
+        "--variable",
+        "x",
+        "--from",
+        "0",
+        "--to",
+        "oo",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "x/(exp(x) - 1)",
+        "ok": true,
+        "value": "pi**2/6",
+        "value_str": "pi**2/6",
+        "latex": "\\frac{\\pi^{2}}{6}",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from 0 to oo of x/(exp(x) - 1)",
+            "-> pi**2/6"
+          ],
+          "reproducible_with": "axiom integrate \"x/(exp(x) - 1)\" --variable x --from 0 --to oo"
+        },
+        "verification": {
+          "kind": "numerical-quadrature",
+          "passed": true,
+          "detail": "Agrees with adaptive Gaussian quadrature (rel error 2.22e-17)",
+          "checks": 1,
+          "max_error": 2.2172569649875964e-17
+        }
+      }
+    },
+    "interior_pole_integral_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "1/x^2",
+        "--variable",
+        "x",
+        "--from",
+        "-1",
+        "--to",
+        "1",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "1/x^2",
+        "ok": true,
+        "value": "oo",
+        "value_str": "oo",
+        "latex": "\\infty",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from -1 to 1 of x**(-2)",
+            "-> oo"
+          ],
+          "reproducible_with": "axiom integrate \"1/x^2\" --variable x --from -1 --to 1"
+        },
+        "verification": {
+          "kind": "divergent-integral",
+          "passed": false,
+          "detail": "definite integral diverges or is undefined (oo)",
+          "checks": 1
+        }
+      }
+    },
+    "factorint_30030": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "number-theory",
+        "factorint",
+        "-n",
+        "30030",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "number_theory",
+        "input": "factorint({'n': 30030})",
+        "ok": true,
+        "value": {
+          "2": 1,
+          "3": 1,
+          "5": 1,
+          "7": 1,
+          "11": 1,
+          "13": 1
+        },
+        "value_str": "30030 = 2 * 3 * 5 * 7 * 11 * 13",
+        "guarantee": "verified-substitution",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "integer prime factorization (sympy.factorint)",
+          "steps": [
+            "factorint(30030) -> {'2': 1, '3': 1, '5': 1, '7': 1, '11': 1, '13': 1}"
+          ],
+          "reproducible_with": "axiom number-theory factorint --n 30030"
+        },
+        "verification": {
+          "kind": "prime-factor-multiplication",
+          "passed": true,
+          "detail": "Verified all 6 factor(s) are prime and their product equals 30030",
+          "checks": 7,
+          "max_error": 0.0
+        }
+      }
+    },
+    "totient_30030": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "number-theory",
+        "totient",
+        "-n",
+        "30030",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "number_theory",
+        "input": "totient({'n': 30030})",
+        "ok": true,
+        "value": 5760,
+        "value_str": "?(30030) = 5760",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "Euler totient function (sympy.totient)",
+          "steps": [
+            "totient(30030) -> 5760"
+          ],
+          "reproducible_with": "axiom number-theory totient --n 30030"
+        },
+        "verification": {
+          "kind": "euler-product-totient-check",
+          "passed": true,
+          "detail": "Verified ?(30030) = 5760 via prime-power product formula",
+          "checks": 7,
+          "max_error": 0.0
+        }
+      }
+    },
+    "euler_product_p13_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "(1/(1 - 2^(-2)))*(1/(1 - 3^(-2)))*(1/(1 - 5^(-2)))*(1/(1 - 7^(-2)))*(1/(1 - 11^(-2)))*(1/(1 - 13^(-2)))",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "(1/(1 - 2^(-2)))*(1/(1 - 3^(-2)))*(1/(1 - 5^(-2)))*(1/(1 - 7^(-2)))*(1/(1 - 11^(-2)))*(1/(1 - 13^(-2)))",
+        "ok": true,
+        "value": "715715/442368",
+        "value_str": "715715/442368",
+        "latex": "\\frac{715715}{442368}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate 715715/442368",
+            "result 715715/442368"
+          ],
+          "reproducible_with": "axiom evaluate \"(1/(1 - 2^(-2)))*(1/(1 - 3^(-2)))*(1/(1 - 5^(-2)))*(1/(1 - 7^(-2)))*(1/(1 - 11^(-2)))*(1/(1 - 13^(-2)))\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0
+        }
+      }
+    },
+    "zeta_half_real": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "zeta(1/2)",
+        "--precision",
+        "30",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "zeta(1/2)",
+        "ok": true,
+        "value": "-1.46035450880958681288949915252",
+        "value_str": "-1.46035450880958681288949915252",
+        "latex": "-1.46035450880958681288949915252",
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "numeric",
+          "engine_version": "1.3.0",
+          "method": "arbitrary-precision float evaluation (dps=30)",
+          "steps": [
+            "evalf(zeta(1/2), 30)",
+            "-> -1.46035450880958681288949915252"
+          ],
+          "limitations": [
+            "rounded to 30 significant digits"
+          ],
+          "reproducible_with": "axiom evaluate \"zeta(1/2)\" --precision 30"
+        },
+        "verification": {
+          "kind": "arbitrary-precision-eval",
+          "passed": true,
+          "detail": "Evaluated with 30 digits of working precision",
+          "checks": 1
+        }
+      }
+    },
+    "first_nontrivial_zero_residual": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "Abs(zeta(1/2 + 14.134725141734693790457251983562*I))",
+        "--precision",
+        "30",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "Abs(zeta(1/2 + 14.134725141734693790457251983562*I))",
+        "ok": true,
+        "value": "3.76295843114829930172187037173e-31",
+        "value_str": "3.76295843114829930172187037173e-31",
+        "latex": "3.76295843114829930172187037173 \\cdot 10^{-31}",
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "numeric",
+          "engine_version": "1.3.0",
+          "method": "arbitrary-precision float evaluation (dps=30)",
+          "steps": [
+            "evalf(3.7629584311482993017218703717298E-31, 30)",
+            "-> 3.76295843114829930172187037173E-31"
+          ],
+          "limitations": [
+            "rounded to 30 significant digits"
+          ],
+          "reproducible_with": "axiom evaluate \"Abs(zeta(1/2 + 14.134725141734693790457251983562*I))\" --precision 30"
+        },
+        "verification": {
+          "kind": "arbitrary-precision-eval",
+          "passed": true,
+          "detail": "Evaluated with 30 digits of working precision",
+          "checks": 1
+        }
+      }
+    },
+    "solve_zeta_zero_attempt": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "zeta(s) = 0",
+        "--variable",
+        "s",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "zeta(s) = 0",
+        "ok": false,
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "axiom"
+        },
+        "error": "\nNo algorithms are implemented to solve equation zeta(s) + 0"
+      }
+    },
+    "mathlib_search_prime": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "search-mathlib",
+        "prime",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "search_mathlib",
+        "input": "prime",
+        "ok": true,
+        "value": {
+          "query": "prime",
+          "count": 2,
+          "sources": [
+            "axiom-mathlib-catalog"
+          ],
+          "results": [
+            {
+              "name": "Nat.Infinite.primes",
+              "module": "Mathlib.Data.Nat.Prime.Infinite",
+              "type": "? (n : ?), ? p, n ? p ? Nat.Prime p",
+              "tactic_hint": "exact Nat.exists_infinite_primes n",
+              "doc": "Euclid's theorem: there are infinitely many prime numbers.",
+              "source": "axiom-mathlib-catalog"
+            },
+            {
+              "name": "ZMod.fermat_little",
+              "module": "Mathlib.FieldTheory.Finite.Basic",
+              "type": "? {p : ?} [Fact p.Prime] {a : ZMod p} (ha : a ? 0), a ^ (p - 1) = 1",
+              "tactic_hint": "exact ZMod.pow_card_sub_one_eq_one ha",
+              "doc": "Fermat's Little Theorem in ZMod p.",
+              "source": "axiom-mathlib-catalog"
+            }
+          ]
+        },
+        "value_str": "found 2 Mathlib4 theorem(s): Nat.Infinite.primes, ZMod.fermat_little",
+        "guarantee": "catalog-lookup",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "Mathlib4 semantic & signature search (axiom-mathlib-catalog)",
+          "steps": [
+            "query: 'prime'",
+            "matched 2 declaration(s)",
+            "top match: Nat.Infinite.primes : ? (n : ?), ? p, n ? p ? Nat.Prime p"
+          ],
+          "reproducible_with": "axiom search-mathlib \"prime\""
+        },
+        "verification": {
+          "kind": "catalog-signature-check",
+          "passed": true,
+          "detail": "Matched 2 verified Lean 4 / Mathlib4 declaration signature(s)",
+          "checks": 2
+        }
+      }
+    },
+    "mathlib_search_empty": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "search-mathlib",
+        "nonexistent_riemann_proof_xyz_999",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "search_mathlib",
+        "input": "nonexistent_riemann_proof_xyz_999",
+        "ok": true,
+        "value": {
+          "query": "nonexistent_riemann_proof_xyz_999",
+          "count": 0,
+          "sources": [
+            "axiom-mathlib-catalog"
+          ],
+          "results": []
+        },
+        "value_str": "no Mathlib4 matches for 'nonexistent_riemann_proof_xyz_999'",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "Mathlib4 semantic & signature search (axiom-mathlib-catalog)",
+          "steps": [
+            "query: 'nonexistent_riemann_proof_xyz_999'",
+            "matched 0 declaration(s)"
+          ],
+          "reproducible_with": "axiom search-mathlib \"nonexistent_riemann_proof_xyz_999\""
+        },
+        "verification": {
+          "kind": "catalog-signature-check",
+          "passed": false,
+          "detail": "No Mathlib4 declarations matched 'nonexistent_riemann_proof_xyz_999'",
+          "checks": 0
+        }
+      }
+    },
+    "plot_regularized_zeta": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "plot",
+        "(s - 1)*zeta(s)",
+        "--variable",
+        "s",
+        "--range",
+        "1.1:4.0",
+        "--points",
+        "25",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "plot",
+        "input": "(s - 1)*zeta(s)",
+        "ok": true,
+        "value": {
+          "variable": "s",
+          "range": [
+            1.1,
+            4.0
+          ],
+          "points": 25,
+          "valid_points": 25,
+          "y_min": 1.058444846495081,
+          "y_max": 3.2469697011334144,
+          "x": [
+            1.1,
+            1.22083333,
+            1.34166667,
+            1.4625,
+            1.58333333,
+            1.70416667,
+            1.825,
+            1.94583333,
+            2.06666667,
+            2.1875,
+            2.30833333,
+            2.42916667,
+            2.55,
+            2.67083333,
+            2.79166667,
+            2.9125,
+            3.03333333,
+            3.15416667,
+            3.275,
+            3.39583333,
+            3.51666667,
+            3.6375,
+            3.75833333,
+            3.87916667,
+            4.0
+          ],
+          "y": [
+            1.05844485,
+            1.13096655,
+            1.20551812,
+            1.28204499,
+            1.36049165,
+            1.44080185,
+            1.52291887,
+            1.6067857,
+            1.69234527,
+            1.77954061,
+            1.86831504,
+            1.95861233,
+            2.05037679,
+            2.14355347,
+            2.23808822,
+            2.33392781,
+            2.43102002,
+            2.52931371,
+            2.6287589,
+            2.7293068,
+            2.8309099,
+            2.93352197,
+            3.03709811,
+            3.14159475,
+            3.2469697
+          ],
+          "ascii_preview": "                                             * *\n                                         * *    \n                                     * *        \n                                 * *            \n                             * *                \n                       * * *                    \n                    * *                         \n              * * *                             \n          * *                                   \n    * * *                                       \n* *                                             ",
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 380\" width=\"640\" height=\"380\">\n  <rect width=\"100%\" height=\"100%\" fill=\"#0f172a\" rx=\"8\"/>\n  <rect x=\"58\" y=\"38\" width=\"558\" height=\"298\" fill=\"#1e293b\" stroke=\"#334155\"/>\n  \n  <polyline fill=\"none\" stroke=\"#38bdf8\" stroke-width=\"2.2\" points=\"58.00,336.00 81.25,326.13 104.50,315.97 127.75,305.55 151.00,294.87 174.25,283.94 197.50,272.75 220.75,261.34 244.00,249.69 267.25,237.81 290.50,225.72 313.75,213.43 337.00,200.93 360.25,188.25 383.50,175.37 406.75,162.32 430.00,149.10 453.25,135.72 476.50,122.18 499.75,108.49 523.00,94.65 546.25,80.68 569.50,66.58 592.75,52.35 616.00,38.00\"/>\n  <text x=\"320.0\" y=\"24\" fill=\"#f8fafc\" font-family=\"monospace\" font-size=\"13\" text-anchor=\"middle\">f(s) = (s - 1)*zeta(s)</text>\n  <text x=\"58\" y=\"368\" fill=\"#94a3b8\" font-family=\"monospace\" font-size=\"11\">1.1</text>\n  <text x=\"337.0\" y=\"368\" fill=\"#cbd5e1\" font-family=\"monospace\" font-size=\"11\" text-anchor=\"middle\">s</text>\n  <text x=\"616\" y=\"368\" fill=\"#94a3b8\" font-family=\"monospace\" font-size=\"11\" text-anchor=\"end\">4</text>\n  <text x=\"52\" y=\"48\" fill=\"#94a3b8\" font-family=\"monospace\" font-size=\"11\" text-anchor=\"end\">3.25</text>\n  <text x=\"52\" y=\"336\" fill=\"#94a3b8\" font-family=\"monospace\" font-size=\"11\" text-anchor=\"end\">1.06</text>\n  <text x=\"14\" y=\"187.0\" fill=\"#cbd5e1\" font-family=\"monospace\" font-size=\"11\">f(s)</text>\n</svg>\n",
+          "output_file": null
+        },
+        "value_str": "sampled 25/25 points on [1.1, 4.0] (y in [1.058, 3.247])",
+        "latex": "\\left(s - 1\\right) \\zeta\\left(s\\right)",
+        "variables": [
+          "s"
+        ],
+        "guarantee": "sampled-visualization",
+        "evidence": {
+          "engine": "numeric",
+          "engine_version": "1.3.0",
+          "method": "uniform grid sampling (25 points via mpmath) + SVG/ASCII renderer",
+          "steps": [
+            "domain: s in [1.1, 4.0]",
+            "sampled 25/25 points on [1.1, 4.0] (y in [1.058, 3.247])"
+          ],
+          "limitations": [
+            "discrete grid sampling may miss narrow spikes between grid points"
+          ],
+          "reproducible_with": "axiom plot \"(s - 1)*zeta(s)\" --range 1.1:4.0"
+        },
+        "verification": {
+          "kind": "domain-sampling",
+          "passed": true,
+          "detail": "25 finite evaluations succeeded",
+          "checks": 25
+        }
+      }
+    },
+    "lean_control_file": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "prove",
+        "examples/theorems.lean",
+        "--engine",
+        "lean",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "prove",
+        "input": "examples/theorems.lean",
+        "ok": true,
+        "value": {
+          "checked": false,
+          "complete": true,
+          "theorems": [
+            "add_zero_right",
+            "eq_refl_nat"
+          ],
+          "audited_theorems": [],
+          "trivial_theorems": [
+            "eq_refl_nat"
+          ],
+          "untrusted_axioms": [],
+          "source": "-- Example formal theorems for `axiom prove examples/theorems.lean --engine lean`\n\ntheorem add_zero_right (n : Nat) : n + 0 = n := by\n  rfl\n\ntheorem eq_refl_nat (a : Nat) : a = a := by\n  rfl\n"
+        },
+        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "steps": [
+            "loaded Lean source from examples\\theorems.lean",
+            "audited declarations: ['add_zero_right', 'eq_refl_nat']"
+          ],
+          "limitations": [
+            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
+          ],
+          "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean"
+        },
+        "verification": {
+          "kind": "lean4-kernel-axiom-audit",
+          "passed": false,
+          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "checks": 1,
+          "data": {
+            "theorems": [
+              "add_zero_right",
+              "eq_refl_nat"
+            ],
+            "audited_theorems": [],
+            "trivial_theorems": [
+              "eq_refl_nat"
+            ],
+            "diagnostics": [
+              "lean binary not found in PATH or ~/.elan/bin"
+            ],
+            "axioms_used": [],
+            "untrusted_axioms": []
+          }
+        },
+        "warnings": [
+          "syntactic reflexive tautology (X = X) detected in: eq_refl_nat"
+        ]
+      }
+    },
+    "lean_tautology_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "prove",
+        "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
+        "--engine",
+        "lean",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "prove",
+        "input": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
+        "ok": true,
+        "value": {
+          "checked": false,
+          "complete": true,
+          "theorems": [
+            "fake_rh"
+          ],
+          "audited_theorems": [],
+          "trivial_theorems": [
+            "fake_rh"
+          ],
+          "untrusted_axioms": [],
+          "source": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl"
+        },
+        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "steps": [
+            "loaded Lean source from inline snippet",
+            "audited declarations: ['fake_rh']"
+          ],
+          "limitations": [
+            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
+          ],
+          "reproducible_with": "axiom prove \"theorem fake_rh : 2 + 2 = 2 + 2 := by rfl\" --engine lean"
+        },
+        "verification": {
+          "kind": "lean4-kernel-axiom-audit",
+          "passed": false,
+          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "checks": 1,
+          "data": {
+            "theorems": [
+              "fake_rh"
+            ],
+            "audited_theorems": [],
+            "trivial_theorems": [
+              "fake_rh"
+            ],
+            "diagnostics": [
+              "lean binary not found in PATH or ~/.elan/bin"
+            ],
+            "axioms_used": [],
+            "untrusted_axioms": []
+          }
+        },
+        "warnings": [
+          "syntactic reflexive tautology (X = X) detected in: fake_rh"
+        ]
+      }
+    }
+  },
+  "mcp": {
+    "command": [
+      "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "-m",
+      "axiom.mcp_server"
+    ],
+    "returncode": 0,
+    "stderr": "<frozen runpy>:130: RuntimeWarning: 'axiom.mcp_server' found in sys.modules after import of package 'axiom', but prior to execution of 'axiom.mcp_server'; this may result in unpredictable behaviour\n",
+    "requests": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+          "protocolVersion": "2024-11-05",
+          "capabilities": {},
+          "clientInfo": {
+            "name": "axiom-riemann-validation",
+            "version": "0.2.0"
+          }
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized"
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/list"
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+          "name": "math_compare",
+          "arguments": {
+            "left": "sqrt(x^2)",
+            "right": "x"
+          }
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "tools/call",
+        "params": {
+          "name": "math_compare",
+          "arguments": {
+            "left": "sqrt(x^2)",
+            "right": "x",
+            "assumptions": {
+              "x": "positive"
+            }
+          }
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "tools/call",
+        "params": {
+          "name": "math_evaluate",
+          "arguments": {
+            "expression": "zeta(2) - pi^2/6"
+          }
+        }
+      }
+    ],
+    "responses": [
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "protocolVersion": "2024-11-05",
+          "capabilities": {
+            "tools": {
+              "listChanged": false
+            }
+          },
+          "serverInfo": {
+            "name": "axiom",
+            "version": "0.1.0"
+          }
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "tools": [
+            {
+              "name": "math_parse",
+              "description": "Parse a mathematical expression or equation into a canonical AST, extracting free variables, structure type, and LaTeX.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Mathematical expression or equation, e.g. 'x^2 - 5*x + 6 = 0'."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_simplify",
+              "description": "Simplify, factor, or expand an algebraic/trigonometric expression with independent equivalence verification.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression to simplify."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "simplify",
+                      "factor",
+                      "expand"
+                    ],
+                    "default": "simplify",
+                    "description": "Transformation mode."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "description": "Optional engine name (default: sympy)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_solve",
+              "description": "Solve an equation (or ';'-separated system of equations) and independently verify all roots by exact substitution.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Equation or system, e.g. 'x^2 - 5*x + 6 = 0' or 'x + y = 5; x - y = 1'."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Variable (or comma-separated variables) to solve for."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "description": "Engine to use ('sympy' for exact symbolic, 'numeric' for nsolve)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_differentiate",
+              "description": "Differentiate an expression symbolically and verify against high-precision numerical differentiation.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression to differentiate."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Differentiation variable (default: x)."
+                  },
+                  "order": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Derivative order (>= 1)."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_integrate",
+              "description": "Compute an indefinite or definite integral and verify by differentiating the antiderivative or comparing with quadrature.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Integrand expression."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Integration variable (default: x)."
+                  },
+                  "lower": {
+                    "type": "string",
+                    "description": "Optional lower limit for definite integral."
+                  },
+                  "upper": {
+                    "type": "string",
+                    "description": "Optional upper limit for definite integral."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "description": "Optional engine ('sympy' or 'numeric')."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_limit",
+              "description": "Compute the limit of an expression as a variable approaches a point and verify via numerical sequence probing.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression whose limit to take."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Variable (default: x)."
+                  },
+                  "point": {
+                    "type": "string",
+                    "default": "0",
+                    "description": "Limit point (e.g. '0', 'oo')."
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "+-",
+                      "+",
+                      "-"
+                    ],
+                    "default": "+-",
+                    "description": "Direction of approach."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_evaluate",
+              "description": "Evaluate an expression exactly or to arbitrary numerical precision with optional variable substitutions.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression to evaluate."
+                  },
+                  "precision": {
+                    "type": "integer",
+                    "description": "Decimal digits of precision for numerical evaluation."
+                  },
+                  "substitutions": {
+                    "type": "object",
+                    "description": "Mapping of variable names to values/expressions."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_plot",
+              "description": "Sample a 1D mathematical function over a domain [min, max] and optionally save a plot image.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Function expression to sample/plot."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Independent variable (default: x)."
+                  },
+                  "min": {
+                    "type": "number",
+                    "default": -10.0,
+                    "description": "Domain minimum."
+                  },
+                  "max": {
+                    "type": "number",
+                    "default": 10.0,
+                    "description": "Domain maximum."
+                  },
+                  "points": {
+                    "type": "integer",
+                    "default": 101,
+                    "description": "Number of sample points."
+                  },
+                  "output": {
+                    "type": "string",
+                    "description": "Optional file path to save PNG/SVG plot."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_prove",
+              "description": "Check a formal proof using the Lean 4 kernel (or verify a symbolic identity).",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "statement": {
+                    "type": "string",
+                    "description": "Lean 4 theorem statement, path to a .lean file, or symbolic equality."
+                  },
+                  "proof": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Optional Lean 4 proof body."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "default": "lean",
+                    "description": "Engine ('lean' or 'sympy')."
+                  }
+                },
+                "required": [
+                  "statement"
+                ]
+              }
+            },
+            {
+              "name": "math_verify",
+              "description": "Independently verify a mathematical claim: candidate roots for an equation, an identity 'lhs = rhs', or a MathResult JSON payload.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "description": "Equation, identity 'lhs = rhs', JSON string, or path to JSON file."
+                  },
+                  "candidate": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "Optional candidate solution(s) to substitute into the equation."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Target variable name."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "target"
+                ]
+              }
+            },
+            {
+              "name": "math_explain",
+              "description": "Generate a traceable step-by-step derivation and verification report for a mathematical operation.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression or equation."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "solve",
+                      "simplify",
+                      "factor",
+                      "expand",
+                      "differentiate",
+                      "integrate",
+                      "limit",
+                      "evaluate"
+                    ],
+                    "default": "solve"
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Optional variable name."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_compare",
+              "description": "Compare two mathematical expressions for equivalence via symbolic reduction and multi-point counterexample search.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "string",
+                    "description": "Left-hand expression."
+                  },
+                  "right": {
+                    "type": "string",
+                    "description": "Right-hand expression."
+                  },
+                  "variables": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Optional explicit variable list."
+                  },
+                  "assumptions": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}."
+                      },
+                      {
+                        "type": "string",
+                        "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'."
+                      }
+                    ],
+                    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
+                  }
+                },
+                "required": [
+                  "left",
+                  "right"
+                ]
+              }
+            },
+            {
+              "name": "math_explore",
+              "description": "Explore an expression: simplified/factored/expanded forms, parity, zeros, first and second derivatives, critical points, Taylor series, and samples.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression to explore."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Variable to analyze (default: x)."
+                  },
+                  "samples": {
+                    "type": "integer",
+                    "default": 7,
+                    "description": "Number of sample evaluations."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_matrix",
+              "description": "Perform linear algebra operations (det, trace, inv, rref, eigen, lu, solve) on a matrix literal with independent verification.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "matrix": {
+                    "type": "string",
+                    "description": "Matrix literal, e.g. '[[1, 2], [3, 4]]'."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "eigen",
+                      "det",
+                      "trace",
+                      "inv",
+                      "rref",
+                      "lu",
+                      "solve"
+                    ],
+                    "default": "eigen"
+                  },
+                  "rhs": {
+                    "type": "string",
+                    "description": "Right-hand side vector/matrix when operation is 'solve', e.g. '[[5], [11]]'."
+                  }
+                },
+                "required": [
+                  "matrix"
+                ]
+              }
+            },
+            {
+              "name": "math_ode",
+              "description": "Solve an ordinary differential equation symbolically and verify by substituting the solution back into the ODE.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "equation": {
+                    "type": "string",
+                    "description": "ODE such as 'diff(y(x), x) + 2*y(x) = exp(x)'."
+                  },
+                  "function": {
+                    "type": "string",
+                    "default": "y",
+                    "description": "Unknown function name."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "default": "x",
+                    "description": "Independent variable."
+                  }
+                },
+                "required": [
+                  "equation"
+                ]
+              }
+            },
+            {
+              "name": "math_number_theory",
+              "description": "Execute verified number-theory and combinatorics operations: factorint, isprime, extgcd, crt, totient, binomial.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "factorint",
+                      "isprime",
+                      "extgcd",
+                      "crt",
+                      "totient",
+                      "binomial"
+                    ]
+                  },
+                  "n": {
+                    "type": "integer",
+                    "description": "Integer input for factorint, isprime, totient, binomial."
+                  },
+                  "a": {
+                    "type": "integer",
+                    "description": "First integer for extgcd."
+                  },
+                  "b": {
+                    "type": "integer",
+                    "description": "Second integer for extgcd."
+                  },
+                  "k": {
+                    "type": "integer",
+                    "description": "k parameter for binomial(n, k)."
+                  },
+                  "remainders": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Remainders r_i for Chinese Remainder Theorem (crt)."
+                  },
+                  "moduli": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Moduli m_i for Chinese Remainder Theorem (crt)."
+                  }
+                },
+                "required": [
+                  "operation"
+                ]
+              }
+            },
+            {
+              "name": "math_optimize",
+              "description": "Find and verify minima or maxima of a mathematical expression via stationary points and neighborhood perturbation checks.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "Objective expression."
+                  },
+                  "variable": {
+                    "type": "string",
+                    "description": "Decision variable (default: x)."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "minimize",
+                      "maximize"
+                    ],
+                    "default": "minimize"
+                  },
+                  "lower": {
+                    "type": "string",
+                    "description": "Optional lower bound of interval."
+                  },
+                  "upper": {
+                    "type": "string",
+                    "description": "Optional upper bound of interval."
+                  }
+                },
+                "required": [
+                  "expression"
+                ]
+              }
+            },
+            {
+              "name": "math_statistics",
+              "description": "Compute exact symbolic and numerical summary statistics (mean, median, population/sample variance and stdev) with algebraic moment verification.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    ],
+                    "description": "Comma-separated values or array of numbers."
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              }
+            },
+            {
+              "name": "math_session",
+              "description": "Record verified mathematical steps and conjectures into a reproducible research session, tracking the weakest-link guarantee across the chain.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "show",
+                      "record",
+                      "hypothesis",
+                      "export",
+                      "clear"
+                    ],
+                    "default": "show"
+                  },
+                  "name": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "Session name."
+                  },
+                  "expression": {
+                    "type": "string",
+                    "description": "Expression to evaluate and record when action='record'."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "default": "solve",
+                    "description": "Operation for action='record'."
+                  },
+                  "hypothesis": {
+                    "type": "string",
+                    "description": "Conjecture/equality statement for action='hypothesis'."
+                  },
+                  "note": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Optional research note for recorded step."
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              }
+            },
+            {
+              "name": "math_tensor",
+              "description": "Compute differential-geometry and tensor-calculus quantities (inverse metric, Christoffel symbols, Riemann/Ricci/Einstein tensors, Ricci scalar curvature) with independent Levi-Civita metric-compatibility verification (nabla_k g_ij = 0).",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "metric": {
+                    "type": "string",
+                    "description": "Metric matrix literal (e.g. '[[1, 0], [0, r^2]]') or preset name ('polar', 'sphere', 'spherical_2d', 'cylindrical', 'minkowski', 'schwarzschild')."
+                  },
+                  "coordinates": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "Coordinate symbols (e.g. ['r', 'theta'] or 't,r,theta,phi')."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "christoffel",
+                      "riemann",
+                      "ricci",
+                      "scalar",
+                      "einstein",
+                      "metric"
+                    ],
+                    "default": "all"
+                  }
+                },
+                "required": [
+                  "metric"
+                ]
+              }
+            },
+            {
+              "name": "math_search_mathlib",
+              "description": "Search Lean 4 / Mathlib4 theorems, type signatures, and tactic hints by mathematical concept, identifier, or expression pattern.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search query (e.g. 'binomial square', 'sin^2 + cos^2', 'Nat.add_comm', 'fermat')."
+                  },
+                  "max_results": {
+                    "type": "integer",
+                    "default": 8,
+                    "description": "Maximum number of matching declarations to return."
+                  },
+                  "online": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Also query the live Loogle Mathlib4 JSON API when True."
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"equivalent\": false,\n    \"left\": \"sqrt(x**2)\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"-x + sqrt(x**2)\"\n  },\n  \"value_str\": \"not equivalent (diff = -x + sqrt(x**2))\",\n  \"latex\": \"\\\\sqrt{x^{2}} \\\\neq x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = sqrt(x**2)\",\n      \"rhs = x\",\n      \"simplify(lhs - rhs) -> -x + sqrt(x**2)\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\"\n      }\n    }\n  }\n}"
+            }
+          ],
+          "structuredContent": {
+            "kind": "compare",
+            "input": "sqrt(x^2) == x",
+            "ok": true,
+            "value": {
+              "equivalent": false,
+              "left": "sqrt(x**2)",
+              "right": "x",
+              "simplified_difference": "-x + sqrt(x**2)"
+            },
+            "value_str": "not equivalent (diff = -x + sqrt(x**2))",
+            "latex": "\\sqrt{x^{2}} \\neq x",
+            "variables": [
+              "x"
+            ],
+            "guarantee": "unverified",
+            "evidence": {
+              "engine": "sympy",
+              "engine_version": "1.14.0",
+              "method": "symbolic difference reduction + domain & multi-point sampling",
+              "steps": [
+                "lhs = sqrt(x**2)",
+                "rhs = x",
+                "simplify(lhs - rhs) -> -x + sqrt(x**2)"
+              ],
+              "reproducible_with": "axiom compare \"sqrt(x^2)\" \"x\""
+            },
+            "verification": {
+              "kind": "counterexample-search",
+              "passed": false,
+              "detail": "counterexample found at {'x': '-1'} (|diff| = 2.000e+00)",
+              "checks": 1,
+              "max_error": 2.0,
+              "data": {
+                "counterexample": {
+                  "x": "-1"
+                }
+              }
+            }
+          },
+          "isError": false
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"value\": {\n    \"equivalent\": true,\n    \"left\": \"x\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"x = x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = x\",\n      \"rhs = x\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'x': {'positive': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\" --assumptions \\\"x:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 6 numerical sample(s) agree\",\n    \"checks\": 6,\n    \"max_error\": 0.0\n  }\n}"
+            }
+          ],
+          "structuredContent": {
+            "kind": "compare",
+            "input": "sqrt(x^2) == x",
+            "ok": true,
+            "value": {
+              "equivalent": true,
+              "left": "x",
+              "right": "x",
+              "simplified_difference": "0"
+            },
+            "value_str": "equivalent",
+            "latex": "x = x",
+            "variables": [
+              "x"
+            ],
+            "guarantee": "exact-symbolic",
+            "evidence": {
+              "engine": "sympy",
+              "engine_version": "1.14.0",
+              "method": "symbolic difference reduction + domain & multi-point sampling",
+              "steps": [
+                "lhs = x",
+                "rhs = x",
+                "simplify(lhs - rhs) -> 0",
+                "assumptions: {'x': {'positive': True}}"
+              ],
+              "reproducible_with": "axiom compare \"sqrt(x^2)\" \"x\" --assumptions \"x:positive\""
+            },
+            "verification": {
+              "kind": "symbolic-identity",
+              "passed": true,
+              "detail": "Symbolic difference reduces to 0 and 6 numerical sample(s) agree",
+              "checks": 6,
+              "max_error": 0.0
+            }
+          },
+          "isError": false
+        }
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"evaluate\",\n  \"input\": \"zeta(2) - pi^2/6\",\n  \"ok\": true,\n  \"value\": \"0\",\n  \"value_str\": \"0\",\n  \"latex\": \"0\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact evaluation (nsimplify) / simplify\",\n    \"steps\": [\n      \"evaluate 0\",\n      \"result 0\"\n    ],\n    \"reproducible_with\": \"axiom evaluate \\\"zeta(2) - pi^2/6\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0\n  }\n}"
+            }
+          ],
+          "structuredContent": {
+            "kind": "evaluate",
+            "input": "zeta(2) - pi^2/6",
+            "ok": true,
+            "value": "0",
+            "value_str": "0",
+            "latex": "0",
+            "guarantee": "exact-symbolic",
+            "evidence": {
+              "engine": "sympy",
+              "engine_version": "1.14.0",
+              "method": "exact evaluation (nsimplify) / simplify",
+              "steps": [
+                "evaluate 0",
+                "result 0"
+              ],
+              "reproducible_with": "axiom evaluate \"zeta(2) - pi^2/6\""
+            },
+            "verification": {
+              "kind": "symbolic-identity",
+              "passed": true,
+              "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+              "checks": 1,
+              "max_error": 0.0
+            }
+          },
+          "isError": false
+        }
+      }
+    ]
+  },
+  "checks": {
+    "doctor_self_tests_pass": true,
+    "parse_uses_structural_parse_guarantee": true,
+    "zeta_2_exact_verified": true,
+    "zeta_4_exact_verified": true,
+    "trivial_zeros_verified_zero": true,
+    "zeta_0_and_neg1_bernoulli_values": true,
+    "compare_basel_exact_symbolic": true,
+    "compare_basel_false_refuted": true,
+    "residue_at_pole_s1_verified": true,
+    "two_sided_limit_at_pole_rejected_v020": true,
+    "functional_equation_spot_checked_numerical": true,
+    "mellin_integral_s2_verified": true,
+    "interior_pole_integral_rejected_v020": true,
+    "primorial_30030_factorint_and_totient": true,
+    "euler_product_p13_matches_independent_fraction": true,
+    "zeta_half_nonzero_matches_mpmath": true,
+    "first_nontrivial_zero_residual_small": true,
+    "solve_zeta_zero_fails_closed": true,
+    "mathlib_search_uses_catalog_lookup_guarantee": true,
+    "plot_uses_sampled_visualization_guarantee": true,
+    "mcp_branch_cut_refuted_without_assumptions": true,
+    "mcp_branch_cut_verified_with_positive_assumption": true,
+    "mcp_basel_diff_zero": true,
+    "lean_expected_fail_closed": true
+  },
+  "validation_passed": true,
+  "formal_verification_available_locally": false
+}

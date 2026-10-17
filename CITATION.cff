@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use Chronokairo AXIOM in your academic research or applications, please cite it using the metadata from this file."
+title: "Chronokairo AXIOM: Mathematical Reasoning Engine with Independent Verification and Domain Integrity"
+abstract: "AXIOM is a neuro-symbolic mathematical reasoning engine designed for autonomous coding agents. It unifies Computer Algebra Systems (SymPy, mpmath), Interactive Theorem Provers (Lean 4, Mathlib4), and a strict six-level mathematical guarantee hierarchy over the Model Context Protocol (MCP) and deterministic CLI."
+type: software
+version: 0.2.1
+date-released: "2026-10-17"
+license: MIT
+repository-code: "https://github.com/chronokairo/axiom"
+url: "https://chronokairo.com"
+authors:
+  - name: "Chronokairo"
+    website: "https://chronokairo.com"
+keywords:
+  - "mathematical-reasoning"
+  - "neuro-symbolic-ai"
+  - "model-context-protocol"
+  - "computer-algebra-system"
+  - "formal-verification"
+  - "lean4"
+  - "mathlib4"
+  - "sympy"
+  - "domain-integrity"
+  - "autonomous-agents"
+preferred-citation:
+  type: article
+  authors:
+    - name: "Chronokairo"
+  title: "Chronokairo AXIOM: A Neuro-Symbolic Mathematical Reasoning Engine with Epistemic Evidence Contracts"
+  year: 2026
+  url: "https://github.com/chronokairo/axiom"

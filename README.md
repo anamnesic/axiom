@@ -150,10 +150,24 @@ axiom verify solution.json
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0009`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0010`).
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
 - **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`, Cloud MCP, and API MCP Service), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
+
+## Scientific Research & Academic Foundation
+
+AXIOM operates as a rigorous neuro-symbolic research harness designed for mathematical exploration, cross-checking computer algebra against interactive theorem provers, and enforcing fail-closed formal guarantees for AI reasoning agents.
+
+- **[Research Proposal (`proposal.md`)](proposal.md)** — Delimits the central research question: *To what extent can an independent neuro-symbolic mediation layer eliminate algebraic/branch-cut hallucinations and enforce formal semantic soundness in AI agents?*
+- **[Curriculum & Study Program (`curriculum.md`)](curriculum.md)** — Graduate-level study track across 7 foundational disciplines (Calculus, Linear Algebra, Real Analysis, Abstract Algebra, Differential Geometry, Analytic Number Theory, and Interactive Theorem Proving in Lean 4).
+- **[Study Log & Demonstrations (`study-log.md`)](study-log.md)** — Daily research log recording formal demonstrations, counterexamples, and dual SymPy + Lean 4 cross-verifications.
+- **[Related Work (`related-work.md`)](related-work.md)** — Systematic positioning against AlphaGeometry, Minerva, SymKit-MCP, Lean-LSP, and Wolfram Language.
+- **[Methodology & Validation (`methodology.md`)](methodology.md)** — Mathematical guarantee hierarchy, invariant contracts, verification protocols, and empirical evaluation metrics.
+- **[Benchmark EXP-0001 (`experiments/exp-0001/`)](experiments/exp-0001/REPORT.md)** — Empirical benchmark of domain integrity: AXIOM achieves **0.0% False Positive Rate** and **100% Fail-Closed Rate** on singular, complex, and boundary cases vs. 33.3% false positives in naive CAS baselines.
+- **[Theoretical & Implementation Limitations (`limitations.md`)](limitations.md)** — Explicit analysis of undecidability boundaries (Richardson's theorem, Gödel incompleteness, Matiyasevich DPRM) and operational boundaries.
+- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Analytical and numerical property audit of the Riemann Hypothesis ([`reports/riemann-hypothesis/`](reports/riemann-hypothesis/README.md)).
+- **[Citation Metadata (`CITATION.cff`)](CITATION.cff)** — Machine-readable academic citation schema.
 
 ## Roadmap
 
@@ -161,6 +175,7 @@ axiom verify solution.json
 - [x] **v0.1.1 — Verification Integrity**: Strict separation between `exact-symbolic` identities (FTC antiderivative round-trip, symbolic L'Hôpital/series) and `numerical-approximation` evidence (finite differences, quadrature, sequence probes), plus mandatory non-empty theorem confirmation in `#print axioms`.
 - [x] **v0.1.2 — Formal Integration**: Live Lean 4 + Lake formal verification job in GitHub Actions CI (`formal-lean`) validating constructive, classical, and invalid/spoofed proofs end-to-end.
 - [x] **v0.2.0 — Mathematical Coverage**: Separation of mathematical correctness claims from operational states (`structural-parse`, `catalog-lookup`, `sampled-visualization`), domain `assumptions`, branch-cut counterexample generation ($\sqrt{x^2} \neq x$ over $\mathbb{R}$), definite integral interior pole rejection, two-sided limit discontinuity rejection, extraneous pole filtering & periodic solution sets (`solveset`), and Lean 4 `X = X` reflexive tautology detection (`37` `pytest` tests).
+- [x] **v0.2.1 — Domain Integrity & Academic Research Foundation**: Pre-evaluation AST denominator tracking preventing silent domain loss ($\frac{x-1}{x-1} \neq 1$), complex Gaussian probes ($i, -i, 1+i$) invalidating unstated real branch-cuts ($\sqrt{x^2} \neq |x|$ over $\mathbb{C}$), explicit `assumptions` exposed across all MCP schemas and CLI commands (`-A`), periodic solution completeness flags, quantitative validation on Riemann Hypothesis (`reports/riemann-hypothesis/`), empirical benchmark `EXP-0001` (0% false positives vs 33.3% naive CAS), and formal research artifacts (`42` tests).
 - [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
 
 ## Repository Layout
@@ -169,7 +184,14 @@ axiom verify solution.json
 axiom/
 ├── README.md
 ├── LICENSE
+├── CITATION.cff               # Academic citation metadata
 ├── AGENTS.md
+├── curriculum.md              # Research study program & bibliography
+├── study-log.md               # Daily research log & Lean 4 cross-checks
+├── proposal.md                # Neuro-symbolic research proposal
+├── related-work.md            # Literature review & scientific comparison
+├── methodology.md             # Experimental methodology & invariants
+├── limitations.md             # Theoretical & implementation limitations
 ├── pyproject.toml
 ├── src/
 │   └── axiom/
@@ -183,6 +205,10 @@ axiom/
 │       ├── session.py         # Reproducible research sessions
 │       ├── setup_agent.py     # Agent auto-config (setup) & diagnostics (doctor)
 │       └── engines/           # sympy, numeric (mpmath), lean, sagemath, julia
+├── experiments/
+│   └── exp-0001/              # Domain integrity benchmark (run.py, results.json, REPORT.md)
+├── reports/
+│   └── riemann-hypothesis/    # Millennium problem property validation
 ├── skills/
 │   └── mathematics/SKILL.md
 ├── examples/
@@ -190,10 +216,10 @@ axiom/
 ├── benchmarks/
 │   └── run_benchmarks.py
 ├── tests/
-│   ├── test_axiom.py          # 37 automated test_* methods
+│   ├── test_axiom.py          # 42 automated test_* methods
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0009)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0010)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

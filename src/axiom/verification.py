@@ -53,12 +53,26 @@ _RATIONAL_PROBES: tuple[sp.Expr, ...] = (
 
 def _respects_symbol_assumptions(sym: sp.Symbol, val: sp.Expr | float) -> bool:
     """Return True if candidate numeric probe ``val`` satisfies the assumptions declared on ``sym``."""
+    if isinstance(val, sp.Basic) and val.is_real is False:
+        if (
+            sym.is_real is True
+            or sym.is_positive is True
+            or sym.is_negative is True
+            or sym.is_nonnegative is True
+            or sym.is_nonpositive is True
+            or sym.is_integer is True
+            or sym.is_rational is True
+        ):
+            return False
+        return True
     v_float = float(val)
     if sym.is_positive is True and v_float <= 0:
         return False
     if sym.is_negative is True and v_float >= 0:
         return False
     if sym.is_nonnegative is True and v_float < 0:
+        return False
+    if sym.is_nonpositive is True and v_float > 0:
         return False
     if sym.is_nonzero is True and v_float == 0:
         return False
@@ -76,7 +90,7 @@ def _respects_symbol_assumptions(sym: sp.Symbol, val: sp.Expr | float) -> bool:
 
 
 def _build_probe_sequence(sym: sp.Symbol, offset_index: int) -> list[sp.Expr]:
-    """Build an ordered list of exact + transcendental sample values respecting ``sym``'s assumptions."""
+    """Build an ordered list of exact + complex + transcendental sample values respecting ``sym``'s assumptions."""
     probes: list[sp.Expr] = []
     if sym.is_integer is True:
         int_candidates = [-1, 2, -2, 3, -3, 4, -4, 5, 6, 7]
@@ -86,7 +100,25 @@ def _build_probe_sequence(sym: sp.Symbol, offset_index: int) -> list[sp.Expr]:
                 probes.append(cand)
         return probes or [sp.Integer(2)]
 
-    for r_cand in _RATIONAL_PROBES:
+    # Start with negative and positive rational probes (-1, 2)
+    for r_cand in _RATIONAL_PROBES[:2]:
+        shifted = r_cand + sp.Rational(offset_index, 7) if offset_index else r_cand
+        if _respects_symbol_assumptions(sym, shifted):
+            probes.append(shifted)
+
+    # When symbol is unconstrained over C (is_real is None), probe complex Gaussian rationals early
+    # so identities valid only over R (such as sqrt(x^2) = |x| failing at x = I) are caught immediately.
+    if sym.is_real is None:
+        complex_cands = (
+            sp.I if offset_index == 0 else sp.I + sp.Integer(offset_index),
+            -sp.I if offset_index == 0 else -sp.I - sp.Integer(offset_index),
+            sp.Integer(1) + sp.I,
+        )
+        for c_cand in complex_cands:
+            if _respects_symbol_assumptions(sym, c_cand):
+                probes.append(c_cand)
+
+    for r_cand in _RATIONAL_PROBES[2:]:
         shifted = r_cand + sp.Rational(offset_index, 7) if offset_index else r_cand
         if _respects_symbol_assumptions(sym, shifted):
             probes.append(shifted)
@@ -107,7 +139,8 @@ def _is_symbolic_zero(expr: sp.Expr) -> bool:
     """Return True if ``expr`` can be proved identically zero by exact symbolic reduction.
 
     Never uses floating-point heuristic rational approximation (``nsimplify``),
-    and rejects expressions containing inexact ``Float`` literals.
+    never injects undeclared real-domain assumptions, and rejects expressions
+    containing inexact ``Float`` literals.
     """
     if isinstance(expr, sp.Basic) and expr.has(sp.Float):
         return False
@@ -127,18 +160,6 @@ def _is_symbolic_zero(expr: sp.Expr) -> bool:
                 continue
             if reduced == 0 or reduced is sp.S.Zero:
                 return True
-        # For real-domain identities involving Abs(x) (such as sqrt(x^2) - Abs(x)),
-        # check reduction over real variables when no symbol has non-real assumptions.
-        if isinstance(expr, sp.Basic) and expr.has(sp.Abs):
-            real_map = {
-                s: sp.Symbol(s.name, real=True)
-                for s in expr.free_symbols
-                if s.is_real is None
-            }
-            if real_map:
-                real_reduced = sp.simplify(expr.subs(real_map))
-                if real_reduced == 0 or real_reduced is sp.S.Zero:
-                    return True
     except Exception:
         pass
     return False
@@ -360,14 +381,68 @@ def verify_equivalence(
     variables: list[sp.Symbol] | None = None,
     *,
     tol: float = 1e-20,
+    left_domain: dict[str, object] | None = None,
+    right_domain: dict[str, object] | None = None,
 ) -> tuple[Verification, Guarantee]:
-    """Verify ``left == right`` via symbolic reduction and domain-aware multi-point sampling."""
+    """Verify ``left == right`` via domain preservation, symbolic reduction, and multi-point sampling."""
     diff = left - right
     free = sorted(diff.free_symbols, key=str) if variables is None else list(variables)
 
+    left_excl: dict[str, list[str]] = dict((left_domain or {}).get("excluded_points") or {})
+    right_excl: dict[str, list[str]] = dict((right_domain or {}).get("excluded_points") or {})
+    left_constraints: list[str] = list((left_domain or {}).get("domain_constraints") or [])
+    right_constraints: list[str] = list((right_domain or {}).get("domain_constraints") or [])
+    all_constraints: list[str] = []
+    for c in left_constraints + right_constraints:
+        if c not in all_constraints:
+            all_constraints.append(c)
+
+    merged_excluded: dict[str, list[str]] = {}
+    all_excl_vars = sorted(set(left_excl.keys()) | set(right_excl.keys()))
+    for v_name in all_excl_vars:
+        pts: list[str] = []
+        for p in list(left_excl.get(v_name, [])) + list(right_excl.get(v_name, [])):
+            if p not in pts:
+                pts.append(p)
+        if pts:
+            merged_excluded[v_name] = pts
+
+    # Check whether one expression excludes points in the active domain that the other does not
+    for v_name in all_excl_vars:
+        l_set = set(left_excl.get(v_name, []))
+        r_set = set(right_excl.get(v_name, []))
+        if l_set != r_set:
+            mismatch_pts = sorted(l_set ^ r_set)
+            pt_str = mismatch_pts[0]
+            return (
+                Verification(
+                    kind="domain-mismatch",
+                    passed=False,
+                    detail=(
+                        f"Domain mismatch at {v_name} = {pt_str}: original domain constraints "
+                        f"{all_constraints} (excluded_points={merged_excluded}) are not preserved"
+                    ),
+                    checks=1,
+                    data={
+                        "domain_constraints": all_constraints,
+                        "excluded_points": merged_excluded,
+                        "left_excluded_points": left_excl,
+                        "right_excluded_points": right_excl,
+                        "counterexample": {v_name: pt_str},
+                    },
+                ),
+                Guarantee.UNVERIFIED,
+            )
+
+    domain_meta: dict[str, object] = {}
+    if all_constraints:
+        domain_meta["domain_constraints"] = all_constraints
+    if merged_excluded:
+        domain_meta["excluded_points"] = merged_excluded
+
     symbolic_ok = _is_symbolic_zero(diff)
 
-    # Also perform independent numerical spot-checks (starting with clean rational probes)
+    # Also perform independent numerical spot-checks (starting with clean rational & complex probes)
     checks = 0
     max_error = 0.0
     if not free:
@@ -383,6 +458,7 @@ def verify_equivalence(
                         detail=f"constant values differ by {err:.3e}",
                         checks=1,
                         max_error=err,
+                        data=dict(domain_meta),
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -407,6 +483,8 @@ def verify_equivalence(
             max_error = max(max_error, err)
             if err > tol:
                 counterexample = {str(k): str(v) for k, v in subs.items()}
+                data_out = dict(domain_meta)
+                data_out["counterexample"] = counterexample
                 return (
                     Verification(
                         kind="counterexample-search",
@@ -414,7 +492,7 @@ def verify_equivalence(
                         detail=f"counterexample found at {counterexample} (|diff| = {err:.3e})",
                         checks=checks,
                         max_error=err,
-                        data={"counterexample": counterexample},
+                        data=data_out,
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -432,6 +510,7 @@ def verify_equivalence(
                 ),
                 checks=max(checks, 1),
                 max_error=max_error,
+                data=dict(domain_meta),
             ),
             Guarantee.EXACT_SYMBOLIC,
         )
@@ -447,6 +526,7 @@ def verify_equivalence(
                 ),
                 checks=checks,
                 max_error=max_error,
+                data=dict(domain_meta),
             ),
             Guarantee.NUMERICAL_APPROXIMATION,
         )
@@ -457,6 +537,7 @@ def verify_equivalence(
             passed=False,
             detail="could not confirm symbolic or numerical equivalence",
             checks=checks,
+            data=dict(domain_meta),
         ),
         Guarantee.UNVERIFIED,
     )
@@ -851,12 +932,12 @@ def verify_limit(
     sequence probe confirms convergence, assigns
     :attr:`Guarantee.NUMERICAL_APPROXIMATION`.
     """
-    if result.has(sp.AccumBounds) or result.has(sp.Limit):
+    if result.has(sp.AccumBounds) or result.has(sp.Limit) or result == sp.zoo:
         return (
             Verification(
                 kind="two-sided-or-oscillatory-limit-check",
                 passed=False,
-                detail="Limit does not exist as a single value (two-sided mismatch, oscillatory AccumBounds, or unevaluated)",
+                detail="Limit does not exist as a single value (two-sided mismatch, unsigned complex infinity zoo, oscillatory AccumBounds, or unevaluated)",
                 checks=1,
             ),
             Guarantee.UNVERIFIED,
@@ -1298,15 +1379,78 @@ def verify_number_theory_op(raw: dict) -> tuple[Verification, Guarantee]:
             Guarantee.VERIFIED_SUBSTITUTION,
         )
 
+    if op == "binomial":
+        import math
+
+        n, k, val = int(raw["n"]), int(raw["k"]), int(raw["value"])
+        if n >= 0 and k >= 0:
+            comb_ok = val == math.comb(n, k)
+            pascal_ok = (
+                True
+                if not (0 < k < n)
+                else val == math.comb(n - 1, k - 1) + math.comb(n - 1, k)
+            )
+            ok = comb_ok and pascal_ok
+            return (
+                Verification(
+                    kind="binomial-comb-and-pascal-check",
+                    passed=ok,
+                    detail=f"Verified C({n}, {k}) against independent math.comb and Pascal recurrence",
+                    checks=2,
+                    max_error=0.0 if ok else None,
+                ),
+                Guarantee.EXACT_SYMBOLIC if ok else Guarantee.UNVERIFIED,
+            )
+
+    if op == "totient":
+        import math
+
+        n, phi = int(raw["n"]), int(raw["phi"])
+        factors = sp.factorint(n)
+        expected_phi = 1
+        for p, e in factors.items():
+            expected_phi *= (int(p) ** (int(e) - 1)) * (int(p) - 1)
+        ok = phi == expected_phi
+        checks_count = len(factors) + 1
+        if n <= 2000:
+            coprime_count = sum(1 for k in range(1, n + 1) if math.gcd(k, n) == 1)
+            ok = ok and (phi == coprime_count)
+            checks_count += 1
+        return (
+            Verification(
+                kind="euler-product-totient-check",
+                passed=ok,
+                detail=f"Verified φ({n}) = {phi} via prime-power product formula",
+                checks=checks_count,
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.EXACT_SYMBOLIC if ok else Guarantee.UNVERIFIED,
+        )
+
+    if op == "isprime":
+        n, prime = int(raw["n"]), bool(raw["prime"])
+        factors = sp.factorint(n) if n >= 2 else {}
+        expected_prime = n >= 2 and factors == {n: 1}
+        ok = prime == expected_prime
+        return (
+            Verification(
+                kind="primality-factor-audit",
+                passed=ok,
+                detail=f"Verified primality of {n} ({'prime' if prime else 'composite'}) via factor decomposition",
+                checks=max(len(factors), 1),
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.EXACT_SYMBOLIC if ok else Guarantee.UNVERIFIED,
+        )
+
     return (
         Verification(
-            kind="exact-integer-arithmetic",
-            passed=True,
-            detail=f"Verified exact integer {op} computation",
-            checks=1,
-            max_error=0.0,
+            kind="number-theory-check",
+            passed=False,
+            detail=f"Unsupported number_theory operation for verification: {op!r}",
+            checks=0,
         ),
-        Guarantee.EXACT_SYMBOLIC,
+        Guarantee.UNVERIFIED,
     )
 
 

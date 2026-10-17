@@ -936,8 +936,16 @@ class TestAxiom(unittest.TestCase):
             over_reals.verification.data["counterexample"], {"x": "-1"}
         )
 
-        # Over general reals, sqrt(x^2) == Abs(x) holds identically
-        abs_id = ax.compare("sqrt(x^2)", "Abs(x)")
+        # Over complex numbers (default unconstrained), sqrt(x^2) != Abs(x): refuted at x = I
+        unconstrained = ax.compare("sqrt(x^2)", "Abs(x)")
+        self.assertTrue(unconstrained.ok and not unconstrained.verified)
+        self.assertIs(unconstrained.value["equivalent"], False)
+        self.assertEqual(unconstrained.guarantee, Guarantee.UNVERIFIED)
+        assert unconstrained.verification is not None
+        self.assertEqual(unconstrained.verification.data["counterexample"], {"x": "I"})
+
+        # Over reals (assumptions={"x": "real"}), sqrt(x^2) == Abs(x) holds identically
+        abs_id = ax.compare("sqrt(x^2)", "Abs(x)", assumptions={"x": "real"})
         self.assertTrue(abs_id.ok and abs_id.verified)
         self.assertIs(abs_id.value["equivalent"], True)
         self.assertEqual(abs_id.guarantee, Guarantee.EXACT_SYMBOLIC)
@@ -1092,6 +1100,166 @@ class TestAxiom(unittest.TestCase):
         )
         self.assertEqual(triv, ["refl_nat"])
 
+    def test_domain_preservation_and_mismatch(self) -> None:
+        ax = Axiom()
+
+        # 1. Parsing (x - 1)/(x - 1) preserves variable x and records domain restrictions
+        parsed = ax.parse("(x - 1)/(x - 1)")
+        self.assertTrue(parsed.ok)
+        self.assertIn("x", parsed.variables)
+        self.assertIn("x", parsed.value["free_symbols"])
+        self.assertEqual(parsed.value["domain_constraints"], ["x - 1 != 0"])
+        self.assertEqual(parsed.value["excluded_points"], {"x": ["1"]})
+        self.assertTrue(any("x - 1 != 0" in w for w in parsed.warnings))
+
+        # 2. Algebraic simplification carries the domain constraint limitation and warning
+        simplified = ax.simplify("(x - 1)/(x - 1)")
+        self.assertTrue(simplified.ok and simplified.verified)
+        self.assertEqual(simplified.value, "1")
+        self.assertIn("x", simplified.variables)
+        assert simplified.verification is not None
+        self.assertEqual(
+            simplified.verification.data["domain_constraints"], ["x - 1 != 0"]
+        )
+        self.assertTrue(
+            any("x - 1 != 0" in lim for lim in simplified.evidence.limitations)
+        )
+
+        # 3. Comparing (x - 1)/(x - 1) to 1 without assumptions is refuted at x = 1
+        cmp_unrestricted = ax.compare("(x - 1)/(x - 1)", "1")
+        self.assertTrue(cmp_unrestricted.ok and not cmp_unrestricted.verified)
+        self.assertIs(cmp_unrestricted.value["equivalent"], False)
+        self.assertEqual(cmp_unrestricted.guarantee, Guarantee.UNVERIFIED)
+        assert cmp_unrestricted.verification is not None
+        self.assertEqual(cmp_unrestricted.verification.kind, "domain-mismatch")
+        self.assertEqual(
+            cmp_unrestricted.verification.data["counterexample"], {"x": "1"}
+        )
+
+        # 4. Under assumptions that explicitly exclude the singularity, equivalence holds
+        cmp_nonzero = ax.compare("x/x", "1", assumptions={"x": "nonzero"})
+        self.assertTrue(cmp_nonzero.ok and cmp_nonzero.verified)
+        self.assertIs(cmp_nonzero.value["equivalent"], True)
+        self.assertEqual(cmp_nonzero.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+    def test_solution_completeness_and_sample_roots(self) -> None:
+        ax = Axiom()
+
+        # Polynomial equation has complete finite solution set
+        poly = ax.solve("x^2 - 5*x + 6 = 0")
+        self.assertTrue(poly.ok and poly.verified)
+        assert poly.verification is not None
+        self.assertIs(poly.verification.data["solution_complete"], True)
+
+        # Periodic equation sin(x) = 0 has incomplete sample roots
+        trig = ax.solve("sin(x) = 0")
+        self.assertTrue(trig.ok and trig.verified)
+        assert trig.verification is not None
+        self.assertIs(trig.verification.data["solution_complete"], False)
+        self.assertEqual(trig.verification.data["sample_solutions"], ["0", "pi"])
+        self.assertTrue(trig.verification.data["periodic_family"])
+
+    def test_mcp_and_cli_assumptions_exposure(self) -> None:
+        from axiom import TOOL_DEFINITIONS, dispatch_tool
+
+        tools_with_assumptions = {
+            "math_parse",
+            "math_simplify",
+            "math_solve",
+            "math_differentiate",
+            "math_integrate",
+            "math_limit",
+            "math_evaluate",
+            "math_verify",
+            "math_compare",
+        }
+        for tool_def in TOOL_DEFINITIONS:
+            name = tool_def["name"]
+            if name in tools_with_assumptions:
+                props = tool_def["inputSchema"]["properties"]
+                self.assertIn(
+                    "assumptions",
+                    props,
+                    f"Tool {name} must declare assumptions in inputSchema",
+                )
+
+        # MCP dispatch with string assumption format 'x:real'
+        res_real = dispatch_tool(
+            "math_compare",
+            {"left": "sqrt(x^2)", "right": "Abs(x)", "assumptions": "x:real"},
+        )
+        self.assertTrue(res_real.ok and res_real.verified)
+        self.assertEqual(res_real.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+        # MCP dispatch without assumptions refutes over complex C
+        res_complex = dispatch_tool(
+            "math_compare",
+            {"left": "sqrt(x^2)", "right": "Abs(x)"},
+        )
+        self.assertTrue(res_complex.ok and not res_complex.verified)
+        self.assertEqual(res_complex.guarantee, Guarantee.UNVERIFIED)
+
+        # CLI execution with --assumptions
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            ret = cli_main(
+                [
+                    "--plain",
+                    "compare",
+                    "sqrt(x^2)",
+                    "Abs(x)",
+                    "-A",
+                    "x:real",
+                ]
+            )
+        self.assertEqual(ret, 0)
+        self.assertIn("EXACT-SYMBOLIC", buf.getvalue())
+
+    def test_high_precision_decimal_literals_and_zeta_pole(self) -> None:
+        ax = Axiom()
+
+        # 30-digit literal preservation without IEEE-754 truncation
+        pi_literal = "3.141592653589793238462643383279"
+        parsed = ax.parse(pi_literal)
+        self.assertTrue(parsed.ok)
+        self.assertEqual(parsed.value_str, pi_literal)
+
+        # Removable singularity at s = 1 for (s - 1)*zeta(s)
+        lim_rem = ax.limit("(s - 1)*zeta(s)", variable="s", point="1")
+        self.assertTrue(lim_rem.ok and lim_rem.verified)
+        self.assertEqual(lim_rem.value, "1")
+        self.assertEqual(lim_rem.guarantee, Guarantee.NUMERICAL_APPROXIMATION)
+
+        # Two-sided pole of zeta(s) at s = 1 must be refuted / unverified
+        lim_pole = ax.limit("zeta(s)", variable="s", point="1", direction="+-")
+        self.assertTrue(lim_pole.ok and not lim_pole.verified)
+        self.assertEqual(lim_pole.guarantee, Guarantee.UNVERIFIED)
+
+    def test_number_theory_extended_verification(self) -> None:
+        ax = Axiom()
+
+        tot = ax.number_theory("totient", n=10)
+        self.assertTrue(tot.ok and tot.verified)
+        self.assertEqual(tot.value, 4)
+        assert tot.evidence is not None
+        self.assertEqual(tot.evidence.reproducible_with, "axiom number-theory totient --n 10")
+
+        bin_res = ax.number_theory("binomial", n=5, k=2)
+        self.assertTrue(bin_res.ok and bin_res.verified)
+        self.assertEqual(bin_res.value, 10)
+        assert bin_res.evidence is not None
+        self.assertEqual(
+            bin_res.evidence.reproducible_with,
+            "axiom number-theory binomial --n 5 --k 2",
+        )
+
+        isp = ax.number_theory("isprime", n=17)
+        self.assertTrue(isp.ok and isp.verified)
+        self.assertEqual(isp.value, True)
+        assert isp.evidence is not None
+        self.assertEqual(isp.evidence.reproducible_with, "axiom number-theory isprime --n 17")
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -30,6 +30,20 @@ from typing import Any
 from axiom.contract import MathResult, error_result
 from axiom.core import Axiom
 
+_ASSUMPTIONS_PROPERTY: dict[str, Any] = {
+    "oneOf": [
+        {
+            "type": "object",
+            "description": "Mapping from symbol to assumptions, e.g. {'x': 'positive'} or {'x': {'real': true}}.",
+        },
+        {
+            "type": "string",
+            "description": "Assumption string, e.g. 'x:positive' or 'x:real,nonzero;y:positive'.",
+        },
+    ],
+    "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero).",
+}
+
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "name": "math_parse",
@@ -44,6 +58,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": "Mathematical expression or equation, e.g. 'x^2 - 5*x + 6 = 0'.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["expression"],
         },
@@ -64,6 +79,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "default": "simplify",
                     "description": "Transformation mode.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
                 "engine": {"type": "string", "description": "Optional engine name (default: sympy)."},
             },
             "required": ["expression"],
@@ -86,6 +102,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": "Variable (or comma-separated variables) to solve for.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
                 "engine": {
                     "type": "string",
                     "description": "Engine to use ('sympy' for exact symbolic, 'numeric' for nsolve).",
@@ -106,6 +123,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "expression": {"type": "string", "description": "Expression to differentiate."},
                 "variable": {"type": "string", "description": "Differentiation variable (default: x)."},
                 "order": {"type": "integer", "default": 1, "description": "Derivative order (>= 1)."},
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["expression"],
         },
@@ -123,6 +141,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "variable": {"type": "string", "description": "Integration variable (default: x)."},
                 "lower": {"type": "string", "description": "Optional lower limit for definite integral."},
                 "upper": {"type": "string", "description": "Optional upper limit for definite integral."},
+                "assumptions": _ASSUMPTIONS_PROPERTY,
                 "engine": {"type": "string", "description": "Optional engine ('sympy' or 'numeric')."},
             },
             "required": ["expression"],
@@ -146,6 +165,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "default": "+-",
                     "description": "Direction of approach.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["expression"],
         },
@@ -168,6 +188,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": "object",
                     "description": "Mapping of variable names to values/expressions.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["expression"],
         },
@@ -230,6 +251,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "description": "Optional candidate solution(s) to substitute into the equation.",
                 },
                 "variable": {"type": "string", "description": "Target variable name."},
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["target"],
         },
@@ -279,6 +301,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "items": {"type": "string"},
                     "description": "Optional explicit variable list.",
                 },
+                "assumptions": _ASSUMPTIONS_PROPERTY,
             },
             "required": ["left", "right"],
         },
@@ -539,6 +562,7 @@ def dispatch_tool(
             args["expression"],
             variable=args.get("variable"),
             order=int(args.get("order", 1)),
+            assumptions=args.get("assumptions"),
         )
 
     if name == "math_integrate":
@@ -547,6 +571,7 @@ def dispatch_tool(
             variable=args.get("variable"),
             lower=args.get("lower"),
             upper=args.get("upper"),
+            assumptions=args.get("assumptions"),
             engine=args.get("engine"),
         )
 
@@ -556,6 +581,7 @@ def dispatch_tool(
             variable=args.get("variable"),
             point=args.get("point", "0"),
             direction=args.get("direction", "+-"),
+            assumptions=args.get("assumptions"),
         )
 
     if name == "math_evaluate":

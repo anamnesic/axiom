@@ -71,9 +71,19 @@ class NumericEngine(Engine):
                    lower: sp.Expr, upper: sp.Expr,
                    precision: int = 30) -> Answer:
         with mp.workdps(precision):
-            fn = sp.lambdify(var, expr, modules="mpmath")
-            a = mp.mpf(str(lower.evalf(precision)))
-            b = mp.mpf(str(upper.evalf(precision)))
+            if lower == sp.oo:
+                a = mp.inf
+            elif lower == -sp.oo:
+                a = -mp.inf
+            else:
+                a = mp.mpf(str(lower.evalf(precision)))
+
+            if upper == sp.oo:
+                b = mp.inf
+            elif upper == -sp.oo:
+                b = -mp.inf
+            else:
+                b = mp.mpf(str(upper.evalf(precision)))
             val, err = mp.quad(fn, [a, b], error=True)
             val_str = mp.nstr(val, min(precision, 15))
             err_float = float(err) if err is not None else 0.0
