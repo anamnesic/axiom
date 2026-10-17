@@ -149,18 +149,18 @@ axiom verify solution.json
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0007`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0008`).
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
 - **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `sympy-mcp`, `fermat-mcp`, `Wolfram-MCP`, and `lean-lsp-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Roadmap
 
-- [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, hardened independent verifiers (never elevating guarantees without evidence), Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix (Python 3.10 & 3.12 on Ubuntu, Windows, macOS).
-- [ ] **v0.2 — Numerical & Scientific Scale**: Deep SciPy / Julia solvers, PDE stencils, large-scale numerical linear algebra, and certified interval arithmetic (`mpmath.iv`).
-- [ ] **v0.3 — Interactive Formal Verification**: Persistent Lean 4 Lake/Mathlib workspace, automated tactic synthesis loop, and step-by-step goal inspection.
-- [ ] **v0.4 — Interactive Visualization**: 2D/3D Plotly & Manim scene generation, vector fields, and phase-portrait rendering.
-- [ ] **v1.0 — Autonomous Mathematical Research**: Multi-agent conjecture discovery, counterexample search, and automated theorem formalization pipelines.
+- [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, hardened fail-closed verifiers, Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix (Python 3.10 & 3.12 on Ubuntu, Windows, macOS).
+- [x] **v0.1.1 — Verification Integrity**: Strict separation between `exact-symbolic` identities (FTC antiderivative round-trip, symbolic L'Hôpital/series) and `numerical-approximation` evidence (finite differences, quadrature, sequence probes), plus mandatory non-empty theorem confirmation in `#print axioms`.
+- [x] **v0.1.2 — Formal Integration**: Live Lean 4 + Lake formal verification job in GitHub Actions CI (`formal-lean`) validating constructive, classical, and invalid/spoofed proofs end-to-end.
+- [ ] **v0.2.0 — Mathematical Coverage**: Expanded test suites for singularities, branch cuts, domain restrictions, incomplete solution sets, directional limits, and automated counterexample generation.
+- [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
 
 ## Repository Layout
 
@@ -189,9 +189,10 @@ axiom/
 ├── benchmarks/
 │   └── run_benchmarks.py
 ├── tests/
-│   └── test_axiom.py
+│   ├── test_axiom.py
+│   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0006)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0008)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

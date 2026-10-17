@@ -407,6 +407,7 @@ class TestAxiom(unittest.TestCase):
             self.assertIn("axiom.mcp_server", toml_text)
 
     def test_lean4_axiom_audit_and_lake_environment(self) -> None:
+        from unittest.mock import MagicMock, patch
         from axiom.engines.lean_engine import LeanEngine
 
         # 1. prepare_audited_source injects #print axioms and ignores 'sorry' inside comments
@@ -433,15 +434,29 @@ class TestAxiom(unittest.TestCase):
         self.assertFalse(ax_res.verified)
         self.assertEqual(ax_res.guarantee, Guarantee.UNVERIFIED)
 
-        # 3. parse_axiom_audit accepts standard Lean 4 axioms and rejects sorryAx / custom axioms
+        # 3. parse_axiom_audit & verify_theorem_audit_coverage require confirmed #print axioms output
         clean_diag = [
             "'thm1' depends on axioms: [propext, Classical.choice, Quot.sound]",
             "'thm2' does not depend on any axioms",
         ]
         used, untrusted, has_sorry = LeanEngine.parse_axiom_audit(clean_diag)
+        audited_thms = LeanEngine.extract_audited_theorems(clean_diag)
         self.assertEqual(used, ["propext", "Classical.choice", "Quot.sound"])
         self.assertEqual(untrusted, [])
         self.assertFalse(has_sorry)
+        self.assertEqual(audited_thms, ["thm1", "thm2"])
+        cov_ok, missing = LeanEngine.verify_theorem_audit_coverage(["thm1", "thm2"], audited_thms)
+        self.assertTrue(cov_ok)
+        self.assertEqual(missing, [])
+
+        # Missing #print axioms output or empty theorem list must fail coverage
+        cov_empty, _ = LeanEngine.verify_theorem_audit_coverage([], [])
+        self.assertFalse(cov_empty)
+        cov_partial, missing_partial = LeanEngine.verify_theorem_audit_coverage(
+            ["thm1", "thm2"], ["thm1"]
+        )
+        self.assertFalse(cov_partial)
+        self.assertEqual(missing_partial, ["thm2"])
 
         tainted_diag = [
             "'thm_bad' depends on axioms: [propext, my_secret_axiom, sorryAx]",
@@ -450,7 +465,35 @@ class TestAxiom(unittest.TestCase):
         self.assertIn("my_secret_axiom", untrusted2)
         self.assertTrue(has_sorry2)
 
-        # 4. Lake project detection (`lake env lean`)
+        # 4. Declaration-free Lean source (-- comment / #check) must NEVER receive FORMAL_PROOF
+        # even if the Lean binary exits with returncode == 0
+        ax = Axiom()
+        lean_eng = ax.registry.get("lean")
+        with patch.object(lean_eng, "lean_bin", "/usr/bin/lean"), patch(
+            "axiom.engines.lean_engine.subprocess.run"
+        ) as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="Nat : Type\n", stderr="")
+            no_thm_res = ax.prove("-- just a comment\n#check Nat")
+            self.assertFalse(no_thm_res.verified)
+            self.assertEqual(no_thm_res.guarantee, Guarantee.UNVERIFIED)
+
+            # Theorem declared, but Lean stdout did not confirm #print axioms -> UNVERIFIED
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            unconfirmed_res = ax.prove("theorem t (n : Nat) : n = n := rfl")
+            self.assertFalse(unconfirmed_res.verified)
+            self.assertEqual(unconfirmed_res.guarantee, Guarantee.UNVERIFIED)
+
+            # Theorem declared AND confirmed by #print axioms -> FORMAL_PROOF
+            mock_run.return_value = MagicMock(
+                returncode=0,
+                stdout="'t' does not depend on any axioms\n",
+                stderr="",
+            )
+            confirmed_res = ax.prove("theorem t (n : Nat) : n = n := rfl")
+            self.assertTrue(confirmed_res.verified)
+            self.assertEqual(confirmed_res.guarantee, Guarantee.FORMAL_PROOF)
+
+        # 5. Lake project detection (`lake env lean`)
         with tempfile.TemporaryDirectory() as td:
             proj = Path(td)
             (proj / "lakefile.lean").write_text("-- lake project\n", encoding="utf-8")
@@ -468,12 +511,90 @@ class TestAxiom(unittest.TestCase):
             self.assertEqual(cmd[:3], ["/usr/bin/lake", "env", "lean"])
             self.assertEqual(cwd, str(proj.resolve()))
 
+    def test_lean4_live_kernel_and_lake_integration(self) -> None:
+        import os
+        from axiom.engines.lean_engine import LeanEngine
+
+        eng = LeanEngine()
+        if os.environ.get("AXIOM_REQUIRE_LEAN") == "1":
+            self.assertTrue(
+                eng.available,
+                "AXIOM_REQUIRE_LEAN=1 is set, but Lean 4 binary was not found",
+            )
+            self.assertIsNotNone(
+                eng.lake_bin,
+                "AXIOM_REQUIRE_LEAN=1 is set, but Lake binary was not found",
+            )
+        if not eng.available:
+            return
+
+        ax = Axiom()
+        # 1. Verify Lake project file via `lake env lean`
+        lake_test_file = (
+            Path(__file__).resolve().parent / "lean_project" / "AxiomFormalTests.lean"
+        )
+        res_file = ax.prove(str(lake_test_file))
+        self.assertTrue(res_file.ok and res_file.verified, msg=res_file.to_json())
+        self.assertEqual(res_file.guarantee, Guarantee.FORMAL_PROOF)
+        assert res_file.verification is not None
+        self.assertEqual(
+            res_file.verification.data["audited_theorems"],
+            ["nat_add_comm_verified", "int_linear_identity"],
+        )
+
+        # 2. Valid classical proof using Classical.choice & propext
+        res_classical = ax.prove(
+            "open Classical in\ntheorem em_holds (P : Prop) : P ∨ ¬P := em P"
+        )
+        self.assertTrue(res_classical.ok and res_classical.verified)
+        self.assertEqual(res_classical.guarantee, Guarantee.FORMAL_PROOF)
+        assert res_classical.verification is not None
+        self.assertIn("Classical.choice", res_classical.verification.data["axioms_used"])
+
+        # 3. Valid anonymous example rewritten and audited via #print axioms
+        res_ex = ax.prove("example (a b : Nat) : a + b = b + a := by omega")
+        self.assertTrue(res_ex.ok and res_ex.verified)
+        self.assertEqual(res_ex.guarantee, Guarantee.FORMAL_PROOF)
+
+        # 4. Invalid proof with `sorry` -> rejected as UNVERIFIED
+        res_sorry = ax.prove("theorem bad_sorry (n : Nat) : n = n + 1 := by sorry")
+        self.assertFalse(res_sorry.verified)
+        self.assertEqual(res_sorry.guarantee, Guarantee.UNVERIFIED)
+
+        # 5. Sneaky proof with user-declared `axiom` -> rejected by #print axioms audit
+        res_custom_ax = ax.prove(
+            "axiom fake_eq : 1 = 2\ntheorem bad_ax : 1 = 2 := fake_eq"
+        )
+        self.assertFalse(res_custom_ax.verified)
+        self.assertEqual(res_custom_ax.guarantee, Guarantee.UNVERIFIED)
+        assert res_custom_ax.verification is not None
+        self.assertIn("fake_eq", res_custom_ax.verification.data["untrusted_axioms"])
+
+        # 6. Declaration-free file (#check only) -> rejected as UNVERIFIED
+        res_empty = ax.prove("-- no theorem here\n#check Nat")
+        self.assertFalse(res_empty.verified)
+        self.assertEqual(res_empty.guarantee, Guarantee.UNVERIFIED)
+
+        # 7. False statement with failing tactic -> rejected by Lean kernel
+        res_false = ax.prove("theorem wrong : 1 + 1 = 3 := by rfl")
+        self.assertFalse(res_false.verified)
+        self.assertEqual(res_false.guarantee, Guarantee.UNVERIFIED)
+
     def test_verifiers_never_elevate_without_evidence(self) -> None:
         import sympy as sp
-        from axiom.verification import verify_derivative, verify_integral, verify_limit
+        from axiom.verification import (
+            _is_symbolic_zero,
+            verify_derivative,
+            verify_integral,
+            verify_limit,
+        )
 
         x = sp.Symbol("x")
         a = sp.Symbol("a")
+
+        # Small non-zero Float must NEVER be treated as exact symbolic zero via nsimplify
+        self.assertFalse(_is_symbolic_zero(sp.Float("1e-16")))
+        self.assertTrue(_is_symbolic_zero(sp.sin(x) ** 2 + sp.cos(x) ** 2 - 1))
 
         # False definite integral must be rejected as UNVERIFIED
         ver_bad, guar_bad = verify_integral(
@@ -481,6 +602,16 @@ class TestAxiom(unittest.TestCase):
         )
         self.assertFalse(ver_bad.passed)
         self.assertEqual(guar_bad, Guarantee.UNVERIFIED)
+
+        # Definite integral with perturbed rational value within quadrature tolerance (2 + 1e-11)
+        # passes numerical quadrature but is NOT an exact symbolic identity -> NUMERICAL_APPROXIMATION
+        perturbed_two = sp.Rational(200000000001, 100000000000)
+        ver_quad_only, guar_quad_only = verify_integral(
+            sp.sin(x), perturbed_two, x, limits=(sp.Integer(0), sp.pi)
+        )
+        self.assertTrue(ver_quad_only.passed)
+        self.assertEqual(ver_quad_only.kind, "numerical-quadrature")
+        self.assertEqual(guar_quad_only, Guarantee.NUMERICAL_APPROXIMATION)
 
         # Parametric definite integral: verified via independent FTC antiderivative check
         ver_param, guar_param = verify_integral(
@@ -509,6 +640,21 @@ class TestAxiom(unittest.TestCase):
         )
         self.assertFalse(ver_lim.passed)
         self.assertEqual(guar_lim, Guarantee.UNVERIFIED)
+
+        # Limit confirmed only by numerical sequence probing at infinity -> NUMERICAL_APPROXIMATION
+        ver_lim_num, guar_lim_num = verify_limit(
+            1 / x, x, sp.oo, "+-", sp.Integer(0)
+        )
+        self.assertTrue(ver_lim_num.passed)
+        self.assertEqual(guar_lim_num, Guarantee.NUMERICAL_APPROXIMATION)
+
+        # Derivative that only matches numerically within tolerance (perturbed by 1e-13)
+        # must receive NUMERICAL_APPROXIMATION, never EXACT_SYMBOLIC
+        ver_d_num, guar_d_num = verify_derivative(
+            sp.sin(x), sp.cos(x) + sp.Float("1e-13"), x
+        )
+        self.assertTrue(ver_d_num.passed)
+        self.assertEqual(guar_d_num, Guarantee.NUMERICAL_APPROXIMATION)
 
         # Derivative that fails evaluation everywhere must return UNVERIFIED
         undef_fn = sp.Function("undef_fn")(x)

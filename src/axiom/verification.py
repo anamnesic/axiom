@@ -42,17 +42,28 @@ _SAMPLE_POINTS: tuple[float, ...] = (
 
 
 def _is_symbolic_zero(expr: sp.Expr) -> bool:
-    """Return True if ``expr`` can be proved identically zero symbolically."""
+    """Return True if ``expr`` can be proved identically zero by exact symbolic reduction.
+
+    Never uses floating-point heuristic rational approximation (``nsimplify``),
+    and rejects expressions containing inexact ``Float`` literals.
+    """
+    if isinstance(expr, sp.Basic) and expr.has(sp.Float):
+        return False
     if expr == 0 or expr is sp.S.Zero:
         return True
     try:
-        for transform in (sp.expand, sp.cancel, sp.trigsimp, sp.radsimp, sp.simplify):
+        for transform in (
+            sp.expand,
+            sp.cancel,
+            sp.trigsimp,
+            sp.radsimp,
+            sp.powsimp,
+            sp.simplify,
+        ):
             reduced = transform(expr)
+            if isinstance(reduced, sp.Basic) and reduced.has(sp.Float):
+                continue
             if reduced == 0 or reduced is sp.S.Zero:
-                return True
-        if expr.is_number:
-            simplified = sp.nsimplify(expr)
-            if simplified == 0:
                 return True
     except Exception:
         pass
@@ -331,7 +342,14 @@ def verify_derivative(
     *,
     tol: float = 1e-10,
 ) -> tuple[Verification, Guarantee]:
-    """Check a symbolic derivative against high-precision numerical differentiation."""
+    """Check a derivative via symbolic antiderivative round-trip and high-precision finite differences.
+
+    Assigns :attr:`Guarantee.EXACT_SYMBOLIC` only when the symbolic inverse
+    integration operator confirms ``expr - integral(derivative, var)`` is
+    independent of ``var`` (or has polynomial degree ``< order``) AND numerical
+    finite differences do not refute it. When only numerical finite differences
+    confirm the derivative, assigns :attr:`Guarantee.NUMERICAL_APPROXIMATION`.
+    """
     other_vars = [s for s in sorted(expr.free_symbols, key=str) if s != var]
     fixed_subs = {
         sym: sp.Rational(idx + 2, idx + 3) for idx, sym in enumerate(other_vars)
@@ -369,16 +387,53 @@ def verify_derivative(
                     Guarantee.UNVERIFIED,
                 )
 
+    # Independent symbolic verification via inverse integration (FTC round-trip)
+    symbolic_ftc_ok = False
+    if not expr.has(sp.Float) and not derivative.has(sp.Float):
+        try:
+            antideriv = derivative
+            for _ in range(order):
+                antideriv = sp.integrate(antideriv, var)
+                if antideriv.has(sp.Integral):
+                    break
+            if not antideriv.has(sp.Integral):
+                residual = sp.simplify(sp.trigsimp(sp.expand(expr - antideriv)))
+                if not residual.has(sp.Float):
+                    if var not in residual.free_symbols:
+                        symbolic_ftc_ok = True
+                    elif order > 1 and residual.is_polynomial(var):
+                        symbolic_ftc_ok = sp.Poly(residual, var).degree() < order
+        except Exception:
+            symbolic_ftc_ok = False
+
+    if symbolic_ftc_ok and checks > 0:
+        return (
+            Verification(
+                kind="antiderivative-roundtrip",
+                passed=True,
+                detail=(
+                    f"Verified symbolic antiderivative round-trip and matched "
+                    f"high-precision finite differences at {checks} points (max rel error {max_error:.2e})"
+                ),
+                checks=checks + 1,
+                max_error=max_error,
+            ),
+            Guarantee.EXACT_SYMBOLIC,
+        )
+
     if checks > 0:
         return (
             Verification(
                 kind="numerical-derivative-check",
                 passed=True,
-                detail=f"Matched high-precision finite differences at {checks} points (max rel error {max_error:.2e})",
+                detail=(
+                    f"Matched high-precision finite differences at {checks} points "
+                    f"(max rel error {max_error:.2e}; no closed-form symbolic antiderivative confirmation)"
+                ),
                 checks=checks,
                 max_error=max_error,
             ),
-            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.NUMERICAL_APPROXIMATION,
         )
 
     return (
@@ -400,7 +455,14 @@ def verify_integral(
     *,
     tol: float = 1e-10,
 ) -> tuple[Verification, Guarantee]:
-    """Verify an integral by differentiation (indefinite) or quadrature / FTC antiderivative check (definite)."""
+    """Verify an integral by differentiation (indefinite) or FTC + quadrature (definite).
+
+    For definite integrals, :attr:`Guarantee.EXACT_SYMBOLIC` is granted only
+    when the symbolic Fundamental Theorem of Calculus check confirms an exact
+    antiderivative ``F'(x) == f(x)`` with ``F(b) - F(a) == result`` (and
+    numerical quadrature does not disagree). When only numerical quadrature
+    confirms the value, :attr:`Guarantee.NUMERICAL_APPROXIMATION` is returned.
+    """
     if result.has(sp.Integral):
         return (
             Verification(
@@ -438,13 +500,14 @@ def verify_integral(
         )
 
     # Definite integral:
-    # Step 1: Compare against adaptive Gaussian quadrature (mpmath.quad) when numeric
     lower, upper = limits
     other_vars = (
         (integrand.free_symbols - {var})
         | lower.free_symbols
         | upper.free_symbols
     )
+    quad_passed = False
+    quad_err = 0.0
     quad_error_msg: str | None = None
     if not other_vars:
         try:
@@ -465,62 +528,76 @@ def verify_integral(
                 if mp.isfinite(quad_val) and mp.isfinite(sym_val):
                     scale = max(mp.fabs(sym_val), mp.mpf("1.0"))
                     err = float(mp.fabs(quad_val - sym_val) / scale)
-                    if err <= tol:
+                    if err > tol:
                         return (
                             Verification(
                                 kind="numerical-quadrature",
-                                passed=True,
-                                detail=f"Agrees with adaptive Gaussian quadrature (rel error {err:.2e})",
+                                passed=False,
+                                detail=f"Disagrees with numerical quadrature (rel error {err:.2e})",
                                 checks=1,
                                 max_error=err,
                             ),
-                            Guarantee.EXACT_SYMBOLIC
-                            if not isinstance(result, sp.Float)
-                            else Guarantee.NUMERICAL_APPROXIMATION,
+                            Guarantee.UNVERIFIED,
                         )
-                    return (
-                        Verification(
-                            kind="numerical-quadrature",
-                            passed=False,
-                            detail=f"Disagrees with numerical quadrature (rel error {err:.2e})",
-                            checks=1,
-                            max_error=err,
-                        ),
-                        Guarantee.UNVERIFIED,
-                    )
-                quad_error_msg = "quadrature produced non-finite value"
+                    quad_passed = True
+                    quad_err = err
+                else:
+                    quad_error_msg = "quadrature produced non-finite value"
         except Exception as exc:
             quad_error_msg = f"quadrature failed ({exc})"
 
-    # Step 2: Independent FTC antiderivative check: find F(x) with F'(x) == f(x) and F(b) - F(a) == result
-    try:
-        antideriv = sp.integrate(integrand, var)
-        if not antideriv.has(sp.Integral):
-            deriv_check, _ = verify_equivalence(
-                sp.diff(antideriv, var), integrand, [var, *sorted(other_vars, key=str)]
-            )
-            if deriv_check.passed:
-                fb = sp.limit(antideriv, var, upper, dir="-")
-                fa = sp.limit(antideriv, var, lower, dir="+")
-                ftc_diff = fb - fa
-                eq_check, eq_guar = verify_equivalence(
-                    ftc_diff, result, sorted(other_vars, key=str)
+    # Independent symbolic FTC antiderivative check: F'(x) == f(x) and F(b) - F(a) == result
+    if not integrand.has(sp.Float) and not result.has(sp.Float):
+        try:
+            antideriv = sp.integrate(integrand, var)
+            if not antideriv.has(sp.Integral):
+                deriv_check, deriv_guar = verify_equivalence(
+                    sp.diff(antideriv, var), integrand, [var, *sorted(other_vars, key=str)]
                 )
-                if eq_check.passed:
-                    return (
-                        Verification(
-                            kind="ftc-antiderivative-check",
-                            passed=True,
-                            detail=(
-                                f"Verified F'({var}) = f({var}) and F({upper}) - F({lower}) == {result}"
-                            ),
-                            checks=deriv_check.checks + eq_check.checks,
-                            max_error=eq_check.max_error,
-                        ),
-                        eq_guar,
-                    )
-    except Exception:
-        pass
+                if deriv_check.passed and deriv_guar == Guarantee.EXACT_SYMBOLIC:
+                    fb = sp.limit(antideriv, var, upper, dir="-")
+                    fa = sp.limit(antideriv, var, lower, dir="+")
+                    ftc_diff = fb - fa
+                    if not ftc_diff.has(sp.Integral, sp.Limit, sp.nan, sp.zoo):
+                        eq_check, eq_guar = verify_equivalence(
+                            ftc_diff, result, sorted(other_vars, key=str)
+                        )
+                        if (
+                            eq_check.passed
+                            and eq_guar == Guarantee.EXACT_SYMBOLIC
+                            and (bool(other_vars) or quad_passed)
+                        ):
+                            return (
+                                Verification(
+                                    kind="ftc-antiderivative-check",
+                                    passed=True,
+                                    detail=(
+                                        f"Verified F'({var}) = f({var}) and F({upper}) - F({lower}) == {result}"
+                                        + (
+                                            f" (quadrature rel error {quad_err:.2e})"
+                                            if quad_passed
+                                            else ""
+                                        )
+                                    ),
+                                    checks=deriv_check.checks + eq_check.checks + (1 if quad_passed else 0),
+                                    max_error=quad_err if quad_passed else eq_check.max_error,
+                                ),
+                                Guarantee.EXACT_SYMBOLIC,
+                            )
+        except Exception:
+            pass
+
+    if quad_passed:
+        return (
+            Verification(
+                kind="numerical-quadrature",
+                passed=True,
+                detail=f"Agrees with adaptive Gaussian quadrature (rel error {quad_err:.2e})",
+                checks=1,
+                max_error=quad_err,
+            ),
+            Guarantee.NUMERICAL_APPROXIMATION,
+        )
 
     detail = (
         f"Independent definite-integral verification failed: {quad_error_msg}"
@@ -547,7 +624,14 @@ def verify_limit(
     *,
     tol: float = 1e-4,
 ) -> tuple[Verification, Guarantee]:
-    """Verify a limit by sampling the expression along a sequence approaching ``point``."""
+    """Verify a limit via symbolic cancellation/L'Hôpital/series and sequence sampling.
+
+    Assigns :attr:`Guarantee.EXACT_SYMBOLIC` only when an independent symbolic
+    method (algebraic cancellation, L'Hôpital differentiation, or formal series
+    expansion) confirms the limit AND numerical sequence probing agrees. When
+    only the numerical sequence probe confirms convergence, assigns
+    :attr:`Guarantee.NUMERICAL_APPROXIMATION`.
+    """
     if result.has(sp.AccumBounds) or result.has(sp.Limit):
         return (
             Verification(
@@ -593,34 +677,24 @@ def verify_limit(
                         detail=f"Magnitude grows unboundedly toward {point} (|f| ~ {mags[-1]:.2e})",
                         checks=len(samples),
                     ),
-                    Guarantee.EXACT_SYMBOLIC if growing else Guarantee.UNVERIFIED,
+                    Guarantee.NUMERICAL_APPROXIMATION if growing else Guarantee.UNVERIFIED,
                 )
 
             target = mp.mpc(str(complex(result_1d.evalf(35)).real))
             err = float(mp.fabs(vals[-1] - target))
             scale = max(float(mp.fabs(target)), 1.0)
             rel_err = err / scale
-            if rel_err <= tol:
+            if rel_err > tol:
                 return (
                     Verification(
                         kind="numerical-limit-probe",
-                        passed=True,
-                        detail=f"Sequence converges to {result} (error at 1e-8 step: {rel_err:.2e})",
+                        passed=False,
+                        detail=f"Numerical sequence near {point} diverged from {result} (error {rel_err:.2e})",
                         checks=len(samples),
                         max_error=rel_err,
                     ),
-                    Guarantee.EXACT_SYMBOLIC,
+                    Guarantee.UNVERIFIED,
                 )
-            return (
-                Verification(
-                    kind="numerical-limit-probe",
-                    passed=False,
-                    detail=f"Numerical sequence near {point} diverged from {result} (error {rel_err:.2e})",
-                    checks=len(samples),
-                    max_error=rel_err,
-                ),
-                Guarantee.UNVERIFIED,
-            )
     except Exception as exc:
         return (
             Verification(
@@ -631,6 +705,90 @@ def verify_limit(
             ),
             Guarantee.UNVERIFIED,
         )
+
+    # Independent symbolic verification (without calling sp.limit)
+    symbolic_ok = False
+    symbolic_kind = ""
+    if (
+        not expr.has(sp.Float)
+        and not result.has(sp.Float)
+        and point not in (sp.oo, -sp.oo, sp.zoo)
+    ):
+        # 1. Algebraic / radical cancellation + continuous substitution
+        try:
+            cancelled = sp.cancel(sp.radsimp(expr))
+            sub_val = cancelled.subs(var, point)
+            if not sub_val.has(sp.nan, sp.oo, -sp.oo, sp.zoo) and _is_symbolic_zero(
+                sub_val - result
+            ):
+                symbolic_ok = True
+                symbolic_kind = "algebraic-cancellation-limit"
+        except Exception:
+            pass
+
+        # 2. Symbolic L'Hôpital differentiation on 0/0 indeterminate forms
+        if not symbolic_ok:
+            try:
+                num, den = sp.fraction(sp.together(expr))
+                if _is_symbolic_zero(num.subs(var, point)) and _is_symbolic_zero(
+                    den.subs(var, point)
+                ):
+                    cur_n, cur_d = num, den
+                    for _ in range(4):
+                        cur_n = sp.diff(cur_n, var)
+                        cur_d = sp.diff(cur_d, var)
+                        d_val = cur_d.subs(var, point)
+                        if not d_val.has(
+                            sp.nan, sp.oo, -sp.oo, sp.zoo
+                        ) and not _is_symbolic_zero(d_val):
+                            n_val = cur_n.subs(var, point)
+                            if not n_val.has(
+                                sp.nan, sp.oo, -sp.oo, sp.zoo
+                            ) and _is_symbolic_zero(n_val / d_val - result):
+                                symbolic_ok = True
+                                symbolic_kind = "symbolic-lhopital-limit"
+                            break
+            except Exception:
+                pass
+
+        # 3. Formal Taylor/Laurent series expansion around point
+        if not symbolic_ok:
+            try:
+                ser = sp.series(expr, var, point, n=3).removeO()
+                ser_val = ser.subs(var, point)
+                if not ser_val.has(
+                    sp.nan, sp.oo, -sp.oo, sp.zoo
+                ) and _is_symbolic_zero(ser_val - result):
+                    symbolic_ok = True
+                    symbolic_kind = "formal-series-limit"
+            except Exception:
+                pass
+
+    if symbolic_ok:
+        return (
+            Verification(
+                kind=symbolic_kind,
+                passed=True,
+                detail=(
+                    f"Verified symbolically ({symbolic_kind}) and confirmed by "
+                    f"numerical sequence convergence to {result} (step error {rel_err:.2e})"
+                ),
+                checks=len(samples) + 1,
+                max_error=rel_err,
+            ),
+            Guarantee.EXACT_SYMBOLIC,
+        )
+
+    return (
+        Verification(
+            kind="numerical-limit-probe",
+            passed=True,
+            detail=f"Sequence converges to {result} (error at 1e-8 step: {rel_err:.2e}; numerical evidence only)",
+            checks=len(samples),
+            max_error=rel_err,
+        ),
+        Guarantee.NUMERICAL_APPROXIMATION,
+    )
 
 
 def verify_matrix_op(raw: dict) -> tuple[Verification, Guarantee]:

@@ -345,6 +345,43 @@ class LeanEngine(Engine):
         return axioms_used, untrusted, has_sorry_ax
 
     @staticmethod
+    def extract_audited_theorems(diagnostics: list[str]) -> list[str]:
+        """Extract declaration names confirmed by ``#print axioms`` output lines."""
+        audited: list[str] = []
+        for line in diagnostics:
+            clean = line.strip()
+            m_dep = _AXIOMS_LINE.match(clean)
+            if m_dep:
+                thm = m_dep.group(1).strip()
+                if thm and thm not in audited:
+                    audited.append(thm)
+                continue
+            m_no = _NO_AXIOMS_LINE.match(clean)
+            if m_no:
+                thm = m_no.group(1).strip()
+                if thm and thm not in audited:
+                    audited.append(thm)
+        return audited
+
+    @staticmethod
+    def verify_theorem_audit_coverage(
+        expected_theorems: list[str],
+        audited_theorems: list[str],
+    ) -> tuple[bool, list[str]]:
+        """Confirm at least one theorem was declared and every declared theorem was audited."""
+        if not expected_theorems:
+            return False, ["<no-theorem-declared>"]
+        missing: list[str] = []
+        for expected in expected_theorems:
+            matched = any(
+                actual == expected or actual.endswith(f".{expected}")
+                for actual in audited_theorems
+            )
+            if not matched:
+                missing.append(expected)
+        return len(missing) == 0, missing
+
+    @staticmethod
     def find_lake_project_root(start_dir: Path | None = None) -> Path | None:
         """Locate the nearest ancestor directory containing ``lakefile.lean`` or ``lakefile.toml``."""
         candidates: list[Path] = []
@@ -388,6 +425,10 @@ class LeanEngine(Engine):
             self.prepare_audited_source(source)
         )
         warnings: list[str] = []
+        if not theorem_names:
+            warnings.append(
+                "no theorem, lemma, or example declaration found to audit via #print axioms"
+            )
         if has_hole:
             warnings.append(
                 "proof contains 'sorry', 'admit', or 'sorryAx' (incomplete proof)"
@@ -407,8 +448,9 @@ class LeanEngine(Engine):
             return Answer(
                 value={
                     "checked": False,
-                    "complete": not has_hole and not custom_axioms,
+                    "complete": bool(theorem_names) and not has_hole and not custom_axioms,
                     "theorems": theorem_names,
+                    "audited_theorems": [],
                     "untrusted_axioms": custom_axioms,
                     "source": source,
                 },
@@ -426,14 +468,20 @@ class LeanEngine(Engine):
                 raw={
                     "kernel_verified": False,
                     "has_hole": has_hole,
+                    "theorems": theorem_names,
+                    "audited_theorems": [],
+                    "audit_complete": False,
                     "axioms_used": [],
                     "untrusted_axioms": custom_axioms,
                     "diagnostics": ["lean binary not found in PATH or ~/.elan/bin"],
                 },
             )
 
+        # Place temporary file inside the Lake project root when available so relative imports work
+        lake_root = self.find_lake_project_root(origin_path)
+        tmp_dir = str(lake_root) if (self.lake_bin and lake_root is not None) else None
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".lean", encoding="utf-8", delete=False
+            mode="w", suffix=".lean", dir=tmp_dir, encoding="utf-8", delete=False
         ) as tmp:
             tmp.write(audited_source)
             tmp_path = Path(tmp.name)
@@ -445,7 +493,7 @@ class LeanEngine(Engine):
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=60,
                 check=False,
             )
             diagnostics = [
@@ -456,6 +504,10 @@ class LeanEngine(Engine):
             axioms_used, untrusted_axioms, has_sorry_ax = self.parse_axiom_audit(
                 diagnostics, declared_custom_axioms=custom_axioms
             )
+            audited_theorems = self.extract_audited_theorems(diagnostics)
+            audit_complete, missing_audits = self.verify_theorem_audit_coverage(
+                theorem_names, audited_theorems
+            )
             if has_sorry_ax:
                 has_hole = True
                 warnings.append("proof depends on 'sorryAx' via #print axioms audit")
@@ -463,11 +515,17 @@ class LeanEngine(Engine):
                 warnings.append(
                     f"proof depends on untrusted axiom(s): {', '.join(untrusted_axioms)}"
                 )
+            if theorem_names and not audit_complete:
+                warnings.append(
+                    f"#print axioms output missing confirmation for: {', '.join(missing_audits)}"
+                )
 
             kernel_ok = (
                 proc.returncode == 0
                 and not has_hole
                 and len(untrusted_axioms) == 0
+                and len(theorem_names) > 0
+                and audit_complete
             )
             status_str = (
                 "verified by Lean 4 kernel (#print axioms clean)"
@@ -475,12 +533,30 @@ class LeanEngine(Engine):
                 else "rejected by Lean 4 kernel or axiom audit"
             )
             runner_label = "lake env lean" if cwd else "lean"
+            failure_limitations: list[str] = []
+            if not kernel_ok:
+                if not theorem_names:
+                    failure_limitations.append(
+                        "no theorem, lemma, or example declaration found to audit"
+                    )
+                elif not audit_complete:
+                    failure_limitations.append(
+                        f"unconfirmed #print axioms audit for: {', '.join(missing_audits)}"
+                    )
+                elif untrusted_axioms:
+                    failure_limitations.append(
+                        f"untrusted axioms: {', '.join(untrusted_axioms)}"
+                    )
+                else:
+                    failure_limitations.extend(diagnostics[:5])
+
             return Answer(
                 value={
                     "checked": True,
                     "verified": kernel_ok,
                     "returncode": proc.returncode,
                     "theorems": theorem_names,
+                    "audited_theorems": audited_theorems,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted_axioms,
                     "diagnostics": diagnostics,
@@ -490,21 +566,18 @@ class LeanEngine(Engine):
                 steps=[
                     f"source: {origin}",
                     f"runner: {runner_label} (exit code: {proc.returncode})",
+                    f"audited theorems: {audited_theorems or ['none']}",
                     f"axioms used: {axioms_used or ['none (constructive)']}",
                 ],
                 warnings=warnings,
-                limitations=(
-                    []
-                    if kernel_ok
-                    else (
-                        [f"untrusted axioms: {', '.join(untrusted_axioms)}"]
-                        if untrusted_axioms
-                        else diagnostics[:5]
-                    )
-                ),
+                limitations=failure_limitations,
                 raw={
                     "kernel_verified": kernel_ok,
                     "has_hole": has_hole,
+                    "theorems": theorem_names,
+                    "audited_theorems": audited_theorems,
+                    "audit_complete": audit_complete,
+                    "missing_audits": missing_audits,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted_axioms,
                     "diagnostics": diagnostics,

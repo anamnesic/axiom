@@ -901,16 +901,35 @@ class Axiom:
         has_hole = bool(ans.raw.get("has_hole"))
         untrusted = list(ans.raw.get("untrusted_axioms") or [])
         axioms_used = list(ans.raw.get("axioms_used") or [])
+        theorems = list(ans.raw.get("theorems") or [])
+        audited_theorems = list(ans.raw.get("audited_theorems") or [])
+        audit_complete = bool(ans.raw.get("audit_complete"))
 
-        if kernel_ok and not has_hole and not untrusted:
+        if (
+            kernel_ok
+            and not has_hole
+            and not untrusted
+            and len(theorems) > 0
+            and len(audited_theorems) >= len(theorems)
+            and audit_complete
+        ):
             guar = Guarantee.FORMAL_PROOF
             ax_desc = ", ".join(axioms_used) if axioms_used else "none (constructive)"
+            thm_desc = ", ".join(audited_theorems)
             ver = Verification(
                 kind="lean4-kernel-axiom-audit",
                 passed=True,
-                detail=f"Typechecked by Lean 4 kernel and audited via #print axioms (axioms: {ax_desc})",
-                checks=2,
-                data={"axioms_used": axioms_used, "untrusted_axioms": []},
+                detail=(
+                    f"Typechecked by Lean 4 kernel and audited {len(audited_theorems)} "
+                    f"declaration(s) [{thm_desc}] via #print axioms (axioms: {ax_desc})"
+                ),
+                checks=1 + len(audited_theorems),
+                data={
+                    "theorems": theorems,
+                    "audited_theorems": audited_theorems,
+                    "axioms_used": axioms_used,
+                    "untrusted_axioms": [],
+                },
             )
         else:
             guar = Guarantee.UNVERIFIED
@@ -918,8 +937,13 @@ class Axiom:
                 detail = "Incomplete proof (contains 'sorry', 'admit', or 'sorryAx')"
             elif untrusted:
                 detail = f"Proof depends on untrusted/user-declared axiom(s): {', '.join(untrusted)}"
+            elif not theorems:
+                detail = "No theorem, lemma, or example declaration was found to audit via #print axioms"
             elif ans.limitations:
                 detail = ans.limitations[0]
+            elif not audit_complete:
+                missing = list(ans.raw.get("missing_audits") or [])
+                detail = f"#print axioms output did not confirm declaration(s): {', '.join(missing)}"
             else:
                 detail = "Lean 4 kernel verification did not pass"
             ver = Verification(
@@ -928,6 +952,8 @@ class Axiom:
                 detail=detail,
                 checks=1,
                 data={
+                    "theorems": theorems,
+                    "audited_theorems": audited_theorems,
                     "diagnostics": ans.raw.get("diagnostics", []),
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted,

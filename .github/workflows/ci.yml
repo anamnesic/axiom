@@ -29,8 +29,36 @@ jobs:
       - name: Run verification benchmarks
         run: python benchmarks/run_benchmarks.py
 
+  formal-lean:
+    runs-on: ubuntu-latest
+    env:
+      AXIOM_REQUIRE_LEAN: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache Lean 4 toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan
+          key: elan-lean4-v4.14.0-${{ runner.os }}
+      - name: Install elan and Lean 4 toolchain
+        run: |
+          if [ ! -x "$HOME/.elan/bin/lean" ]; then
+            curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.14.0
+          fi
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          $HOME/.elan/bin/elan default leanprover/lean4:v4.14.0
+          $HOME/.elan/bin/lean --version
+          $HOME/.elan/bin/lake --version
+      - name: Install axiom-math with dev dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Run Lean 4 + Lake formal proof integration suite
+        run: python -m pytest -v -k "lean"
+
   build-dist:
-    needs: test
+    needs: [test, formal-lean]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
