@@ -236,6 +236,7 @@ class Parser:
         self.symbol_excluded_points: dict[str, list[str]] = {}
         self.denominators: list[sp.Expr] = []
         self.domain_constraints: list[str] = []
+        self.has_inexact_floats: bool = False
         self._load_assumptions(assumptions)
         self.functions = {
             name: getattr(sp, name)
@@ -416,6 +417,7 @@ class Parser:
             "active_domain_constraints": active_constraints,
             "excluded_points": excluded_points,
             "assumptions": self.describe_assumptions(),
+            "has_inexact_floats": self.has_inexact_floats,
         }
 
     # ------------------------------------------------------------------ API
@@ -479,6 +481,8 @@ class Parser:
                 self.denominators.append(denom)
 
     def _tree(self, text: str) -> ast.Expression:
+        if _HIGH_PREC_DECIMAL.search(text):
+            self.has_inexact_floats = True
         normalized = _normalize(_LONE_EQUALS.sub("==", text))
         try:
             return ast.parse(normalized, mode="eval")
@@ -490,7 +494,15 @@ class Parser:
             value = node.value
             if isinstance(value, bool) or value is None:
                 return value
-            if isinstance(value, (int, float, complex)):
+            if isinstance(value, float):
+                self.has_inexact_floats = True
+                return sp.sympify(value)
+            if isinstance(value, complex) and (
+                isinstance(value.real, float) or isinstance(value.imag, float)
+            ):
+                self.has_inexact_floats = True
+                return sp.sympify(value)
+            if isinstance(value, (int, complex)):
                 return sp.sympify(value)
             if isinstance(value, str):
                 return value
@@ -540,6 +552,8 @@ class Parser:
         if not isinstance(node.func, ast.Name):
             raise ParseError("only direct calls to allowed functions are supported")
         name = node.func.id
+        if name == "Float":
+            self.has_inexact_floats = True
         if name.startswith("_"):
             raise ParseError(f"name not allowed: {name!r}")
         func = self.locals.get(name) or self.functions.get(name)

@@ -17,6 +17,7 @@ from fractions import Fraction
 from hashlib import sha256
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -25,7 +26,7 @@ import mpmath as mp
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = Path(__file__).with_name("validation.json")
+OUTPUT = Path(os.environ.get("AXIOM_VALIDATION_OUT") or Path(__file__).with_name("validation.json"))
 
 MATHEMATICAL_GUARANTEES = {
     "formal-proof",

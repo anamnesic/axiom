@@ -1,15 +1,15 @@
 {
-  "timestamp_utc": "2026-10-17T23:03:31.596157+00:00",
+  "timestamp_utc": "2026-10-17T23:48:48.190609+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
-  "total_evaluations": 16,
-  "passed_evaluations": 16,
+  "total_evaluations": 17,
+  "passed_evaluations": 17,
   "positive_claims_count": 9,
   "true_positives_count": 9,
   "true_positive_rate": 1.0,
-  "negative_controls_count": 6,
-  "fail_closed_count": 6,
+  "negative_controls_count": 7,
+  "fail_closed_count": 7,
   "fail_closed_rate": 1.0,
   "false_positives_count": 0,
   "false_positive_rate": 0.0,
@@ -147,6 +147,17 @@
       "is_fail_closed": true
     },
     {
+      "id": "lean_forced_variant_anti_drift_probe",
+      "kind": "open_boundary_probe",
+      "description": "External forcing Lean 4 variant is classified as scoped_forced_variant (anti-drift control)",
+      "expected_verdict": "unsolved",
+      "observed_verdict": "inconclusive",
+      "evidence_type": "anti-drift-formal-manifest",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
       "id": "poiseuille_exact",
       "kind": "positive_claim",
       "description": "Poiseuille steady laminar momentum balance holds under mu > 0",
@@ -204,17 +215,18 @@
     "energy_conservation_refuted": true,
     "pressure_poisson_exact": true,
     "unsolvable_navier_stokes_fail_closed": true,
+    "lean_forced_variant_anti_drift_probe": true,
     "poiseuille_exact": true,
     "poiseuille_false_bc_refuted": true,
     "mcp_exact_div_ok": true,
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "2f178fe7f9c4a0ae810acc508c14afdf6acc5ccd777b02424f0b326f901584e9",
+    "reports/navier-stokes/validate.py": "1aba940f133afea16b104531b629e21b180dc3fb2e2bd4abc49fed4e1863ed34",
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
     "reports/navier-stokes/REPORT.md": "d4a0c9f066553be1519948bda5a103cb6bc0e0b9f95e2ba6965fa76a25bd9e8e",
-    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
-    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
+    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
+    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
   },
   "runs": {
     "doctor": {
@@ -314,6 +326,94 @@
         }
       }
     },
+    "taylor_green_dudx": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "--json",
+        "--variable",
+        "x",
+        "--",
+        "sin(x)*cos(y)*exp(-2*nu*t)"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "sin(x)*cos(y)*exp(-2*nu*t)",
+        "ok": true,
+        "value": "exp(-2*nu*t)*cos(x)*cos(y)",
+        "value_str": "exp(-2*nu*t)*cos(x)*cos(y)",
+        "latex": "e^{- 2 \\nu t} \\cos{\\left(x \\right)} \\cos{\\left(y \\right)}",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dx (1x) of exp(-2*nu*t)*sin(x)*cos(y)",
+            "-> exp(-2*nu*t)*cos(x)*cos(y)"
+          ],
+          "reproducible_with": "axiom differentiate \"sin(x)*cos(y)*exp(-2*nu*t)\" --variable x"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 2.87e-42)",
+          "checks": 6,
+          "max_error": 2.8698592549372254e-42
+        }
+      }
+    },
+    "taylor_green_dvdy": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "--json",
+        "--variable",
+        "y",
+        "--",
+        "-cos(x)*sin(y)*exp(-2*nu*t)"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "-cos(x)*sin(y)*exp(-2*nu*t)",
+        "ok": true,
+        "value": "-exp(-2*nu*t)*cos(x)*cos(y)",
+        "value_str": "-exp(-2*nu*t)*cos(x)*cos(y)",
+        "latex": "- e^{- 2 \\nu t} \\cos{\\left(x \\right)} \\cos{\\left(y \\right)}",
+        "variables": [
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dy (1x) of -exp(-2*nu*t)*sin(y)*cos(x)",
+            "-> -exp(-2*nu*t)*cos(x)*cos(y)"
+          ],
+          "reproducible_with": "axiom differentiate \"-cos(x)*sin(y)*exp(-2*nu*t)\" --variable y"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 2.87e-42)",
+          "checks": 6,
+          "max_error": 2.8698592549372254e-42
+        }
+      }
+    },
     "taylor_green_divergence": {
       "command": [
         "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
@@ -322,14 +422,14 @@
         "compare",
         "--json",
         "--",
-        "cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t)",
+        "(exp(-2*nu*t)*cos(x)*cos(y)) + (-exp(-2*nu*t)*cos(x)*cos(y))",
         "0"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t) == 0",
+        "input": "(exp(-2*nu*t)*cos(x)*cos(y)) + (-exp(-2*nu*t)*cos(x)*cos(y)) == 0",
         "ok": true,
         "value": {
           "status": "proven",
@@ -358,7 +458,7 @@
             "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
-          "reproducible_with": "axiom compare \"cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t)\" \"0\""
+          "reproducible_with": "axiom compare \"(exp(-2*nu*t)*cos(x)*cos(y)) + (-exp(-2*nu*t)*cos(x)*cos(y))\" \"0\""
         },
         "verification": {
           "kind": "symbolic-identity",
@@ -568,6 +668,94 @@
         }
       }
     },
+    "taylor_green_dudy": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "--json",
+        "--variable",
+        "y",
+        "--",
+        "sin(x)*cos(y)*exp(-2*nu*t)"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "sin(x)*cos(y)*exp(-2*nu*t)",
+        "ok": true,
+        "value": "-exp(-2*nu*t)*sin(x)*sin(y)",
+        "value_str": "-exp(-2*nu*t)*sin(x)*sin(y)",
+        "latex": "- e^{- 2 \\nu t} \\sin{\\left(x \\right)} \\sin{\\left(y \\right)}",
+        "variables": [
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dy (1x) of exp(-2*nu*t)*sin(x)*cos(y)",
+            "-> -exp(-2*nu*t)*sin(x)*sin(y)"
+          ],
+          "reproducible_with": "axiom differentiate \"sin(x)*cos(y)*exp(-2*nu*t)\" --variable y"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 2.87e-42)",
+          "checks": 6,
+          "max_error": 2.8698592549372254e-42
+        }
+      }
+    },
+    "taylor_green_dvdx": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "--json",
+        "--variable",
+        "x",
+        "--",
+        "-cos(x)*sin(y)*exp(-2*nu*t)"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "-cos(x)*sin(y)*exp(-2*nu*t)",
+        "ok": true,
+        "value": "exp(-2*nu*t)*sin(x)*sin(y)",
+        "value_str": "exp(-2*nu*t)*sin(x)*sin(y)",
+        "latex": "e^{- 2 \\nu t} \\sin{\\left(x \\right)} \\sin{\\left(y \\right)}",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dx (1x) of -exp(-2*nu*t)*sin(y)*cos(x)",
+            "-> exp(-2*nu*t)*sin(x)*sin(y)"
+          ],
+          "reproducible_with": "axiom differentiate \"-cos(x)*sin(y)*exp(-2*nu*t)\" --variable x"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 2.87e-42)",
+          "checks": 6,
+          "max_error": 2.8698592549372254e-42
+        }
+      }
+    },
     "kinetic_energy_integral_x": {
       "command": [
         "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
@@ -716,14 +904,14 @@
         "compare",
         "--json",
         "--",
-        "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)",
+        "(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t)",
         "0"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t) == 0",
+        "input": "(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t) == 0",
         "ok": true,
         "value": {
           "status": "proven",
@@ -750,7 +938,7 @@
             "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
-          "reproducible_with": "axiom compare \"-4*nu*pi^2*exp(-4*nu*t) + 4*nu*pi^2*exp(-4*nu*t)\" \"0\""
+          "reproducible_with": "axiom compare \"(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t)\" \"0\""
         },
         "verification": {
           "kind": "symbolic-identity",
@@ -915,6 +1103,191 @@
           "engine": "axiom"
         },
         "error": "division by zero"
+      }
+    },
+    "lean_forced_variant_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "prove",
+        "--json",
+        "--engine",
+        "lean",
+        "--canonical",
+        "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+        "--alignment",
+        "scoped_forced_variant",
+        "--",
+        "examples/theorems.lean"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "prove",
+        "input": "examples/theorems.lean",
+        "ok": true,
+        "value": {
+          "checked": false,
+          "complete": true,
+          "theorems": [
+            "add_zero_right",
+            "eq_refl_nat"
+          ],
+          "audited_theorems": [],
+          "trivial_theorems": [
+            "eq_refl_nat"
+          ],
+          "untrusted_axioms": [],
+          "source": "-- Example formal theorems for `axiom prove examples/theorems.lean --engine lean`\n\ntheorem add_zero_right (n : Nat) : n + 0 = n := by\n  rfl\n\ntheorem eq_refl_nat (a : Nat) : a = a := by\n  rfl\n",
+          "formal_manifest": {
+            "kernel_validity": {
+              "verified": false,
+              "theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
+              "audited_theorems": [],
+              "trivial_theorems": [
+                "eq_refl_nat"
+              ],
+              "axioms": [],
+              "axioms_used": [],
+              "untrusted_axioms": [],
+              "has_sorry": false,
+              "audit_complete": false,
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+            },
+            "assumptions_audit": {
+              "declared_hypotheses": [],
+              "detected_hypotheses": [],
+              "implicit_hypotheses_flagged": false,
+              "implicit_hypotheses": [],
+              "status": "clean"
+            },
+            "spec_alignment": {
+              "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+              "formal_statement": "examples/theorems.lean",
+              "status": "scoped_forced_variant",
+              "alignment_status": "scoped_forced_variant",
+              "is_aligned": true,
+              "congruent": false,
+              "scope_notes": ""
+            }
+          },
+          "manifest": {
+            "kernel_validity": {
+              "verified": false,
+              "theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
+              "audited_theorems": [],
+              "trivial_theorems": [
+                "eq_refl_nat"
+              ],
+              "axioms": [],
+              "axioms_used": [],
+              "untrusted_axioms": [],
+              "has_sorry": false,
+              "audit_complete": false,
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+            },
+            "assumptions_audit": {
+              "declared_hypotheses": [],
+              "detected_hypotheses": [],
+              "implicit_hypotheses_flagged": false,
+              "implicit_hypotheses": [],
+              "status": "clean"
+            },
+            "spec_alignment": {
+              "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+              "formal_statement": "examples/theorems.lean",
+              "status": "scoped_forced_variant",
+              "alignment_status": "scoped_forced_variant",
+              "is_aligned": true,
+              "congruent": false,
+              "scope_notes": ""
+            }
+          }
+        },
+        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "steps": [
+            "loaded Lean source from examples\\theorems.lean",
+            "audited declarations: ['add_zero_right', 'eq_refl_nat']",
+            "kernel validity: False (0 theorem(s) audited)",
+            "assumptions audit: clean",
+            "spec alignment: scoped_forced_variant"
+          ],
+          "limitations": [
+            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
+          ],
+          "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"scoped_forced_variant\""
+        },
+        "verification": {
+          "kind": "lean4-kernel-axiom-audit",
+          "passed": false,
+          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "checks": 1,
+          "data": {
+            "theorems": [
+              "add_zero_right",
+              "eq_refl_nat"
+            ],
+            "audited_theorems": [],
+            "trivial_theorems": [
+              "eq_refl_nat"
+            ],
+            "diagnostics": [
+              "lean binary not found in PATH or ~/.elan/bin"
+            ],
+            "axioms_used": [],
+            "untrusted_axioms": [],
+            "formal_manifest": {
+              "kernel_validity": {
+                "verified": false,
+                "theorems": [
+                  "add_zero_right",
+                  "eq_refl_nat"
+                ],
+                "audited_theorems": [],
+                "trivial_theorems": [
+                  "eq_refl_nat"
+                ],
+                "axioms": [],
+                "axioms_used": [],
+                "untrusted_axioms": [],
+                "has_sorry": false,
+                "audit_complete": false,
+                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+              },
+              "assumptions_audit": {
+                "declared_hypotheses": [],
+                "detected_hypotheses": [],
+                "implicit_hypotheses_flagged": false,
+                "implicit_hypotheses": [],
+                "status": "clean"
+              },
+              "spec_alignment": {
+                "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+                "formal_statement": "examples/theorems.lean",
+                "status": "scoped_forced_variant",
+                "alignment_status": "scoped_forced_variant",
+                "is_aligned": true,
+                "congruent": false,
+                "scope_notes": ""
+              }
+            }
+          }
+        },
+        "warnings": [
+          "syntactic reflexive tautology (X = X) detected in: eq_refl_nat"
+        ]
       }
     },
     "poiseuille_momentum_balance": {

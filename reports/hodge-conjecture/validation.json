@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T23:03:49.610120+00:00",
+  "timestamp_utc": "2026-10-17T23:49:06.291791+00:00",
   "axiom_version": "0.2.3",
   "problem": "Hodge Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -150,11 +150,11 @@
     "mcp_broken_symmetry_refuted": true
   },
   "file_hashes": {
-    "reports/hodge-conjecture/validate.py": "f187f8b34d66e11d85eea9e2f956a56c6a4e1a2fc2779f6f7df084adb55968cf",
+    "reports/hodge-conjecture/validate.py": "44a4b32b9be56e36ed724542a4a3b295725983b98830dc7d0548282b6b5ba7d9",
     "reports/hodge-conjecture/README.md": "2731738affb12b51b00dc1110fff6f35f5806f8b28c3382c8ed99c117c6b6cef",
     "reports/hodge-conjecture/REPORT.md": "52507bab9518dc30091fe330b6e07ddeb1292aebbfc998713075c9cd521c9bca",
-    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
-    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
+    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
+    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
   },
   "runs": {
     "doctor": {

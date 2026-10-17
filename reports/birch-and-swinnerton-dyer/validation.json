@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T23:03:42.040341+00:00",
+  "timestamp_utc": "2026-10-17T23:48:58.801986+00:00",
   "axiom_version": "0.2.3",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -198,11 +198,11 @@
     "mcp_false_point_refuted": true
   },
   "file_hashes": {
-    "reports/birch-and-swinnerton-dyer/validate.py": "f1a1539068efdf7fff1d8a40fd62ed5b9535cc910627185b355b2f32aaea77ed",
+    "reports/birch-and-swinnerton-dyer/validate.py": "06bb882819cdee8238f39c62b49e7db60f22a2e041f714c55e62d7cbe875c3ee",
     "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
     "reports/birch-and-swinnerton-dyer/REPORT.md": "85d560e8ff66b5b16b1a80daec34c738e8a41adcbd38646c72d678ea1ad51784",
-    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
-    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
+    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
+    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
   },
   "runs": {
     "doctor": {

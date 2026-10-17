@@ -8,13 +8,14 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from math import comb
+import os
 from pathlib import Path
 import subprocess
 import sys
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = Path(__file__).with_name("validation.json")
+OUTPUT = Path(os.environ.get("AXIOM_VALIDATION_OUT") or Path(__file__).with_name("validation.json"))
 
 
 def cli(*args):

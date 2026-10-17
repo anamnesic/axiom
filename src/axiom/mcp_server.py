@@ -226,6 +226,19 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 },
                 "proof": {"type": "string", "default": "", "description": "Optional Lean 4 proof body."},
                 "engine": {"type": "string", "default": "lean", "description": "Engine ('lean' or 'sympy')."},
+                "canonical_statement": {
+                    "type": "string",
+                    "description": "Canonical informal mathematical formulation for anti-drift alignment check.",
+                },
+                "declared_hypotheses": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Explicitly declared hypotheses to audit against implicit assumptions.",
+                },
+                "spec_alignment": {
+                    "type": "string",
+                    "description": "Declared alignment status ('congruent', 'scoped_forced_variant', etc.).",
+                },
             },
             "required": ["statement"],
         },
@@ -608,6 +621,9 @@ def dispatch_tool(
             args["statement"],
             proof=args.get("proof", ""),
             engine=args.get("engine", "lean"),
+            canonical_statement=args.get("canonical_statement"),
+            declared_hypotheses=args.get("declared_hypotheses"),
+            spec_alignment=args.get("spec_alignment"),
         )
 
     if name == "math_verify":

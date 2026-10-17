@@ -1402,6 +1402,80 @@ class TestAxiom(unittest.TestCase):
         self.assertEqual(res.evidence.reproducible_with, 'axiom solve "x^2 + y^2 = 25; x - y = 1" --assumptions "x:positive,y:positive"')
 
 
+    def test_inexact_float_absorption_soundness(self) -> None:
+        ax = Axiom()
+
+        # Float absorption: 0.1 + 1/10^20 vs 0.1 simplifies diff to 0 in naive float logic,
+        # but inexact float tracking MUST prevent exact symbolic proof and EXACT_SYMBOLIC guarantee.
+        res = ax.compare("0.1 + 1/10^20", "0.1")
+        self.assertFalse(res.verified)
+        self.assertNotEqual(res.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+        self.assertEqual(res.value.get("status"), "approximately_equal")
+        self.assertIs(res.value.get("equivalent"), False)
+        self.assertIs(res.value.get("approximately_equal"), True)
+
+        # Inexact float 0.1 vs exact rational 1/10
+        res_rational = ax.compare("0.1", "1/10")
+        self.assertNotEqual(res_rational.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertIn(res_rational.value.get("status"), ("approximately_equal", "inconclusive"))
+
+        # High precision decimal literal tracking
+        res_high_prec = ax.compare("0.100000000000000000000000000001", "0.1")
+        self.assertNotEqual(res_high_prec.guarantee, Guarantee.EXACT_SYMBOLIC)
+
+        # Variable with float vs rational: x + 0.1 vs x + 1/10
+        res_var = ax.compare("x + 0.1", "x + 1/10")
+        self.assertNotEqual(res_var.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertFalse(res_var.verified)
+
+    def test_prove_formal_manifest_three_layers(self) -> None:
+        ax = Axiom()
+
+        res = ax.prove(
+            "x + 0 = x",
+            engine="sympy",
+            canonical_statement="AddZero identity for real numbers",
+            declared_hypotheses=["x is real"],
+            spec_alignment="congruent",
+        )
+        self.assertTrue(res.ok and res.verified)
+        self.assertEqual(res.guarantee, Guarantee.EXACT_SYMBOLIC)
+        self.assertIsNotNone(res.verification)
+        assert res.verification is not None
+        manifest = res.verification.data.get("formal_manifest")
+        self.assertIsInstance(manifest, dict)
+        self.assertIn("kernel_validity", manifest)
+        self.assertIn("assumptions_audit", manifest)
+        self.assertIn("spec_alignment", manifest)
+
+        # Layer 1: Kernel validity
+        self.assertTrue(manifest["kernel_validity"]["verified"])
+        self.assertIsInstance(manifest["kernel_validity"]["axioms"], list)
+
+        # Layer 2: Assumptions audit
+        self.assertEqual(manifest["assumptions_audit"]["declared_hypotheses"], ["x is real"])
+        self.assertEqual(manifest["assumptions_audit"]["status"], "clean")
+
+        # Layer 3: Spec alignment
+        self.assertEqual(manifest["spec_alignment"]["canonical_statement"], "AddZero identity for real numbers")
+        self.assertEqual(manifest["spec_alignment"]["status"], "congruent")
+        self.assertTrue(manifest["spec_alignment"]["is_aligned"])
+
+        # Anti-drift tautology control rejection
+        res_tautology = ax.prove(
+            "theorem fake : 2 + 2 = 4 := by rfl",
+            canonical_statement="Riemann Hypothesis",
+            spec_alignment="tautology_control",
+        )
+        self.assertFalse(res_tautology.verified)
+        self.assertEqual(res_tautology.guarantee, Guarantee.UNVERIFIED)
+        assert res_tautology.verification is not None
+        taut_manifest = res_tautology.verification.data.get("formal_manifest")
+        self.assertFalse(taut_manifest["spec_alignment"]["is_aligned"])
+        self.assertEqual(taut_manifest["spec_alignment"]["status"], "tautology_control")
+
+
 if __name__ == "__main__":
     unittest.main()
 

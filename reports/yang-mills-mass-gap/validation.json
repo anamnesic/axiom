@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T23:03:58.316145+00:00",
+  "timestamp_utc": "2026-10-17T23:49:15.305286+00:00",
   "axiom_version": "0.2.3",
   "problem": "Yang-Mills and the Mass Gap (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -162,11 +162,11 @@
     "mcp_non_abelian_refuted": true
   },
   "file_hashes": {
-    "reports/yang-mills-mass-gap/validate.py": "7cdbc8c138dc6b0f192a7df6a6a16694f66a9bb9a97a7b2b45346863e7e1cf08",
+    "reports/yang-mills-mass-gap/validate.py": "75a5c8291492daf0c9432beedbe318e2b1d738772a534b0cdfee9eea496ff15d",
     "reports/yang-mills-mass-gap/README.md": "cca057185dd88f43aff5b56006ddb31ef3cd59873745e68119b62f81cd959be3",
     "reports/yang-mills-mass-gap/REPORT.md": "7b76844b6150cae8d9749837ded14449e7c4a3476ddba0849386667912e97fbb",
-    "src/axiom/verification.py": "22275b3eb6e162d52e004254bdeb04283dc417fab5bda58fe8214c3fbae64b45",
-    "src/axiom/core.py": "c53c090ddf36e8f5f4914a67fca935d4e0d9bcf1b01f488717acb39c34cd40cf"
+    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
+    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
   },
   "runs": {
     "doctor": {

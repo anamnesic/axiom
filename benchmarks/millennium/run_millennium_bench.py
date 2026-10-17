@@ -20,9 +20,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -60,36 +63,18 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "true_positive_rate": 0.0,
         }
 
-    validation_json = REPORTS / folder / "validation.json"
-    if validation_json.exists():
-        try:
-            validation_json.unlink()
-        except Exception as exc:
-            try:
-                stale_backup = REPORTS / folder / f"validation.stale.{time.time_ns()}.json"
-                validation_json.rename(stale_backup)
-            except Exception as ren_exc:
-                return {
-                    "name": name,
-                    "folder": folder,
-                    "ok": False,
-                    "error": f"Failed to remove stale validation.json: {exc}; rename: {ren_exc}",
-                    "evaluations": 0,
-                    "passed": 0,
-                    "positive_claims_count": 0,
-                    "true_positives_count": 0,
-                    "negative_controls_count": 0,
-                    "fail_closed_count": 0,
-                    "false_positives_count": 0,
-                    "fail_closed_rate": 0.0,
-                    "false_positive_rate": 0.0,
-                    "true_positive_rate": 0.0,
-                    "failed_criteria": ["stale_validation_not_removable"],
-                }
+    repo_validation_json = REPORTS / folder / "validation.json"
+    temp_dir = tempfile.mkdtemp(prefix=f"axiom_bench_{folder}_")
+    isolated_validation_json = Path(temp_dir) / "validation.json"
+
+    env = os.environ.copy()
+    env["AXIOM_VALIDATION_OUT"] = str(isolated_validation_json)
 
     start_time = time.time()
     cmd = [sys.executable, str(validate_script)]
-    proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
+    proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False, env=env)
+
+    target_json = isolated_validation_json if isolated_validation_json.exists() else repo_validation_json
 
     eval_count = 0
     passed_count = 0
@@ -103,7 +88,8 @@ def run_problem_suite(name: str, folder: str) -> dict:
     true_pos_rate = 1.0
 
     failed_criteria: list[str] = []
-    if not validation_json.exists():
+    if not target_json.exists():
+        shutil.rmtree(temp_dir, ignore_errors=True)
         return {
             "name": name,
             "folder": folder,
@@ -126,8 +112,9 @@ def run_problem_suite(name: str, folder: str) -> dict:
         }
 
     try:
-        mtime = validation_json.stat().st_mtime
+        mtime = target_json.stat().st_mtime
         if mtime < start_time - 1.0:
+            shutil.rmtree(temp_dir, ignore_errors=True)
             return {
                 "name": name,
                 "folder": folder,
@@ -152,7 +139,13 @@ def run_problem_suite(name: str, folder: str) -> dict:
         pass
 
     try:
-        data = json.loads(validation_json.read_text(encoding="utf-8"))
+        raw_text = target_json.read_text(encoding="utf-8")
+        data = json.loads(raw_text)
+        if target_json == isolated_validation_json:
+            try:
+                repo_validation_json.write_text(raw_text, encoding="utf-8")
+            except Exception:
+                pass
         checks_dict = data.get("evaluations") or data.get("checks") or {}
         if isinstance(checks_dict, dict) and checks_dict:
             eval_count = len(checks_dict)
@@ -174,6 +167,7 @@ def run_problem_suite(name: str, folder: str) -> dict:
         false_pos_rate = data.get("false_positive_rate", (fp_count / neg_count) if neg_count > 0 else 0.0)
         true_pos_rate = data.get("true_positive_rate", (tp_count / pos_count) if pos_count > 0 else 1.0)
     except Exception as exc:
+        shutil.rmtree(temp_dir, ignore_errors=True)
         return {
             "name": name,
             "folder": folder,
@@ -193,6 +187,8 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "stdout": proc.stdout,
             "stderr": proc.stderr,
         }
+
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
     if eval_count == 0:
         failed_criteria.append("empty_evaluation_suite")

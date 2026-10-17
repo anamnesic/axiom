@@ -30,43 +30,63 @@ Durante a revisão científica detalhada após a estabilização do pipeline de 
 ## Decisões de Arquitetura
 
 ### 1. Separação Estrita entre Igualdade Exata e Aproximação Numérica
+No módulo `src/axiom/parsing.py`:
+- Rastreamento explícito de ponto flutuante inexato (`has_inexact_floats = True`) durante a análise sintática de expressões literais (`_tree`), números decimais de alta precisão (`_HIGH_PREC_DECIMAL`), chamadas diretas a `Float()` e literais float (`_expr`).
+- Exposição de `has_inexact_floats` nos metadados de domínio (`domain_info()`).
+
 No módulo `src/axiom/verification.py`:
-- Para expressões sem símbolos livres (`not free`):
-  1. Se `_is_symbolic_zero(diff)` for satisfeito, a identidade exata é declarada como `proven` com garantia `EXACT_SYMBOLIC`.
-  2. Se as expressões contiverem ponto flutuante (`sp.Float`) e a diferença for menor que a tolerância $\epsilon$, o resultado é categorizado como `approximately_equal` (`equivalent: false`, `approximately_equal: true`, garantia `UNVERIFIED`), sem jamais ser promovido a `proven`.
-  3. Se as expressões forem exatas (inteiros, racionais, números algébricos, constantes simbólicas como $\pi, e$) e não reduzirem identicamente a zero, sua não-nulidade é auditada de forma exata (`is_nonzero`, `is_positive`, `is_negative` ou avaliação em alta precisão com dígitos estáveis). O veredito é categoricamente `disproven` (`status: "disproven"`, `equivalent: false`).
-  4. Nenhuma proximidade numérica em ponto flutuante tem autoridade para certificar igualdade exata entre constantes.
+- Determinação antecipada do predicado `has_float`:
+  ```python
+  has_float = bool(
+      (left_domain and left_domain.get("has_inexact_floats"))
+      or (right_domain and right_domain.get("has_inexact_floats"))
+      or (isinstance(diff, sp.Basic) and diff.has(sp.Float))
+      or (isinstance(left, sp.Basic) and left.has(sp.Float))
+      or (isinstance(right, sp.Basic) and right.has(sp.Float))
+  )
+  ```
+- Bloqueio de absorção: `symbolic_ok = (not has_float) and _is_symbolic_zero(diff)`. Se houver qualquer entrada float inexata, a simplificação algébrica nunca pode atribuir `EXACT_SYMBOLIC` ou `proven`.
+- Reordenação da verificação: o ramo `if has_float:` é avaliado **antes** de `if symbolic_ok:`. Expressões como `0.1 + 1/10^20` vs `0.1` retornam categoricamente `status: "approximately_equal"`, `equivalent: false`, `approximately_equal: true`, com garantia `Guarantee.UNVERIFIED`.
+- Para constantes exatas (sem float), qualquer resíduo não-nulo resulta em `disproven` (`status: "disproven"`).
 
 No módulo `src/axiom/core.py`:
-- `Axiom.compare()` trata explicitamente o estado `approximately_equal`:
-  - `status: "approximately_equal"`;
-  - `equivalent: false`;
-  - `relation: \approx`;
-  - metadados registram `tolerance` e `max_error`.
+- `Axiom.compare()` trata o veredito `approximately_equal` com `equivalent: false`, `relation: \approx`, e registra tolerância e erro nos metadados.
 
 ### 2. Partição Determinística de Argumentos da CLI
-Em `reports/navier-stokes/validate.py` e rotinas correlatas:
-- Eliminação de qualquer heurística baseada em caracteres;
-- Definição estrita de conjuntos canônicos `KNOWN_OPTIONS_WITH_ARG` e `KNOWN_FLAGS_NO_ARG`;
+Em `reports/*/validate.py` e rotinas correlatas:
+- Eliminação de qualquer heurística baseada em caracteres individuais;
+- Definição estrita de conjuntos canônicos `KNOWN_OPTIONS_WITH_ARG` (incluindo `--canonical`, `--alignment`, `--hypotheses`) e `KNOWN_FLAGS_NO_ARG`;
 - Inserção compulsória do delimitador padrão `--` antes dos argumentos posicionais quando presentes, assegurando que expressões negativas arbitrárias (como `-sin(x)`, `-4*nu*pi^2*exp(-4*nu*t)`) sejam tratadas inequivocamente como operandos matemáticos pelo `argparse`.
 
 ### 3. Isolamento e Contemporaneidade Estrita de Evidências
-Em `benchmarks/millennium/run_millennium_bench.py`:
-- Tentativa de remoção de `validation.json` anterior com fallback de renomeação caso ocorram locks no sistema operacional; se a remoção/isolamento falhar, a execução aborta fail-closed;
-- Verificação do timestamp de modificação (`mtime >= start_time - 1.0s`), rejeitando arquivos não gerados pela execução corrente;
-- Rejeição obrigatória de suítes vazias: `eval_count > 0` passa a ser condição estrita para aprovação (`suite_ok`).
+- Suporte a injeção de caminho via variável de ambiente `AXIOM_VALIDATION_OUT` em todas as rotinas `reports/*/validate.py`:
+  ```python
+  OUTPUT = Path(os.environ.get("AXIOM_VALIDATION_OUT") or Path(__file__).with_name("validation.json"))
+  ```
+- Em `benchmarks/millennium/run_millennium_bench.py`:
+  - Cada suíte de validação é executada em diretório temporário efêmero (`tempfile.mkdtemp`), definindo `AXIOM_VALIDATION_OUT` para isolamento total contra stale cache, locks de SO e concorrência;
+  - Após a verificação de contemporaneidade e integridade, as evidências são consolidadas em `reports/<problema>/validation.json`;
+  - Rejeição obrigatória de suítes vazias: `eval_count > 0` passa a ser condição estrita para aprovação (`suite_ok`).
 
-### 4. Camadas de Integridade Epistêmica contra *Specification Drift*
-Nos relatórios de pesquisa e documentação científica (`related-work.md`, `reports/navier-stokes/REPORT.md`), a validação formal passa a ser explicitamente estruturada em três camadas ortogonais:
-1. **Validade de Kernel (`kernel_validity`)**: Checagem formal pelo Lean 4 com auditoria de axiomas (`#print axioms`), assegurando ausência de `sorry` e tautologias triviais (`rfl`);
-2. **Auditoria de Hipóteses e Domínio (`assumptions_audit`)**: Verificação explícita de consistência e minimalidade das premissas analíticas (impedindo suposições tácitas de regularidade);
-3. **Correspondência de Especificação (`spec_alignment`)**: Rastreamento auditável entre o enunciado informal ou canônico (e.g., Fefferman 2000) e a assinatura formal dos tipos em Lean 4, demarcando com clareza o escopo das conclusões e prevenindo que modificações silenciosas de enunciados sejam confundidas com soluções de problemas em aberto.
+### 4. Manifesto Executável de Integridade Epistêmica contra *Specification Drift*
+No núcleo matemático (`Axiom.prove`), CLI (`axiom prove --canonical ... --alignment ... --hypotheses ...`) e MCP Server (`math_prove`):
+Implementação de registro executável com três camadas estruturadas em `formal_manifest`:
+1. **Validade de Kernel (`kernel_validity`)**: Checagem formal pelo Lean 4 com auditoria de axiomas (`#print axioms`), validando ausência de `sorry` e axiomas não confiáveis;
+2. **Auditoria de Hipóteses (`assumptions_audit`)**: Confrontação entre hipóteses declaradas (`declared_hypotheses`) e detectadas na sintaxe do teorema, sinalizando premissas implícitas ou não justificadas;
+3. **Alinhamento de Especificação (`spec_alignment`)**: Confrontação explícita entre enunciado canônico (`canonical_statement`) e o escopo formalizado (`formal_statement`), com classificação semântica (`congruent`, `scoped_forced_variant`, `tautology_control`, `unspecified`). Tautologias e variantes não alinhadas têm prova rejeitada (`Guarantee.UNVERIFIED`, `passed: false`).
+
+### 5. Derivação Dinâmica dos Campos de Navier-Stokes
+Em `reports/navier-stokes/validate.py`:
+- Incompressibilidade ($\nabla \cdot \mathbf{u} = 0$) é verificada diferenciando diretamente os componentes de velocidade $u(x,y,t)$ e $v(x,y,t)$ via `axiom differentiate`, somando os gradientes espaciais calculados;
+- Taxa de dissipação viscosa $D(t) = \nu \int_\Omega |\nabla \mathbf{u}|^2 d\Omega$ e derivada temporal da energia cinética $dE/dt$ são compostas via pipelines encadeados de `differentiate` e `integrate`;
+- Inclusão da sonda anti-drift em Lean 4 para variantes com força externa (`scoped_forced_variant`).
 
 ---
 
 ## Consequências
 
-- **Falsos Positivos Eliminados**: Identidades numéricas infinitesimais como $\frac{1}{10^{30}} \neq 0$ são refutadas imediatamente com garantia de integridade.
+- **Falsos Positivos de Ponto Flutuante Eliminados**: Absorções numéricas infinitesimais como `0.1 + 1/10^20 vs 0.1` jamais recebem `EXACT_SYMBOLIC` ou `proven`.
 - **Robustez CLI**: Linha de comando aceita qualquer expressão matemática iniciada por sinal negativo sem falhas de sintaxe.
-- **Integridade Científica Auditável**: Suítes de validação não podem ser aprovadas com arquivos residuais ou contagens zeradas.
-- **Rigor na Relação AXIOM–Lean**: Fica explicitamente delimitado o papel do verificador formal de tipos em relação à tradução e fidelidade semântica de artigos científicos.
+- **Isolamento de Evidências no CI**: Benchmarks executam em sandbox temporal com sincronização limpa para git.
+- **Rigor na Relação AXIOM–Lean**: Provas formais geram manifestos de 3 camadas com auditoria de premissas e conformidade semântica contra desvios de especificação.
+- **Taxa Fail-Closed Global Mantida em 100%**: 103/103 critérios aprovados nos 7 Problemas do Milênio com 0 falsos positivos.

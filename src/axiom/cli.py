@@ -228,6 +228,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_prove.add_argument("statement", help="Path to .lean file or theorem statement.")
     p_prove.add_argument("--proof", default="", help="Optional Lean 4 proof body.")
     p_prove.add_argument("-e", "--engine", default="lean", help="Engine (lean or sympy).")
+    p_prove.add_argument("--canonical", dest="canonical_statement", help="Canonical mathematical problem statement for anti-drift audit.")
+    p_prove.add_argument("--hypotheses", dest="declared_hypotheses", help="Declared hypotheses/assumptions (comma-separated or JSON).")
+    p_prove.add_argument("--alignment", dest="spec_alignment", help="Specification alignment status (e.g. congruent, scoped_forced_variant).")
     p_prove.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # matrix
@@ -510,7 +513,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             output=args.output,
         )
     elif cmd == "prove":
-        res = ax.prove(args.statement, proof=args.proof, engine=args.engine)
+        hyps = None
+        if getattr(args, "declared_hypotheses", None):
+            try:
+                hyps = json.loads(args.declared_hypotheses)
+            except Exception:
+                hyps = [h.strip() for h in args.declared_hypotheses.split(",") if h.strip()]
+        res = ax.prove(
+            args.statement,
+            proof=args.proof,
+            engine=args.engine,
+            canonical_statement=getattr(args, "canonical_statement", None),
+            declared_hypotheses=hyps,
+            spec_alignment=getattr(args, "spec_alignment", None),
+        )
     elif cmd == "matrix":
         res = ax.matrix(args.matrix, operation=args.op, rhs=args.rhs)
     elif cmd == "ode":

@@ -478,12 +478,20 @@ def verify_equivalence(
     if merged_excluded:
         domain_meta["excluded_points"] = merged_excluded
 
-    symbolic_ok = _is_symbolic_zero(diff)
+    has_float = bool(
+        (left_domain and left_domain.get("has_inexact_floats"))
+        or (right_domain and right_domain.get("has_inexact_floats"))
+        or (isinstance(diff, sp.Basic) and diff.has(sp.Float))
+        or (isinstance(left, sp.Basic) and left.has(sp.Float))
+        or (isinstance(right, sp.Basic) and right.has(sp.Float))
+    )
+
+    symbolic_ok = (not has_float) and _is_symbolic_zero(diff)
 
     # Polynomial check: if diff is a polynomial in free variables
     is_poly = False
     poly_obj = None
-    if free:
+    if free and not has_float:
         try:
             poly_obj = diff.as_poly(*free)
             if poly_obj is not None:
@@ -544,29 +552,8 @@ def verify_equivalence(
 
     if not free:
         data_out = dict(domain_meta)
-        if symbolic_ok:
-            data_out["status"] = "proven"
-            data_out["proven"] = True
-            return (
-                Verification(
-                    kind="symbolic-identity",
-                    passed=True,
-                    detail="Symbolic difference reduces to 0",
-                    checks=1,
-                    max_error=0.0,
-                    data=data_out,
-                ),
-                Guarantee.EXACT_SYMBOLIC,
-            )
-
-        # Check if either expression involves inexact floating-point numbers
-        has_float = (
-            (isinstance(diff, sp.Basic) and diff.has(sp.Float))
-            or (isinstance(left, sp.Basic) and left.has(sp.Float))
-            or (isinstance(right, sp.Basic) and right.has(sp.Float))
-        )
-
         if has_float:
+            data_out["has_inexact_floats"] = True
             try:
                 err = abs(complex(diff.evalf(40)))
             except Exception:
@@ -597,13 +584,28 @@ def verify_equivalence(
                     passed=False,
                     detail=(
                         f"Constant values are approximately equal within tolerance {tol:.1e} "
-                        f"(|diff| = {err:.2e}), exact equality not proven"
+                        f"(|diff| = {err:.2e}); exact equality cannot be established due to inexact float inputs"
                     ),
                     checks=1,
                     max_error=err,
                     data=data_out,
                 ),
                 Guarantee.UNVERIFIED,
+            )
+
+        if symbolic_ok:
+            data_out["status"] = "proven"
+            data_out["proven"] = True
+            return (
+                Verification(
+                    kind="symbolic-identity",
+                    passed=True,
+                    detail="Symbolic difference reduces to 0",
+                    checks=1,
+                    max_error=0.0,
+                    data=data_out,
+                ),
+                Guarantee.EXACT_SYMBOLIC,
             )
 
         # Exact constant expressions (no sp.Float): comparison MUST be exact.
@@ -707,7 +709,7 @@ def verify_equivalence(
         if checks >= target_checks:
             break
 
-    if symbolic_ok:
+    if symbolic_ok and not has_float:
         data_out = dict(domain_meta)
         data_out["status"] = "proven"
         data_out["proven"] = True
