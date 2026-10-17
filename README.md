@@ -4,9 +4,11 @@
 
 *One MCP for mathematical computation, exploration, and verification.*
 
+**[Research Math for All Time by Chronokairo](https://chronokairo.com)**
+
 **English** · [简体中文](docs/readme/README_zh.md) · [繁體中文](docs/readme/README_zh-TW.md) · [日本語](docs/readme/README_ja.md) · [한국어](docs/readme/README_ko.md) · [Türkçe](docs/readme/README_tr.md) · [Русский](docs/readme/README_ru.md) · [Tiếng Việt](docs/readme/README_vi.md) · [ไทย](docs/readme/README_th.md) · [Deutsch](docs/readme/README_de.md) · [Español](docs/readme/README_es.md) · [Français](docs/readme/README_fr.md) · [Português (Brasil)](docs/readme/README_pt-BR.md) · [العربية](docs/readme/README_ar.md) · [فارسی](docs/readme/README_fa.md) · [Italiano](docs/readme/README_it.md) · [Ελληνικά](docs/readme/README_el.md)
 
-AXIOM is a computational mathematics infrastructure for AI agents, researchers, students, and developers. It connects any MCP client to specialized mathematics engines — SymPy, SciPy, SageMath, Lean 4 — through a unified contract, with traceable results that are **independently verified**.
+AXIOM is a computational mathematics infrastructure for AI agents, researchers, students, and developers. It connects any MCP client to specialized mathematics engines — **SymPy**, **mpmath / SciPy**, **SageMath**, **Julia**, and **Lean 4 / Mathlib 4** — through a unified contract, with traceable results that are **independently verified**.
 
 It is not an AI-powered calculator. It is not another Mathematica, SageMath, or Lean. It is the infrastructure that lets agents use all of them through a single interface.
 
@@ -16,39 +18,38 @@ It is not an AI-powered calculator. It is not another Mathematica, SageMath, or 
 
 An agent may claim it solved an equation. AXIOM **requires independent verification** before a result is trusted.
 
-```
-math solve "x^2 - 5*x + 6 = 0"
+```bash
+axiom solve "x^2 - 5*x + 6 = 0"
 ```
 
 ```text
-┌─────────────────────────────────────────────────┐
-│ Quadratic equation                             │
-│   x² - 5x + 6 = 0                              │
-│                                                 │
-│ Solutions                                       │
-│   x = 2  or  x = 3                              │
-│                                                 │
-│ Engine        SymPy                             │
-│ Verification  Exact substitution (fractions)    │
-│ Guarantee     VERIFIED-SUBSTITUTION             │
-│ Result        Both roots satisfy the equation   │
-└─────────────────────────────────────────────────┘
+┌─ AXIOM · solve ──────────────────────────────────────────────────────┐
+│ Input         x^2 - 5*x + 6 = 0                                      │
+│ Result        [2, 3]                                                 │
+│ LaTeX         2, 3                                                   │
+│ Guarantee     [VERIFIED] VERIFIED-SUBSTITUTION                       │
+│ Engine        sympy 1.14.0 (symbolic algebraic solver (sympy.solve)) │
+│ Verification  exact-substitution: PASSED — All 2 solution(s)         │
+│               verified by exact symbolic substitution (max residual  │
+│               0.00e+00)                                              │
+│ Reproduce     axiom solve "x^2 - 5*x + 6 = 0" --variable x           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Guarantee levels
 
-Not every mathematical result carries the same logical strength. AXIOM explicitly distinguishes each level:
+Not every mathematical result carries the same logical strength. AXIOM explicitly distinguishes 6 hierarchical levels:
 
 | Level | Meaning |
 | --- | --- |
-| `exact-symbolic` | Verified symbolic identity (e.g., canonical simplification) |
-| `verified-substitution` | Solution validated by substitution with exact arithmetic |
-| `numerical-approximation` | Numerical approximation with a declared error |
-| `formal-proof` | Proof verified by a proof kernel (Lean 4) |
-| `heuristic` | Likely result, not fully verified |
-| `unverified` | Raw computation, not yet verified |
+| `formal-proof` | Proof verified by a formal proof kernel (Lean 4, with `sorry`/`admit` strictly rejected) |
+| `exact-symbolic` | Verified symbolic identity (e.g., canonical simplification, antiderivative differentiation) |
+| `verified-substitution` | Solution validated by independent substitution ($f(r)=0$, $A A^{-1}=I$, $\nabla_\lambda g_{\mu\nu}=0$) |
+| `numerical-approximation` | Arbitrary-precision numerical computation with declared error tolerance |
+| `heuristic` | Plausible pattern or open conjecture, not yet verified |
+| `unverified` | Raw or refuted computation |
 
-Every result carries evidence metadata: `engine`, `engine_version`, `steps`, `limitations`, and `reproducible_with`.
+Every result carries structured `Evidence` metadata: `engine`, `engine_version`, `method`, `steps`, `limitations`, and `reproducible_with`.
 
 ## Philosophy (inherited from REA)
 
@@ -70,120 +71,132 @@ Every result carries evidence metadata: `engine`, `engine_version`, `steps`, `li
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │  AI Agents                                               │
-│  Codex · Claude Code · Gemini CLI · other MCP clients    │
+│  Codex · Claude Code · Cursor · Gemini CLI · MCP clients │
 └────────────────────────┬─────────────────────────────────┘
-                         │  MCP / CLI
+                         │  MCP (21 tools) / CLI
 ┌────────────────────────▼─────────────────────────────────┐
 │  AXIOM Core                                              │
-│  Parser · Dispatcher · Engine Registry · Evidence ·      │
-│  Verification                                            │
+│  Safe AST Parser · Dispatcher · Engine Registry ·        │
+│  Evidence · Independent Verification · Research Sessions │
 └──┬──────────┬──────────┬──────────┬───────────────────────┘
    │          │          │          │
    ▼          ▼          ▼          ▼
  Symbolic   Numerical   Formal     Visualization
- SymPy      SciPy       Lean 4     Plotly · Manim
- SageMath   Julia       Mathlib
+ SymPy      mpmath      Lean 4     Native Vector SVG
+ SageMath   Julia       Mathlib4   ASCII Preview · Matplotlib
 ```
 
 The same contract holds regardless of which software performs the computation: swapping engines changes neither the result format nor the guarantee level.
 
-## Modules
-
-| Module | Capabilities |
-| --- | --- |
-| `arithmetic` | Exact arithmetic, fractions, arbitrary precision |
-| `algebra` | Equations, polynomials, factoring, simplification |
-| `calculus` | Limits, derivatives, integrals, series |
-| `linear-algebra` | Matrices, eigenvalues, decompositions |
-| `geometry` | Euclidean, analytic, and differential geometry |
-| `number-theory` | Primes, congruences, Diophantine equations |
-| `discrete` | Combinatorics, graphs, logic |
-| `statistics` | Probability, distributions, inference |
-| `optimization` | Linear, nonlinear, and convex optimization |
-| `differential-equations` | ODEs, PDEs, and dynamical systems |
-| `numerical` | Numerical methods, approximations, and errors |
-| `symbolic` | General symbolic manipulation |
-| `proof` | Proofs, counterexamples, and formal verification |
-| `visualization` | 2D/3D plots, animations, and vector fields |
-| `research` | Conjecture exploration, hypotheses, and experiments |
-
-## MCP tools
-
-Small, composable tools:
-
-```
-math_parse        math_simplify     math_solve
-math_differentiate   math_integrate  math_limit
-math_evaluate      math_plot         math_prove
-math_verify        math_explain      math_compare
-math_explore
-```
-
-Proposed CLI:
+## Quick Start
 
 ```bash
-math solve "x^2 - 5*x + 6 = 0"
-math integrate "sin(x)^2" --variable x
-math plot "sin(x)/x" --range -10:10
-math prove theorem.lean --engine lean
-math verify solution.json
+pip install -e .
+
+# Run environment & verification diagnostics
+axiom doctor
+
+# Auto-configure Claude Code, Cursor, Gemini CLI, and Codex
+axiom setup --apply
+
+# Start the MCP stdio server
+axiom mcp
 ```
+
+## Domains & Capabilities
+
+| Module | Capabilities & Independent Verification |
+| --- | --- |
+| `arithmetic` | Exact rationals, arbitrary-precision `mpmath` evaluation |
+| `algebra` | Equations, non-linear systems, polynomials, factoring, simplification |
+| `calculus` | Limits (Gruntz + sequence probes), derivatives, definite/indefinite integrals, Taylor series |
+| `linear-algebra` | Matrices (`eigen`, `inv`, `det`, `lu`, `rref`, `solve`, `trace`) verified via $A A^{-1}=I$, $PA=LU$, $Av=\lambda v$ |
+| `tensor` | Differential geometry: $g^{\mu\nu}$, Christoffel $\Gamma^\lambda_{\mu\nu}$, Riemann, Ricci, Einstein tensors verified via Levi-Civita $\nabla_\lambda g_{\mu\nu}=0$ |
+| `number-theory` | Prime factorization (`factorint`), primality, Extended GCD (Bézout check), Chinese Remainder Theorem (`crt`), Euler totient, binomials |
+| `differential-equations` | Symbolic ODE solver (`dsolve`) verified by back-substitution into the differential equation |
+| `optimization` | Symbolic/numerical minimization & maximization verified via $f'(x^*)=0$ and neighborhood perturbations |
+| `statistics` | Exact rational/symbolic mean, median, variance, stdev verified via König-Huygens identity $\sigma^2 = E[X^2] - \mu^2$ |
+| `proof` | Lean 4 kernel checking, symbolic-to-Lean auto-formalization, and Mathlib 4 theorem search (`math_search_mathlib`) |
+| `visualization` | Zero-dependency vector SVG generation, terminal ASCII curve preview, and optional Matplotlib export |
+| `research` | Multi-step persistent sessions (`math_session`) with weakest-link `chain_guarantee` tracking and Markdown export |
+
+## 21 Composable MCP Tools
+
+```text
+math_parse            math_simplify         math_solve
+math_differentiate    math_integrate        math_limit
+math_evaluate         math_plot             math_prove
+math_verify           math_explain          math_compare
+math_explore          math_matrix           math_ode
+math_number_theory    math_optimize         math_statistics
+math_tensor           math_search_mathlib   math_session
+```
+
+### CLI Examples
+
+```bash
+axiom solve "x^2 - 5*x + 6 = 0"
+axiom integrate "sin(x)^2" --variable x
+axiom matrix "[[4, 1], [2, 3]]" --op eigen
+axiom ode "diff(y(x), x) + 2*y(x) = exp(x)"
+axiom number-theory crt --remainders 2,3,2 --moduli 3,5,7
+axiom tensor sphere
+axiom search-mathlib "binomial square"
+axiom plot "sin(x)/x" --range -10:10 --output sinc.svg
+axiom prove examples/theorems.lean --engine lean
+axiom verify solution.json
+```
+
+## Documentation & ADR Log
+
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0006`).
+- **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
+- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `sympy-mcp`, `fermat-mcp`, `Wolfram-MCP`, and `lean-lsp-mcp`.
+- **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Roadmap
 
-- [ ] **v0.1 — Foundation**: CLI, MCP, expression parser, SymPy, equation solving, and evidence.
-- [ ] **v0.2 — Numerical**: SciPy, matrices, numerical integration, optimization, and error evaluation.
-- [ ] **v0.3 — Verification**: independent verifiers and optional Lean 4 integration.
-- [ ] **v0.4 — Visualization**: interactive plots, geometry, and dynamical-system visualization.
-- [ ] **v1.0 — Research**: automated tool composition, reproducible experiments, and assisted conjecture exploration.
+- [x] **v0.1 — Foundation**: CLI, MCP server, safe AST expression parser, SymPy engine, equation solving, and independent verification.
+- [x] **v0.2 — Numerical & Expanded Domains**: Arbitrary-precision `mpmath`, matrices, ODEs, number theory, optimization, statistics, and tensor calculus.
+- [x] **v0.3 — Verification & Formal**: Independent verifiers across all 12 domains, Lean 4 integration, auto-formalization, and Mathlib 4 search.
+- [x] **v0.4 — Visualization**: Zero-dependency vector SVG plots, ASCII curve previews, and Matplotlib export.
+- [x] **v1.0 — Research**: Persistent multi-step research sessions (`math_session`), weakest-link guarantee tracking, and conjecture auditing.
 
-We start with three engines: **SymPy** (symbolic), **SciPy** (numerical), and **Lean 4** (formal proofs).
+## Repository Layout
 
-## Repository layout
-
-```
+```text
 axiom/
 ├── README.md
 ├── LICENSE
 ├── AGENTS.md
-├── Cargo.toml
-├── crates/
-│   ├── core/
-│   ├── cli/
-│   ├── mcp/
-│   ├── evidence/
-│   ├── verification/
-│   └── engine-registry/
-├── engines/
-│   ├── sympy/
-│   ├── sagemath/
-│   ├── scipy/
-│   ├── julia/
-│   └── lean/
-├── domains/
-│   ├── algebra/
-│   ├── calculus/
-│   ├── geometry/
-│   ├── discrete/
-│   ├── number-theory/
-│   ├── dynamical-systems/
-│   └── optimization/
+├── pyproject.toml
+├── src/
+│   └── axiom/
+│       ├── core.py            # Mathematical core & dispatcher
+│       ├── contract.py        # MathResult, Evidence, Verification, Guarantee
+│       ├── parsing.py         # Safe AST mathematical parser
+│       ├── verification.py    # Independent verifiers for all domains
+│       ├── registry.py        # Multi-engine registry
+│       ├── mcp_server.py      # 21-tool MCP JSON-RPC 2.0 stdio server
+│       ├── cli.py             # CLI & Unicode box renderer
+│       ├── session.py         # Reproducible research sessions
+│       ├── setup_agent.py     # Agent auto-config (setup) & diagnostics (doctor)
+│       └── engines/           # sympy, numeric (mpmath), lean, sagemath, julia
 ├── skills/
-│   └── mathematics/
+│   └── mathematics/SKILL.md
 ├── examples/
+│   └── theorems.lean
 ├── benchmarks/
+│   └── run_benchmarks.py
 ├── tests/
+│   └── test_axiom.py
 └── docs/
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0006)
+    ├── mcp-contracts.md
+    ├── analise-concorrencia-mcp-2026.md
+    └── readme/                # 17 localized README translations
 ```
-
-## Name
-
-**AXIOM** — *Mathematical Reasoning Engine*. Its own identity, aligned with formal mathematics and research.
 
 ## License
 
-MIT
-
-## Relationship with MathTools Offline
-
-This repository was *MathTools Offline* (an offline desktop suite for LaTeX/SymPy/Lean). It was renamed to **AXIOM** and repositioned as computational mathematics infrastructure for agents. The engines (SymPy, Lean 4) are conceptually shared, but the focus is now the unified MCP contract and independent verification of results.
+MIT — **[Research Math for All Time by Chronokairo](https://chronokairo.com)**
