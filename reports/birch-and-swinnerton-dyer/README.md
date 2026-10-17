@@ -2,8 +2,14 @@
 
 - **Registro:** 2026-10-17.
 - **Status matemático:** em aberto, conforme a [página oficial do Clay Mathematics Institute](https://www.claymath.org/millennium/birch-and-swinnerton-dyer-conjecture/), consultada nesta data.
-- **Status da investigação:** pesquisa planejada; nenhuma verificação matemática realizada neste registro.
+- **Status da investigação:** **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 15 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos).
 - **Objetivo da pasta:** reunir referências, hipóteses de trabalho, experimentos e evidências para investigação futura.
+
+## Material salvo
+
+- [Relatório de Validação e Integridade](REPORT.md)
+- [Evidências integrais da execução](validation.json)
+- [Script de reprodução autônomo](validate.py)
 
 ## Descrição fornecida
 

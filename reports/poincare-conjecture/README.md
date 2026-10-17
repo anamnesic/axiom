@@ -3,8 +3,13 @@
 - Registro: 17 de outubro de 2026.
 - Situação matemática: **resolvida por Grigori Perelman**, conforme a
   [página oficial do Clay](https://www.claymath.org/millennium/poincare-conjecture/).
-- Situação neste projeto: estudo da prova e reprodução de resultados auxiliares
-  planejados; nenhuma verificação AXIOM realizada nesta pasta.
+- Situação neste projeto: **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 12 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos).
+
+## Material salvo
+
+- [Relatório de Validação e Integridade](REPORT.md)
+- [Evidências integrais da execução](validation.json)
+- [Script de reprodução autônomo](validate.py)
 
 ## Descrição fornecida
 

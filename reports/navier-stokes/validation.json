@@ -1,0 +1,876 @@
+{
+  "timestamp_utc": "2026-10-17T19:01:28.041778+00:00",
+  "axiom_version": "0.2.2",
+  "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
+  "all_criteria_passed": true,
+  "total_evaluations": 13,
+  "passed_evaluations": 13,
+  "fail_closed_rate": 1.0,
+  "false_positive_rate": 0.0,
+  "evaluations": {
+    "doctor_healthy": true,
+    "taylor_green_div_exact": true,
+    "momentum_x_balance_exact": true,
+    "energy_dissipation_exact": true,
+    "pressure_poisson_exact": true,
+    "poiseuille_exact": true,
+    "non_solenoidal_refuted": true,
+    "viscosity_mismatch_refuted": true,
+    "energy_conservation_refuted": true,
+    "poiseuille_false_bc_refuted": true,
+    "unsolvable_navier_stokes_fail_closed": true,
+    "mcp_exact_div_ok": true,
+    "mcp_negative_control_refuted": true
+  },
+  "file_hashes": {
+    "reports/navier-stokes/validate.py": "11ccebbbcbb150bd2065c4e0c0dd876b3a8c8285ccb2c721c278a81b532cff21",
+    "reports/navier-stokes/README.md": "1bc7ffd90994bbcaa7310e8341ea4181b9c73da0ec6885b5758485253c9181b3",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+  },
+  "runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "taylor_green_divergence": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "nu",
+          "t",
+          "x",
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"cos(x)*cos(y)*exp(-2*nu*t) - cos(x)*cos(y)*exp(-2*nu*t)\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "non_solenoidal_divergence_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "2*x + 2*y",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "2*x + 2*y == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "2*x + 2*y",
+          "right": "0",
+          "simplified_difference": "2*x + 2*y",
+          "counterexample": {
+            "x": "-1",
+            "y": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'x': '-1', 'y': '2'})",
+        "latex": "2 x + 2 y \\neq 0",
+        "variables": [
+          "x",
+          "y"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 2*x + 2*y",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 2*x + 2*y"
+          ],
+          "reproducible_with": "axiom compare \"2*x + 2*y\" \"0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'x': '-1', 'y': '2'} (|diff| = 2.000e+00)",
+          "checks": 2,
+          "max_error": 2.0,
+          "data": {
+            "counterexample": {
+              "x": "-1",
+              "y": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "momentum_x_balance": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) + (1/2)*sin(2*x)*exp(-4*nu*t) - (1/2)*sin(2*x)*exp(-4*nu*t) - (-2*nu*sin(x)*cos(y)*exp(-2*nu*t))",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) + (1/2)*sin(2*x)*exp(-4*nu*t) - (1/2)*sin(2*x)*exp(-4*nu*t) - (-2*nu*sin(x)*cos(y)*exp(-2*nu*t)) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "nu",
+          "t",
+          "x",
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-2*nu*sin(x)*cos(y)*exp(-2*nu*t) + (1/2)*sin(2*x)*exp(-4*nu*t) - (1/2)*sin(2*x)*exp(-4*nu*t) - (-2*nu*sin(x)*cos(y)*exp(-2*nu*t))\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "momentum_viscosity_mismatch_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) - (-4*nu*sin(x)*cos(y)*exp(-2*nu*t))",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-2*nu*sin(x)*cos(y)*exp(-2*nu*t) - (-4*nu*sin(x)*cos(y)*exp(-2*nu*t)) == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "2*nu*exp(-2*nu*t)*sin(x)*cos(y)",
+          "right": "0",
+          "simplified_difference": "2*nu*exp(-2*nu*t)*sin(x)*cos(y)",
+          "counterexample": {
+            "nu": "-1",
+            "t": "-6/7",
+            "x": "-5/7",
+            "y": "-4/7"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'nu': '-1', 't': '-6/7', 'x': '-5/7', 'y': '-4/7'})",
+        "latex": "2 \\nu e^{- 2 \\nu t} \\sin{\\left(x \\right)} \\cos{\\left(y \\right)} \\neq 0",
+        "variables": [
+          "nu",
+          "t",
+          "x",
+          "y"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 2*nu*exp(-2*nu*t)*sin(x)*cos(y)",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 2*nu*exp(-2*nu*t)*sin(x)*cos(y)"
+          ],
+          "reproducible_with": "axiom compare \"-2*nu*sin(x)*cos(y)*exp(-2*nu*t) - (-4*nu*sin(x)*cos(y)*exp(-2*nu*t))\" \"0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'nu': '-1', 't': '-6/7', 'x': '-5/7', 'y': '-4/7'} (|diff| = 1.985e-01)",
+          "checks": 1,
+          "max_error": 0.1984635852356472,
+          "data": {
+            "counterexample": {
+              "nu": "-1",
+              "t": "-6/7",
+              "x": "-5/7",
+              "y": "-4/7"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "kinetic_energy_dissipation_balance": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "nu",
+          "t"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-2*nu*pi^2*exp(-4*nu*t) + 2*nu*pi^2*exp(-4*nu*t)\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "energy_conservation_false_claim": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-2*nu*pi^2*exp(-4*nu*t)",
+        "0",
+        "-A",
+        "nu>0, t>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-2*nu*pi^2*exp(-4*nu*t) == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "-2*pi**2*nu*exp(-4*nu*t)",
+          "right": "0",
+          "simplified_difference": "-2*pi**2*nu*exp(-4*nu*t)",
+          "counterexample": {
+            "nu": "2",
+            "t": "15/7"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'nu': '2', 't': '15/7'})",
+        "latex": "- 2 \\pi^{2} \\nu e^{- 4 \\nu t} \\neq 0",
+        "variables": [
+          "nu",
+          "t"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = -2*pi**2*nu*exp(-4*nu*t)",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -2*pi**2*nu*exp(-4*nu*t)",
+            "assumptions: {'nu': {'real': True, 'positive': True}, 't': {'real': True, 'positive': True}}",
+            "Domain constraint(s): nu > 0, t > 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): nu > 0, t > 0"
+          ],
+          "reproducible_with": "axiom compare \"-2*nu*pi^2*exp(-4*nu*t)\" \"0\" --assumptions \"nu>0, t>0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'nu': '2', 't': '15/7'} (|diff| = 1.417e-06)",
+          "checks": 1,
+          "max_error": 1.4168095498866357e-06,
+          "data": {
+            "domain_constraints": [
+              "nu > 0",
+              "t > 0"
+            ],
+            "counterexample": {
+              "nu": "2",
+              "t": "15/7"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "pressure_poisson_identity": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-(cos(2*x) + cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-(cos(2*x) + cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "(-cos(2*x) - cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t)",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "\\left(- \\cos{\\left(2 x \\right)} - \\cos{\\left(2 y \\right)}\\right) e^{- 4 \\nu t} + \\left(\\cos{\\left(2 x \\right)} + \\cos{\\left(2 y \\right)}\\right) e^{- 4 \\nu t} = 0",
+        "variables": [
+          "nu",
+          "t",
+          "x",
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = (-cos(2*x) - cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t)",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-(cos(2*x) + cos(2*y))*exp(-4*nu*t) + (cos(2*x) + cos(2*y))*exp(-4*nu*t)\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 1.707761343930281e-151,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "unsolvable_navier_stokes_ode_attempt": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "u*diff(u, x) - nu*diff(u, x, 2) = 0",
+        "--variable",
+        "u",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "u*diff(u, x) - nu*diff(u, x, 2) = 0",
+        "ok": false,
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "axiom"
+        },
+        "error": "division by zero"
+      }
+    },
+    "poiseuille_momentum_balance": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "mu * (-P / mu) + P",
+        "0",
+        "-A",
+        "mu>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "mu * (-P / mu) + P == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "P",
+          "mu"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0",
+            "assumptions: {'mu': {'real': True, 'positive': True}}",
+            "Domain constraint(s): mu > 0, mu != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): mu > 0, mu != 0"
+          ],
+          "reproducible_with": "axiom compare \"mu * (-P / mu) + P\" \"0\" --assumptions \"mu>0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "domain_constraints": [
+              "mu > 0",
+              "mu != 0"
+            ],
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "poiseuille_false_boundary_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "(P / (2*mu)) * (h^2 - h^2) + 1",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "(P / (2*mu)) * (h^2 - h^2) + 1 == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "1",
+          "right": "0",
+          "simplified_difference": "1",
+          "counterexample": {
+            "mu": "0"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'mu': '0'})",
+        "latex": "1 \\neq 0",
+        "variables": [
+          "P",
+          "h",
+          "mu"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 1",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 1",
+            "Domain constraint(s): 2*mu != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): 2*mu != 0"
+          ],
+          "reproducible_with": "axiom compare \"(P / (2*mu)) * (h^2 - h^2) + 1\" \"0\""
+        },
+        "verification": {
+          "kind": "domain-mismatch",
+          "passed": false,
+          "detail": "Domain mismatch at mu = 0: original domain constraints ['2*mu != 0'] (excluded_points={'mu': ['0']}) are not preserved",
+          "checks": 1,
+          "data": {
+            "domain_constraints": [
+              "2*mu != 0"
+            ],
+            "excluded_points": {
+              "mu": [
+                "0"
+              ]
+            },
+            "left_excluded_points": {
+              "mu": [
+                "0"
+              ]
+            },
+            "right_excluded_points": {},
+            "counterexample": {
+              "mu": "0"
+            }
+          }
+        }
+      }
+    }
+  },
+  "mcp_responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          }
+        },
+        "serverInfo": {
+          "name": "axiom",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"cos(x)*cos(y) - cos(x)*cos(y) == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"0\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"0 = 0\",\n  \"variables\": [\n    \"x\",\n    \"y\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 0\",\n      \"rhs = 0\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"cos(x)*cos(y) - cos(x)*cos(y)\\\" \\\"0\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "cos(x)*cos(y) - cos(x)*cos(y) == 0",
+          "ok": true,
+          "value": {
+            "status": "proven",
+            "equivalent": true,
+            "consistent_with_samples": true,
+            "left": "0",
+            "right": "0",
+            "simplified_difference": "0"
+          },
+          "value_str": "equivalent",
+          "latex": "0 = 0",
+          "variables": [
+            "x",
+            "y"
+          ],
+          "guarantee": "exact-symbolic",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 0",
+              "rhs = 0",
+              "status = proven",
+              "simplify(lhs - rhs) -> 0"
+            ],
+            "reproducible_with": "axiom compare \"cos(x)*cos(y) - cos(x)*cos(y)\" \"0\""
+          },
+          "verification": {
+            "kind": "symbolic-identity",
+            "passed": true,
+            "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+            "checks": 10,
+            "max_error": 0.0,
+            "data": {
+              "status": "proven",
+              "proven": true
+            }
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"2*x + 2*y == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"2*x + 2*y\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"2*x + 2*y\",\n    \"counterexample\": {\n      \"x\": \"-1\",\n      \"y\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'x': '-1', 'y': '2'})\",\n  \"latex\": \"2 x + 2 y \\\\neq 0\",\n  \"variables\": [\n    \"x\",\n    \"y\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 2*x + 2*y\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 2*x + 2*y\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"2*x + 2*y\\\" \\\"0\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1', 'y': '2'} (|diff| = 2.000e+00)\",\n    \"checks\": 2,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\",\n        \"y\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "2*x + 2*y == 0",
+          "ok": true,
+          "value": {
+            "status": "disproven",
+            "equivalent": false,
+            "consistent_with_samples": false,
+            "left": "2*x + 2*y",
+            "right": "0",
+            "simplified_difference": "2*x + 2*y",
+            "counterexample": {
+              "x": "-1",
+              "y": "2"
+            }
+          },
+          "value_str": "not equivalent (counterexample: {'x': '-1', 'y': '2'})",
+          "latex": "2 x + 2 y \\neq 0",
+          "variables": [
+            "x",
+            "y"
+          ],
+          "guarantee": "unverified",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 2*x + 2*y",
+              "rhs = 0",
+              "status = disproven",
+              "simplify(lhs - rhs) -> 2*x + 2*y"
+            ],
+            "reproducible_with": "axiom compare \"2*x + 2*y\" \"0\""
+          },
+          "verification": {
+            "kind": "counterexample-search",
+            "passed": false,
+            "detail": "counterexample found at {'x': '-1', 'y': '2'} (|diff| = 2.000e+00)",
+            "checks": 2,
+            "max_error": 2.0,
+            "data": {
+              "counterexample": {
+                "x": "-1",
+                "y": "2"
+              },
+              "status": "disproven",
+              "proven": false
+            }
+          }
+        },
+        "isError": false
+      }
+    }
+  ]
+}

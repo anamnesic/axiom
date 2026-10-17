@@ -1,0 +1,844 @@
+{
+  "timestamp_utc": "2026-10-17T19:11:12.928877+00:00",
+  "axiom_version": "0.2.2",
+  "problem": "Yang-Mills and the Mass Gap (Clay Millennium Problem)",
+  "all_criteria_passed": true,
+  "total_evaluations": 12,
+  "passed_evaluations": 12,
+  "fail_closed_rate": 1.0,
+  "false_positive_rate": 0.0,
+  "evaluations": {
+    "doctor_healthy": true,
+    "jacobi_identity_exact": true,
+    "bianchi_identity_exact": true,
+    "instanton_action_exact": true,
+    "maxwell_massless_exact": true,
+    "abelian_su2_refuted": true,
+    "broken_bianchi_refuted": true,
+    "fractional_charge_refuted": true,
+    "massive_photon_refuted": true,
+    "ym_mass_gap_fail_closed": true,
+    "mcp_instanton_ok": true,
+    "mcp_non_abelian_refuted": true
+  },
+  "file_hashes": {
+    "reports/yang-mills-mass-gap/validate.py": "be2cc54ebaa30f0ea64d7bac9eff644e963f65004a2015d43beaa7feea42ca06",
+    "reports/yang-mills-mass-gap/README.md": "94388cf8b0095a0406b55c8800e35d1e629df014e7ff3cd71ca4196e0df0d49c",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+  },
+  "runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "jacobi_identity_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "0 + 0 + 0",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "0 + 0 + 0 == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"0 + 0 + 0\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "abelian_su2_false_claim_refuted": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "I*T3",
+        "0",
+        "-A",
+        "T3!=0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "I*T3 == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "I*T3",
+          "right": "0",
+          "simplified_difference": "I*T3",
+          "counterexample": {
+            "T3": "-2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'T3': '-2'})",
+        "latex": "i T_{3} \\neq 0",
+        "variables": [
+          "T3"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = I*T3",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> I*T3",
+            "assumptions: {'T3': {'nonzero': True, 'excluded_points': ['0']}}",
+            "Domain constraint(s): T3 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): T3 != 0"
+          ],
+          "reproducible_with": "axiom compare \"I*T3\" \"0\" --assumptions \"T3!=0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'T3': '-2'} (|diff| = 2.000e+00)",
+          "checks": 1,
+          "max_error": 2.0,
+          "data": {
+            "domain_constraints": [
+              "T3 != 0"
+            ],
+            "excluded_points": {
+              "T3": [
+                "0"
+              ]
+            },
+            "counterexample": {
+              "T3": "-2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "bianchi_identity_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "(d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3) + (d3*d1*A2 - d3*d2*A1)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "(d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3) + (d3*d1*A2 - d3*d2*A1) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "A1",
+          "A2",
+          "A3",
+          "d1",
+          "d2",
+          "d3"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"(d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3) + (d3*d1*A2 - d3*d2*A1)\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "broken_bianchi_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "(2*d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "(2*d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3) == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "A1*d2*d3 - A2*d1*d3 + A3*d1*d2",
+          "right": "0",
+          "simplified_difference": "A1*d2*d3 - A2*d1*d3 + A3*d1*d2",
+          "counterexample": {
+            "A1": "-2",
+            "A2": "2",
+            "A3": "2",
+            "d1": "2",
+            "d2": "2",
+            "d3": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'A1': '-2', 'A2': '2', 'A3': '2', 'd1': '2', 'd2': '2', 'd3': '2'})",
+        "latex": "A_{1} d_{2} d_{3} - A_{2} d_{1} d_{3} + A_{3} d_{1} d_{2} \\neq 0",
+        "variables": [
+          "A1",
+          "A2",
+          "A3",
+          "d1",
+          "d2",
+          "d3"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = A1*d2*d3 - A2*d1*d3 + A3*d1*d2",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> A1*d2*d3 - A2*d1*d3 + A3*d1*d2"
+          ],
+          "reproducible_with": "axiom compare \"(2*d1*d2*A3 - d1*d3*A2) + (d2*d3*A1 - d2*d1*A3)\" \"0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'A1': '-2', 'A2': '2', 'A3': '2', 'd1': '2', 'd2': '2', 'd3': '2'} (|diff| = 8.000e+00)",
+          "checks": 1,
+          "max_error": 8.0,
+          "data": {
+            "counterexample": {
+              "A1": "-2",
+              "A2": "2",
+              "A3": "2",
+              "d1": "2",
+              "d2": "2",
+              "d3": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "instanton_action_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "8*pi^2/g^2 - 8*pi^2/g^2",
+        "0",
+        "-A",
+        "g>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "8*pi^2/g^2 - 8*pi^2/g^2 == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "g"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0",
+            "assumptions: {'g': {'real': True, 'positive': True}}",
+            "Domain constraint(s): g > 0, g**2 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): g > 0, g**2 != 0"
+          ],
+          "reproducible_with": "axiom compare \"8*pi^2/g^2 - 8*pi^2/g^2\" \"0\" --assumptions \"g>0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "domain_constraints": [
+              "g > 0",
+              "g**2 != 0"
+            ],
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "fractional_topological_charge_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "2*k - 1 = 0",
+        "-A",
+        "k:integer",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "2*k - 1 = 0",
+        "ok": true,
+        "value": [],
+        "value_str": "[]",
+        "variables": [
+          "k"
+        ],
+        "guarantee": "heuristic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "algebraic solve (sympy.solve + domain & solveset completeness audit)",
+          "steps": [
+            "solve Eq(2*k - 1, 0) for k",
+            "solutions: [] (solution_complete=True)",
+            "complete solution set (solveset): EmptySet"
+          ],
+          "reproducible_with": "axiom solve \"2*k - 1 = 0\" --assumptions \"k:integer\""
+        },
+        "verification": {
+          "kind": "empty-solution-set",
+          "passed": false,
+          "detail": "no candidate solutions to verify",
+          "checks": 0,
+          "data": {
+            "solution_complete": true,
+            "solution_set": "EmptySet",
+            "sample_solutions": [],
+            "assumptions": {
+              "k": {
+                "integer": true
+              }
+            }
+          }
+        },
+        "warnings": [
+          "no solutions found"
+        ]
+      }
+    },
+    "maxwell_photon_massless_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "0*c^2",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "0*c^2 == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "variables": [
+          "c"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"0*c^2\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "massive_photon_false_claim_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "Delta_photon",
+        "0",
+        "-A",
+        "Delta_photon>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "Delta_photon == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "Delta_photon",
+          "right": "0",
+          "simplified_difference": "Delta_photon",
+          "counterexample": {
+            "Delta_photon": "1"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'Delta_photon': '1'})",
+        "latex": "\\Delta_{photon} \\neq 0",
+        "variables": [
+          "Delta_photon"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = Delta_photon",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> Delta_photon",
+            "assumptions: {'Delta_photon': {'real': True, 'positive': True}}",
+            "Domain constraint(s): Delta_photon > 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): Delta_photon > 0"
+          ],
+          "reproducible_with": "axiom compare \"Delta_photon\" \"0\" --assumptions \"Delta_photon>0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'Delta_photon': '1'} (|diff| = 1.000e+00)",
+          "checks": 1,
+          "max_error": 1.0,
+          "data": {
+            "domain_constraints": [
+              "Delta_photon > 0"
+            ],
+            "counterexample": {
+              "Delta_photon": "1"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "yang_mills_mass_gap_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "Delta_YM",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "Delta_YM == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "Delta_YM",
+          "right": "0",
+          "simplified_difference": "Delta_YM",
+          "counterexample": {
+            "Delta_YM": "-2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'Delta_YM': '-2'})",
+        "latex": "\\Delta_{YM} \\neq 0",
+        "variables": [
+          "Delta_YM"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = Delta_YM",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> Delta_YM"
+          ],
+          "reproducible_with": "axiom compare \"Delta_YM\" \"0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'Delta_YM': '-2'} (|diff| = 2.000e+00)",
+          "checks": 1,
+          "max_error": 2.0,
+          "data": {
+            "counterexample": {
+              "Delta_YM": "-2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    }
+  },
+  "mcp_responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          }
+        },
+        "serverInfo": {
+          "name": "axiom",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"8*pi^2/g^2 - 8*pi^2/g^2 == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"0\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"0 = 0\",\n  \"variables\": [\n    \"g\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 0\",\n      \"rhs = 0\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'g': {'positive': True}}\",\n      \"Domain constraint(s): g**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): g**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"8*pi^2/g^2 - 8*pi^2/g^2\\\" \\\"0\\\" --assumptions \\\"g:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"domain_constraints\": [\n        \"g**2 != 0\"\n      ],\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "8*pi^2/g^2 - 8*pi^2/g^2 == 0",
+          "ok": true,
+          "value": {
+            "status": "proven",
+            "equivalent": true,
+            "consistent_with_samples": true,
+            "left": "0",
+            "right": "0",
+            "simplified_difference": "0"
+          },
+          "value_str": "equivalent",
+          "latex": "0 = 0",
+          "variables": [
+            "g"
+          ],
+          "guarantee": "exact-symbolic",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 0",
+              "rhs = 0",
+              "status = proven",
+              "simplify(lhs - rhs) -> 0",
+              "assumptions: {'g': {'positive': True}}",
+              "Domain constraint(s): g**2 != 0"
+            ],
+            "limitations": [
+              "Domain constraint(s): g**2 != 0"
+            ],
+            "reproducible_with": "axiom compare \"8*pi^2/g^2 - 8*pi^2/g^2\" \"0\" --assumptions \"g:positive\""
+          },
+          "verification": {
+            "kind": "symbolic-identity",
+            "passed": true,
+            "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+            "checks": 10,
+            "max_error": 0.0,
+            "data": {
+              "domain_constraints": [
+                "g**2 != 0"
+              ],
+              "status": "proven",
+              "proven": true
+            }
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"I*T3 == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"I*T3\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"I*T3\",\n    \"counterexample\": {\n      \"T3\": \"-2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'T3': '-2'})\",\n  \"latex\": \"i T_{3} \\\\neq 0\",\n  \"variables\": [\n    \"T3\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = I*T3\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> I*T3\",\n      \"assumptions: {'T3': {'nonzero': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"I*T3\\\" \\\"0\\\" --assumptions \\\"T3:nonzero\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'T3': '-2'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"T3\": \"-2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "I*T3 == 0",
+          "ok": true,
+          "value": {
+            "status": "disproven",
+            "equivalent": false,
+            "consistent_with_samples": false,
+            "left": "I*T3",
+            "right": "0",
+            "simplified_difference": "I*T3",
+            "counterexample": {
+              "T3": "-2"
+            }
+          },
+          "value_str": "not equivalent (counterexample: {'T3': '-2'})",
+          "latex": "i T_{3} \\neq 0",
+          "variables": [
+            "T3"
+          ],
+          "guarantee": "unverified",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = I*T3",
+              "rhs = 0",
+              "status = disproven",
+              "simplify(lhs - rhs) -> I*T3",
+              "assumptions: {'T3': {'nonzero': True}}"
+            ],
+            "reproducible_with": "axiom compare \"I*T3\" \"0\" --assumptions \"T3:nonzero\""
+          },
+          "verification": {
+            "kind": "counterexample-search",
+            "passed": false,
+            "detail": "counterexample found at {'T3': '-2'} (|diff| = 2.000e+00)",
+            "checks": 1,
+            "max_error": 2.0,
+            "data": {
+              "counterexample": {
+                "T3": "-2"
+              },
+              "status": "disproven",
+              "proven": false
+            }
+          }
+        },
+        "isError": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,826 @@
+{
+  "timestamp_utc": "2026-10-17T19:05:18.541329+00:00",
+  "axiom_version": "0.2.2",
+  "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
+  "all_criteria_passed": true,
+  "total_evaluations": 15,
+  "passed_evaluations": 15,
+  "fail_closed_rate": 1.0,
+  "false_positive_rate": 0.0,
+  "evaluations": {
+    "doctor_healthy": true,
+    "discriminant_e1_exact": true,
+    "discriminant_e5_exact": true,
+    "nodal_zero_delta_exact": true,
+    "torsion_order2_roots_exact": true,
+    "rational_point_P_exact": true,
+    "doubled_point_2P_exact": true,
+    "trace_frobenius_p3_exact": true,
+    "hasse_bound_p5_numerical": true,
+    "false_smoothness_refuted": true,
+    "false_point_refuted": true,
+    "false_hasse_refuted": true,
+    "bsd_global_rank_fail_closed": true,
+    "mcp_point_valid_ok": true,
+    "mcp_false_point_refuted": true
+  },
+  "file_hashes": {
+    "reports/birch-and-swinnerton-dyer/validate.py": "040b17eefc9d278d1c7f1f51fbdc596488eabfc8283613c76544c80ecb17b0ad",
+    "reports/birch-and-swinnerton-dyer/README.md": "f56a3883bab0d6667452ac6756a127ed1149059ba91a17795e3943396ab00917",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+  },
+  "runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "discriminant_e1_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-16 * (4 * (-1)^3 + 27 * 0^2)",
+        "64",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-16 * (4 * (-1)^3 + 27 * 0^2) == 64",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "64",
+          "right": "64",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "64 = 64",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 64",
+            "rhs = 64",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-16 * (4 * (-1)^3 + 27 * 0^2)\" \"64\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "discriminant_e5_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-16 * (4 * (-25)^3 + 27 * 0^2)",
+        "1000000",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-16 * (4 * (-25)^3 + 27 * 0^2) == 1000000",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "1000000",
+          "right": "1000000",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "1000000 = 1000000",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 1000000",
+            "rhs = 1000000",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-16 * (4 * (-25)^3 + 27 * 0^2)\" \"1000000\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "singular_curve_nodal_zero_delta": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-16 * (4 * (-3)^3 + 27 * 2^2)",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-16 * (4 * (-3)^3 + 27 * 2^2) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"-16 * (4 * (-3)^3 + 27 * 2^2)\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "singular_curve_false_smoothness_claim": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "-16 * (4 * (-3)^3 + 27 * 2^2)",
+        "64",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "-16 * (4 * (-3)^3 + 27 * 2^2) == 64",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "0",
+          "right": "64",
+          "simplified_difference": "-64"
+        },
+        "value_str": "not equivalent (diff = -64)",
+        "latex": "0 \\neq 64",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 64",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -64"
+          ],
+          "reproducible_with": "axiom compare \"-16 * (4 * (-3)^3 + 27 * 2^2)\" \"64\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 6.400e+01",
+          "checks": 1,
+          "max_error": 64.0,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "torsion_order2_roots": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "x^3 - x = 0",
+        "--variable",
+        "x",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "x^3 - x = 0",
+        "ok": true,
+        "value": [
+          "-1",
+          "0",
+          "1"
+        ],
+        "value_str": "['-1', '0', '1']",
+        "latex": "-1, 0, 1",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "verified-substitution",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "algebraic solve (sympy.solve + domain & solveset completeness audit)",
+          "steps": [
+            "solve Eq(x**3 - x, 0) for x",
+            "solutions: [-1, 0, 1] (solution_complete=True)",
+            "complete solution set (solveset): {-1, 0, 1}"
+          ],
+          "reproducible_with": "axiom solve \"x^3 - x = 0\""
+        },
+        "verification": {
+          "kind": "exact-substitution",
+          "passed": true,
+          "detail": "All 3 roots satisfy the equation by exact substitution",
+          "checks": 3,
+          "max_error": 0.0,
+          "data": {
+            "residuals": [
+              {
+                "solution": "-1",
+                "residual": "0",
+                "exact": true
+              },
+              {
+                "solution": "0",
+                "residual": "0",
+                "exact": true
+              },
+              {
+                "solution": "1",
+                "residual": "0",
+                "exact": true
+              }
+            ],
+            "solution_complete": true,
+            "solution_set": "{-1, 0, 1}",
+            "sample_solutions": [
+              "-1",
+              "0",
+              "1"
+            ]
+          }
+        }
+      }
+    },
+    "rational_point_P_on_e5": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "verify",
+        "6^2 = (-4)^3 - 25*(-4)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "verify",
+        "input": "6^2 == (-4)^3 - 25*(-4)",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "36",
+          "right": "36",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "36 = 36",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 36",
+            "rhs = 36",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"6^2\" \"(-4)^3 - 25*(-4)\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "doubled_point_2P_on_e5": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "(-62279/1728)^2 - ((1681/144)^3 - 25*(1681/144))",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "(-62279/1728)^2 - ((1681/144)^3 - 25*(1681/144)) == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"(-62279/1728)^2 - ((1681/144)^3 - 25*(1681/144))\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "false_point_on_e5_refuted": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "verify",
+        "5^2 = (-4)^3 - 25*(-4)",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "verify",
+        "input": "5^2 == (-4)^3 - 25*(-4)",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "25",
+          "right": "36",
+          "simplified_difference": "-11"
+        },
+        "value_str": "not equivalent (diff = -11)",
+        "latex": "25 \\neq 36",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 25",
+            "rhs = 36",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -11"
+          ],
+          "reproducible_with": "axiom compare \"5^2\" \"(-4)^3 - 25*(-4)\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 1.100e+01",
+          "checks": 1,
+          "max_error": 11.0,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "trace_frobenius_p3": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "3 + 1 - 4",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "3 + 1 - 4 == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"3 + 1 - 4\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "hasse_bound_p5_numerical": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "evaluate",
+        "2*sqrt(5) - 2",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "evaluate",
+        "input": "2*sqrt(5) - 2",
+        "ok": true,
+        "value": "-2 + 2*sqrt(5)",
+        "value_str": "-2 + 2*sqrt(5)",
+        "latex": "-2 + 2 \\sqrt{5}",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "exact evaluation (nsimplify) / simplify",
+          "steps": [
+            "evaluate -2 + 2*sqrt(5)",
+            "result -2 + 2*sqrt(5)"
+          ],
+          "reproducible_with": "axiom evaluate \"2*sqrt(5) - 2\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "false_hasse_violation_claim": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "10 <= 2*sqrt(5)",
+        "True",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 585, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 479, in main\n    res = ax.compare(args.left, args.right, assumptions=assump)\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\core.py\", line 731, in compare\n    | rhs.free_symbols\n      ^^^^^^^^^^^^^^^^\nAttributeError: 'bool' object has no attribute 'free_symbols'\n",
+      "result": {
+        "ok": false,
+        "raw_stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 585, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\cli.py\", line 479, in main\n    res = ax.compare(args.left, args.right, assumptions=assump)\n  File \"C:\\Users\\luann\\Desktop\\research\\axiom\\src\\axiom\\core.py\", line 731, in compare\n    | rhs.free_symbols\n      ^^^^^^^^^^^^^^^^\nAttributeError: 'bool' object has no attribute 'free_symbols'\n"
+      }
+    },
+    "bsd_global_rank_equation_attempt": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "rank(E) - ord_s1(L(E, s)) = 0",
+        "--variable",
+        "rank",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "rank(E) - ord_s1(L(E, s)) = 0",
+        "ok": false,
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "axiom"
+        },
+        "error": "function not allowed: 'rank'"
+      }
+    }
+  },
+  "mcp_responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          }
+        },
+        "serverInfo": {
+          "name": "axiom",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"6^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"36\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"36 = 36\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 36\",\n      \"rhs = 36\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "verify",
+          "input": "6^2 == (-4)^3 - 25*(-4)",
+          "ok": true,
+          "value": {
+            "status": "proven",
+            "equivalent": true,
+            "consistent_with_samples": true,
+            "left": "36",
+            "right": "36",
+            "simplified_difference": "0"
+          },
+          "value_str": "equivalent",
+          "latex": "36 = 36",
+          "guarantee": "exact-symbolic",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 36",
+              "rhs = 36",
+              "status = proven",
+              "simplify(lhs - rhs) -> 0"
+            ],
+            "reproducible_with": "axiom compare \"6^2\" \"(-4)^3 - 25*(-4)\""
+          },
+          "verification": {
+            "kind": "symbolic-identity",
+            "passed": true,
+            "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+            "checks": 1,
+            "max_error": 0.0,
+            "data": {
+              "status": "proven",
+              "proven": true
+            }
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"equivalence\",\n    \"passed\": false,\n    \"detail\": \"constant values differ by 1.100e+01\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "verify",
+          "input": "5^2 == (-4)^3 - 25*(-4)",
+          "ok": true,
+          "value": {
+            "status": "disproven",
+            "equivalent": false,
+            "consistent_with_samples": false,
+            "left": "25",
+            "right": "36",
+            "simplified_difference": "-11"
+          },
+          "value_str": "not equivalent (diff = -11)",
+          "latex": "25 \\neq 36",
+          "guarantee": "unverified",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 25",
+              "rhs = 36",
+              "status = disproven",
+              "simplify(lhs - rhs) -> -11"
+            ],
+            "reproducible_with": "axiom compare \"5^2\" \"(-4)^3 - 25*(-4)\""
+          },
+          "verification": {
+            "kind": "equivalence",
+            "passed": false,
+            "detail": "constant values differ by 1.100e+01",
+            "checks": 1,
+            "max_error": 11.0,
+            "data": {
+              "status": "disproven",
+              "proven": false
+            }
+          }
+        },
+        "isError": false
+      }
+    }
+  ]
+}

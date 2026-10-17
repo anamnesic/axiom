@@ -1,0 +1,684 @@
+{
+  "timestamp_utc": "2026-10-17T19:08:10.521876+00:00",
+  "axiom_version": "0.2.2",
+  "problem": "Hodge Conjecture (Clay Millennium Problem)",
+  "all_criteria_passed": true,
+  "total_evaluations": 11,
+  "passed_evaluations": 11,
+  "fail_closed_rate": 1.0,
+  "false_positive_rate": 0.0,
+  "evaluations": {
+    "doctor_healthy": true,
+    "hodge_symmetry_b1_even_exact": true,
+    "euler_characteristic_cp2_exact": true,
+    "euler_characteristic_cp3_exact": true,
+    "lefschetz_11_self_intersection_exact": true,
+    "hopf_surface_refuted": true,
+    "broken_hodge_symmetry_refuted": true,
+    "false_euler_cp2_refuted": true,
+    "hodge_dim4_fail_closed": true,
+    "mcp_cp2_euler_ok": true,
+    "mcp_broken_symmetry_refuted": true
+  },
+  "file_hashes": {
+    "reports/hodge-conjecture/validate.py": "39ad314cb56af9dc094c3a57695ca6389687088da17991da8495bf0b6428a15c",
+    "reports/hodge-conjecture/README.md": "787f4b923f25dd4dfd28641e55d499cc28636b04d99d04ecd3ab8ced9757262f",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+  },
+  "runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "hodge_symmetry_b1_even": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "h_10 + h_10",
+        "2*h_10",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "h_10 + h_10 == 2*h_10",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "2*h_10",
+          "right": "2*h_10",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "2 h_{10} = 2 h_{10}",
+        "variables": [
+          "h_10"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 2*h_10",
+            "rhs = 2*h_10",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"h_10 + h_10\" \"2*h_10\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "hopf_surface_non_kaehler_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "2*h - 1 = 0",
+        "-A",
+        "h:integer",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "2*h - 1 = 0",
+        "ok": true,
+        "value": [],
+        "value_str": "[]",
+        "variables": [
+          "h"
+        ],
+        "guarantee": "heuristic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "algebraic solve (sympy.solve + domain & solveset completeness audit)",
+          "steps": [
+            "solve Eq(2*h - 1, 0) for h",
+            "solutions: [] (solution_complete=True)",
+            "complete solution set (solveset): EmptySet"
+          ],
+          "reproducible_with": "axiom solve \"2*h - 1 = 0\" --assumptions \"h:integer\""
+        },
+        "verification": {
+          "kind": "empty-solution-set",
+          "passed": false,
+          "detail": "no candidate solutions to verify",
+          "checks": 0,
+          "data": {
+            "solution_complete": true,
+            "solution_set": "EmptySet",
+            "sample_solutions": [],
+            "assumptions": {
+              "h": {
+                "integer": true
+              }
+            }
+          }
+        },
+        "warnings": [
+          "no solutions found"
+        ]
+      }
+    },
+    "broken_hodge_symmetry_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "3",
+        "5",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "3 == 5",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "3",
+          "right": "5",
+          "simplified_difference": "-2"
+        },
+        "value_str": "not equivalent (diff = -2)",
+        "latex": "3 \\neq 5",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 3",
+            "rhs = 5",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -2"
+          ],
+          "reproducible_with": "axiom compare \"3\" \"5\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 2.000e+00",
+          "checks": 1,
+          "max_error": 2.0,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "euler_characteristic_cp2": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "1 - 0 + 1 - 0 + 1",
+        "3",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "1 - 0 + 1 - 0 + 1 == 3",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "3",
+          "right": "3",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "3 = 3",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 3",
+            "rhs = 3",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"1 - 0 + 1 - 0 + 1\" \"3\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "euler_characteristic_cp3": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "1 + 1 + 1 + 1",
+        "4",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "1 + 1 + 1 + 1 == 4",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "4",
+          "right": "4",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "4 = 4",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 4",
+            "rhs = 4",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"1 + 1 + 1 + 1\" \"4\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "false_euler_characteristic_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "1 - 0 + 1 - 0 + 1",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "1 - 0 + 1 - 0 + 1 == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "3",
+          "right": "0",
+          "simplified_difference": "3"
+        },
+        "value_str": "not equivalent (diff = 3)",
+        "latex": "3 \\neq 0",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 3",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 3"
+          ],
+          "reproducible_with": "axiom compare \"1 - 0 + 1 - 0 + 1\" \"0\""
+        },
+        "verification": {
+          "kind": "equivalence",
+          "passed": false,
+          "detail": "constant values differ by 3.000e+00",
+          "checks": 1,
+          "max_error": 3.0,
+          "data": {
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "lefschetz_11_self_intersection": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "1^2",
+        "1",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "1^2 == 1",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "1",
+          "right": "1",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "1 = 1",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 1",
+            "rhs = 1",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"1^2\" \"1\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "hodge_conjecture_dim4_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "hodge_class",
+        "algebraic_cycle",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "hodge_class == algebraic_cycle",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "hodge_class",
+          "right": "algebraic_cycle",
+          "simplified_difference": "-algebraic_cycle + hodge_class",
+          "counterexample": {
+            "algebraic_cycle": "-2",
+            "hodge_class": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'algebraic_cycle': '-2', 'hodge_class': '2'})",
+        "latex": "hodge_{class} \\neq algebraic_{cycle}",
+        "variables": [
+          "algebraic_cycle",
+          "hodge_class"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = hodge_class",
+            "rhs = algebraic_cycle",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -algebraic_cycle + hodge_class"
+          ],
+          "reproducible_with": "axiom compare \"hodge_class\" \"algebraic_cycle\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'algebraic_cycle': '-2', 'hodge_class': '2'} (|diff| = 4.000e+00)",
+          "checks": 1,
+          "max_error": 4.0,
+          "data": {
+            "counterexample": {
+              "algebraic_cycle": "-2",
+              "hodge_class": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    }
+  },
+  "mcp_responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          }
+        },
+        "serverInfo": {
+          "name": "axiom",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"1 - 0 + 1 - 0 + 1 == 3\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"3\",\n    \"right\": \"3\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"3 = 3\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 3\",\n      \"rhs = 3\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"1 - 0 + 1 - 0 + 1\\\" \\\"3\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 1 numerical sample(s) agree\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "1 - 0 + 1 - 0 + 1 == 3",
+          "ok": true,
+          "value": {
+            "status": "proven",
+            "equivalent": true,
+            "consistent_with_samples": true,
+            "left": "3",
+            "right": "3",
+            "simplified_difference": "0"
+          },
+          "value_str": "equivalent",
+          "latex": "3 = 3",
+          "guarantee": "exact-symbolic",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 3",
+              "rhs = 3",
+              "status = proven",
+              "simplify(lhs - rhs) -> 0"
+            ],
+            "reproducible_with": "axiom compare \"1 - 0 + 1 - 0 + 1\" \"3\""
+          },
+          "verification": {
+            "kind": "symbolic-identity",
+            "passed": true,
+            "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+            "checks": 1,
+            "max_error": 0.0,
+            "data": {
+              "status": "proven",
+              "proven": true
+            }
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"3 == 5\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"3\",\n    \"right\": \"5\",\n    \"simplified_difference\": \"-2\"\n  },\n  \"value_str\": \"not equivalent (diff = -2)\",\n  \"latex\": \"3 \\\\neq 5\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 3\",\n      \"rhs = 5\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -2\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"3\\\" \\\"5\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"equivalence\",\n    \"passed\": false,\n    \"detail\": \"constant values differ by 2.000e+00\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "3 == 5",
+          "ok": true,
+          "value": {
+            "status": "disproven",
+            "equivalent": false,
+            "consistent_with_samples": false,
+            "left": "3",
+            "right": "5",
+            "simplified_difference": "-2"
+          },
+          "value_str": "not equivalent (diff = -2)",
+          "latex": "3 \\neq 5",
+          "guarantee": "unverified",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 3",
+              "rhs = 5",
+              "status = disproven",
+              "simplify(lhs - rhs) -> -2"
+            ],
+            "reproducible_with": "axiom compare \"3\" \"5\""
+          },
+          "verification": {
+            "kind": "equivalence",
+            "passed": false,
+            "detail": "constant values differ by 2.000e+00",
+            "checks": 1,
+            "max_error": 2.0,
+            "data": {
+              "status": "disproven",
+              "proven": false
+            }
+          }
+        },
+        "isError": false
+      }
+    }
+  ]
+}

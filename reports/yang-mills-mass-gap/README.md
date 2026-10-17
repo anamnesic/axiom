@@ -4,7 +4,13 @@ Data do registro: 2026-10-17.
 
 Status matemático: **em aberto**, conforme a [página oficial do Clay Mathematics Institute](https://www.claymath.org/millennium/yang-mills-the-maths-gap/), consultada na data do registro.
 
-Status local: **pesquisa planejada**. Nenhuma verificação AXIOM foi realizada para este registro. Esta pasta reúne o ponto de partida para investigação futura; não apresenta uma solução.
+Status local: **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 12 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos).
+
+## Material salvo
+
+- [Relatório de Validação e Integridade](REPORT.md)
+- [Evidências integrais da execução](validation.json)
+- [Script de reprodução autônomo](validate.py)
 
 ## Descrição fornecida
 

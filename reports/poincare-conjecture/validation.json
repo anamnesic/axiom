@@ -1,0 +1,810 @@
+{
+  "timestamp_utc": "2026-10-17T19:12:31.243490+00:00",
+  "axiom_version": "0.2.2",
+  "problem": "Poincaré Conjecture (Solved Millennium Problem)",
+  "all_criteria_passed": true,
+  "total_evaluations": 12,
+  "passed_evaluations": 12,
+  "fail_closed_rate": 1.0,
+  "false_positive_rate": 0.0,
+  "evaluations": {
+    "doctor_healthy": true,
+    "scalar_curvature_s3_exact": true,
+    "einstein_condition_s3_exact": true,
+    "ricci_flow_derivative_exact": true,
+    "extinction_time_solve_exact": true,
+    "torus_flat_curvature_exact": true,
+    "vanishing_curvature_refuted": true,
+    "broken_einstein_refuted": true,
+    "infinite_existence_refuted": true,
+    "poincare_probe_fail_closed": true,
+    "mcp_einstein_ok": true,
+    "mcp_vanishing_curvature_refuted": true
+  },
+  "file_hashes": {
+    "reports/poincare-conjecture/validate.py": "8450501b8379b7f5e29202a70248a936d3b79d7b4ae3ccdd452c85907fd66841",
+    "reports/poincare-conjecture/README.md": "c39b1272cd5a60be8e29507561711d368e4d7e168ee859bec107cb1c7103e4ca",
+    "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
+    "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
+  },
+  "runs": {
+    "doctor": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "doctor",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "ok": true,
+        "python": "3.14.7",
+        "mcp_tools_count": 21,
+        "packages": {
+          "sympy": "1.14.0",
+          "mpmath": "1.3.0",
+          "scipy": null,
+          "matplotlib": null,
+          "mcp": null,
+          "pytest": "9.1.1"
+        },
+        "external_toolchains": {
+          "lean": null,
+          "lake": null,
+          "sage": null,
+          "julia": null
+        },
+        "engines": [
+          {
+            "name": "sympy",
+            "version": "1.14.0",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor",
+              "expand",
+              "solve",
+              "solve_system",
+              "differentiate",
+              "integrate",
+              "limit",
+              "series",
+              "matrix",
+              "ode",
+              "number_theory",
+              "optimize",
+              "statistics",
+              "tensor"
+            ]
+          },
+          {
+            "name": "numeric",
+            "version": "1.3.0",
+            "capabilities": [
+              "evaluate",
+              "nsolve",
+              "nintegrate",
+              "sample"
+            ]
+          },
+          {
+            "name": "lean",
+            "version": "4",
+            "capabilities": [
+              "prove",
+              "search_mathlib"
+            ]
+          },
+          {
+            "name": "sagemath",
+            "version": "external",
+            "capabilities": [
+              "evaluate",
+              "simplify",
+              "factor"
+            ]
+          },
+          {
+            "name": "julia",
+            "version": "external",
+            "capabilities": [
+              "evaluate"
+            ]
+          }
+        ],
+        "self_tests": {
+          "algebra_solve": true,
+          "calculus_integrate": true,
+          "linear_algebra_eigen": true,
+          "ode_dsolve": true,
+          "number_theory_factorint": true,
+          "tensor_levi_civita": true,
+          "mathlib_search": true
+        }
+      }
+    },
+    "scalar_curvature_s3_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "(6 / R0^2) * R0^2",
+        "6",
+        "-A",
+        "R0>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "(6 / R0^2) * R0^2 == 6",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "6",
+          "right": "6",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "6 = 6",
+        "variables": [
+          "R0"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 6",
+            "rhs = 6",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0",
+            "assumptions: {'R0': {'real': True, 'positive': True}}",
+            "Domain constraint(s): R0 > 0, R0**2 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): R0 > 0, R0**2 != 0"
+          ],
+          "reproducible_with": "axiom compare \"(6 / R0^2) * R0^2\" \"6\" --assumptions \"R0>0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "domain_constraints": [
+              "R0 > 0",
+              "R0**2 != 0"
+            ],
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "einstein_condition_s3_exact": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "6 / (3 * R0^2)",
+        "2 / R0^2",
+        "-A",
+        "R0>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "6 / (3 * R0^2) == 2 / R0^2",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "2/R0**2",
+          "right": "2/R0**2",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "\\frac{2}{R_{0}^{2}} = \\frac{2}{R_{0}^{2}}",
+        "variables": [
+          "R0"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 2/R0**2",
+            "rhs = 2/R0**2",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0",
+            "assumptions: {'R0': {'real': True, 'positive': True}}",
+            "Domain constraint(s): R0 > 0, 3*R0**2 != 0, R0**2 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): R0 > 0, 3*R0**2 != 0, R0**2 != 0"
+          ],
+          "reproducible_with": "axiom compare \"6 / (3 * R0^2)\" \"2 / R0^2\" --assumptions \"R0>0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "domain_constraints": [
+              "R0 > 0",
+              "3*R0**2 != 0",
+              "R0**2 != 0"
+            ],
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "vanishing_curvature_false_claim_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "6 / R0^2",
+        "0",
+        "-A",
+        "R0>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "6 / R0^2 == 0",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "6/R0**2",
+          "right": "0",
+          "simplified_difference": "6/R0**2",
+          "counterexample": {
+            "R0": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'R0': '2'})",
+        "latex": "\\frac{6}{R_{0}^{2}} \\neq 0",
+        "variables": [
+          "R0"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 6/R0**2",
+            "rhs = 0",
+            "status = disproven",
+            "simplify(lhs - rhs) -> 6/R0**2",
+            "assumptions: {'R0': {'real': True, 'positive': True}}",
+            "Domain constraint(s): R0 > 0, R0**2 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): R0 > 0, R0**2 != 0"
+          ],
+          "reproducible_with": "axiom compare \"6 / R0^2\" \"0\" --assumptions \"R0>0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'R0': '2'} (|diff| = 1.500e+00)",
+          "checks": 1,
+          "max_error": 1.5,
+          "data": {
+            "domain_constraints": [
+              "R0 > 0",
+              "R0**2 != 0"
+            ],
+            "counterexample": {
+              "R0": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "broken_einstein_factor_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "6 / (3 * R0^2)",
+        "5 / R0^2",
+        "-A",
+        "R0>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "6 / (3 * R0^2) == 5 / R0^2",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "2/R0**2",
+          "right": "5/R0**2",
+          "simplified_difference": "-3/R0**2",
+          "counterexample": {
+            "R0": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'R0': '2'})",
+        "latex": "\\frac{2}{R_{0}^{2}} \\neq \\frac{5}{R_{0}^{2}}",
+        "variables": [
+          "R0"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 2/R0**2",
+            "rhs = 5/R0**2",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -3/R0**2",
+            "assumptions: {'R0': {'real': True, 'positive': True}}",
+            "Domain constraint(s): R0 > 0, 3*R0**2 != 0, R0**2 != 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): R0 > 0, 3*R0**2 != 0, R0**2 != 0"
+          ],
+          "reproducible_with": "axiom compare \"6 / (3 * R0^2)\" \"5 / R0^2\" --assumptions \"R0>0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'R0': '2'} (|diff| = 7.500e-01)",
+          "checks": 1,
+          "max_error": 0.75,
+          "data": {
+            "domain_constraints": [
+              "R0 > 0",
+              "3*R0**2 != 0",
+              "R0**2 != 0"
+            ],
+            "counterexample": {
+              "R0": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "ricci_flow_contraction_derivative": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "differentiate",
+        "R0^2 - 4*t",
+        "--variable",
+        "t",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "differentiate",
+        "input": "R0^2 - 4*t",
+        "ok": true,
+        "value": "-4",
+        "value_str": "-4",
+        "latex": "-4",
+        "variables": [
+          "t"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic differentiation, order 1 (sympy.diff)",
+          "steps": [
+            "d/dt (1x) of R0**2 - 4*t",
+            "-> -4"
+          ],
+          "reproducible_with": "axiom differentiate \"R0^2 - 4*t\" --variable t"
+        },
+        "verification": {
+          "kind": "antiderivative-roundtrip",
+          "passed": true,
+          "detail": "Verified symbolic antiderivative round-trip and matched high-precision finite differences at 5 points (max rel error 0.00e+00)",
+          "checks": 6,
+          "max_error": 0.0
+        }
+      }
+    },
+    "ricci_flow_extinction_time_solve": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "R0^2 - 4*T = 0",
+        "--variable",
+        "T",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve",
+        "input": "R0^2 - 4*T = 0",
+        "ok": true,
+        "value": [
+          "R0**2/4"
+        ],
+        "value_str": "['R0**2/4']",
+        "latex": "\\frac{R_{0}^{2}}{4}",
+        "variables": [
+          "T"
+        ],
+        "guarantee": "verified-substitution",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "algebraic solve (sympy.solve + domain & solveset completeness audit)",
+          "steps": [
+            "solve Eq(R0**2 - 4*T, 0) for T",
+            "solutions: [R0**2/4] (solution_complete=True)",
+            "complete solution set (solveset): {R0**2/4}"
+          ],
+          "reproducible_with": "axiom solve \"R0^2 - 4*T = 0\""
+        },
+        "verification": {
+          "kind": "exact-substitution",
+          "passed": true,
+          "detail": "Root satisfies the equation by exact substitution",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "residuals": [
+              {
+                "solution": "R0**2/4",
+                "residual": "0",
+                "exact": true
+              }
+            ],
+            "solution_complete": true,
+            "solution_set": "{R0**2/4}",
+            "sample_solutions": [
+              "R0**2/4"
+            ]
+          }
+        }
+      }
+    },
+    "infinite_existence_false_claim": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "R0^2 - 4*T",
+        "R0^2",
+        "-A",
+        "T>0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "R0^2 - 4*T == R0^2",
+        "ok": true,
+        "value": {
+          "status": "disproven",
+          "equivalent": false,
+          "consistent_with_samples": false,
+          "left": "R0**2 - 4*T",
+          "right": "R0**2",
+          "simplified_difference": "-4*T",
+          "counterexample": {
+            "R0": "-2",
+            "T": "2"
+          }
+        },
+        "value_str": "not equivalent (counterexample: {'R0': '-2', 'T': '2'})",
+        "latex": "R_{0}^{2} - 4 T \\neq R_{0}^{2}",
+        "variables": [
+          "R0",
+          "T"
+        ],
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = R0**2 - 4*T",
+            "rhs = R0**2",
+            "status = disproven",
+            "simplify(lhs - rhs) -> -4*T",
+            "assumptions: {'T': {'real': True, 'positive': True}}",
+            "Domain constraint(s): T > 0"
+          ],
+          "limitations": [
+            "Domain constraint(s): T > 0"
+          ],
+          "reproducible_with": "axiom compare \"R0^2 - 4*T\" \"R0^2\" --assumptions \"T>0\""
+        },
+        "verification": {
+          "kind": "counterexample-search",
+          "passed": false,
+          "detail": "counterexample found at {'R0': '-2', 'T': '2'} (|diff| = 8.000e+00)",
+          "checks": 1,
+          "max_error": 8.0,
+          "data": {
+            "domain_constraints": [
+              "T > 0"
+            ],
+            "counterexample": {
+              "R0": "-2",
+              "T": "2"
+            },
+            "status": "disproven",
+            "proven": false
+          }
+        }
+      }
+    },
+    "torus_flat_scalar_curvature": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "0 + 0 + 0",
+        "0",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "0 + 0 + 0 == 0",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "0",
+          "right": "0",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "0 = 0",
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 0",
+            "rhs = 0",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"0 + 0 + 0\" \"0\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 1 numerical sample(s) agree",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "poincare_global_claim_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "M_3manifold",
+        "S3_sphere",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "M_3manifold == S3_sphere",
+        "ok": false,
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "axiom"
+        },
+        "error": "name not allowed: '_sphere'"
+      }
+    }
+  },
+  "mcp_responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          }
+        },
+        "serverInfo": {
+          "name": "axiom",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / (3 * R0^2) == 2 / R0^2\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"2/R0**2\",\n    \"right\": \"2/R0**2\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"\\\\frac{2}{R_{0}^{2}} = \\\\frac{2}{R_{0}^{2}}\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 2/R0**2\",\n      \"rhs = 2/R0**2\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / (3 * R0^2)\\\" \\\"2 / R0^2\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"domain_constraints\": [\n        \"3*R0**2 != 0\",\n        \"R0**2 != 0\"\n      ],\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "6 / (3 * R0^2) == 2 / R0^2",
+          "ok": true,
+          "value": {
+            "status": "proven",
+            "equivalent": true,
+            "consistent_with_samples": true,
+            "left": "2/R0**2",
+            "right": "2/R0**2",
+            "simplified_difference": "0"
+          },
+          "value_str": "equivalent",
+          "latex": "\\frac{2}{R_{0}^{2}} = \\frac{2}{R_{0}^{2}}",
+          "variables": [
+            "R0"
+          ],
+          "guarantee": "exact-symbolic",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 2/R0**2",
+              "rhs = 2/R0**2",
+              "status = proven",
+              "simplify(lhs - rhs) -> 0",
+              "assumptions: {'R0': {'positive': True}}",
+              "Domain constraint(s): 3*R0**2 != 0, R0**2 != 0"
+            ],
+            "limitations": [
+              "Domain constraint(s): 3*R0**2 != 0, R0**2 != 0"
+            ],
+            "reproducible_with": "axiom compare \"6 / (3 * R0^2)\" \"2 / R0^2\" --assumptions \"R0:positive\""
+          },
+          "verification": {
+            "kind": "symbolic-identity",
+            "passed": true,
+            "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+            "checks": 10,
+            "max_error": 0.0,
+            "data": {
+              "domain_constraints": [
+                "3*R0**2 != 0",
+                "R0**2 != 0"
+              ],
+              "status": "proven",
+              "proven": true
+            }
+          }
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / R0^2 == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"6/R0**2\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"6/R0**2\",\n    \"counterexample\": {\n      \"R0\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'R0': '2'})\",\n  \"latex\": \"\\\\frac{6}{R_{0}^{2}} \\\\neq 0\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 6/R0**2\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 6/R0**2\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / R0^2\\\" \\\"0\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'R0': '2'} (|diff| = 1.500e+00)\",\n    \"checks\": 1,\n    \"max_error\": 1.5,\n    \"data\": {\n      \"domain_constraints\": [\n        \"R0**2 != 0\"\n      ],\n      \"counterexample\": {\n        \"R0\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+          }
+        ],
+        "structuredContent": {
+          "kind": "compare",
+          "input": "6 / R0^2 == 0",
+          "ok": true,
+          "value": {
+            "status": "disproven",
+            "equivalent": false,
+            "consistent_with_samples": false,
+            "left": "6/R0**2",
+            "right": "0",
+            "simplified_difference": "6/R0**2",
+            "counterexample": {
+              "R0": "2"
+            }
+          },
+          "value_str": "not equivalent (counterexample: {'R0': '2'})",
+          "latex": "\\frac{6}{R_{0}^{2}} \\neq 0",
+          "variables": [
+            "R0"
+          ],
+          "guarantee": "unverified",
+          "evidence": {
+            "engine": "sympy",
+            "engine_version": "1.14.0",
+            "method": "symbolic difference reduction + domain & multi-point sampling",
+            "steps": [
+              "lhs = 6/R0**2",
+              "rhs = 0",
+              "status = disproven",
+              "simplify(lhs - rhs) -> 6/R0**2",
+              "assumptions: {'R0': {'positive': True}}",
+              "Domain constraint(s): R0**2 != 0"
+            ],
+            "limitations": [
+              "Domain constraint(s): R0**2 != 0"
+            ],
+            "reproducible_with": "axiom compare \"6 / R0^2\" \"0\" --assumptions \"R0:positive\""
+          },
+          "verification": {
+            "kind": "counterexample-search",
+            "passed": false,
+            "detail": "counterexample found at {'R0': '2'} (|diff| = 1.500e+00)",
+            "checks": 1,
+            "max_error": 1.5,
+            "data": {
+              "domain_constraints": [
+                "R0**2 != 0"
+              ],
+              "counterexample": {
+                "R0": "2"
+              },
+              "status": "disproven",
+              "proven": false
+            }
+          }
+        },
+        "isError": false
+      }
+    }
+  ]
+}

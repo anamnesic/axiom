@@ -166,7 +166,7 @@ AXIOM operates as a rigorous neuro-symbolic research harness designed for mathem
 - **[Methodology & Validation (`methodology.md`)](methodology.md)** — Mathematical guarantee hierarchy, invariant contracts, verification protocols, and empirical evaluation metrics.
 - **[Benchmark EXP-0001 (`experiments/exp-0001/`)](experiments/exp-0001/REPORT.md)** — Empirical benchmark of domain integrity: AXIOM achieves **0.0% False Positive Rate** and **100% Fail-Closed Rate** on singular, complex, and adversarial cases vs. 46.2% false positives in naive CAS baselines.
 - **[Theoretical & Implementation Limitations (`limitations.md`)](limitations.md)** — Explicit analysis of undecidability boundaries (Richardson's theorem, Gödel incompleteness, Matiyasevich DPRM) and operational boundaries.
-- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Dedicated research workspaces and property audits for all seven Clay Millennium Prize Problems (Riemann Hypothesis, P vs NP, Navier-Stokes, Birch-Swinnerton-Dyer, Hodge, Yang-Mills, Poincaré).
+- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Dedicated research workspaces, autonomous validation suites (`validate.py`), and 100% fail-closed integrity audits across all seven Clay Millennium Prize Problems (Riemann Hypothesis, P vs NP, Navier-Stokes, Birch-Swinnerton-Dyer, Hodge, Yang-Mills, Poincaré).
 - **[Citation Metadata (`CITATION.cff`)](CITATION.cff)** — Machine-readable academic citation schema.
 
 ## Roadmap

@@ -2,9 +2,15 @@
 
 - **Registro:** 17 de outubro de 2026.
 - **Status matemático:** **em aberto**, conforme a [página oficial do Clay Mathematics Institute](https://www.claymath.org/millennium/navier-stokes-equation/).
-- **Status da investigação:** pesquisa planejada; nenhuma verificação matemática realizada neste registro.
+- **Status da investigação:** **propriedades analíticas e controles validados** ([REPORT.md](REPORT.md)). Suíte com 13 critérios automatizados aprovados (100% fail-closed, 0.0% falsos positivos).
 - **Referência técnica oficial:** [Existence & Smoothness of the Navier-Stokes Equation (Charles L. Fefferman)](https://www.claymath.org/wp-content/uploads/2022/06/navierstokes.pdf).
 - **Objetivo da pasta:** reunir referências, formulação físico-matemática, lemas auxiliares e experimentos com soluções analíticas e identidades de energia.
+
+## Material salvo
+
+- [Relatório de Validação e Integridade](REPORT.md)
+- [Evidências integrais da execução](validation.json)
+- [Script de reprodução autônomo](validate.py)
 
 ---
 

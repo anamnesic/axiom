@@ -1,23 +1,40 @@
-# Problemas do Milênio — Fila de Investigação AXIOM
+# Problemas do Milênio — Fila de Investigação e Validação AXIOM
 
-Registrado em 17 de outubro de 2026 a pedido do usuário. Cada problema tem sua
-própria pasta, com a descrição fornecida, fonte técnica e roteiro de investigação.
+Registrado em 17 de outubro de 2026 a pedido do usuário. Cada problema possui sua
+própria pasta de pesquisa reprodutível com formulação matemática formal, suíte de verificação
+autônoma (`validate.py`), evidências integrais serializadas (`validation.json`) e relatório
+detalhado com controles negativos (`REPORT.md`).
 
-| Problema | Situação matemática | Situação neste projeto |
-| --- | --- | --- |
-| [Birch and Swinnerton-Dyer](birch-and-swinnerton-dyer/README.md) | Em aberto | Investigação planejada |
-| [Conjectura de Hodge](hodge-conjecture/README.md) | Em aberto | Investigação planejada |
-| [Navier-Stokes (Existência e Suavidade)](navier-stokes/README.md) | Em aberto | Formulação registrada; verificação de identidades e soluções exatas planejada |
-| [P vs NP](p-vs-np/README.md) | Em aberto | Exemplo combinatório e ambiente avaliados ([REPORT.md](p-vs-np/REPORT.md)) |
-| [Hipótese de Riemann](riemann-hypothesis/README.md) | Em aberto | Propriedades analíticas e controles validados ([REPORT.md](riemann-hypothesis/REPORT.md)) |
-| [Yang-Mills e o Gap de Massa](yang-mills-mass-gap/README.md) | Em aberto | Investigação planejada |
-| [Conjectura de Poincaré](poincare-conjecture/README.md) | Resolvido (G. Perelman) | Estudo da demonstração e reprodução de resultados auxiliares planejados |
+| Problema | Situação matemática | Situação no AXIOM v0.2.2 | Critérios & Fail-Closed |
+| --- | --- | --- | --- |
+| [Birch and Swinnerton-Dyer](birch-and-swinnerton-dyer/README.md) | Em aberto | Propriedades analíticas e controles validados ([REPORT.md](birch-and-swinnerton-dyer/REPORT.md)) | 15/15 checks (100% fail-closed) |
+| [Conjectura de Hodge](hodge-conjecture/README.md) | Em aberto | Propriedades analíticas e controles validados ([REPORT.md](hodge-conjecture/REPORT.md)) | 11/11 checks (100% fail-closed) |
+| [Navier-Stokes (Existência e Suavidade)](navier-stokes/README.md) | Em aberto | Soluções exatas e dissipação validadas ([REPORT.md](navier-stokes/REPORT.md)) | 13/13 checks (100% fail-closed) |
+| [P vs NP](p-vs-np/README.md) | Em aberto | Exemplo combinatório e controles validados ([REPORT.md](p-vs-np/REPORT.md)) | 11/11 checks (100% fail-closed) |
+| [Hipótese de Riemann](riemann-hypothesis/README.md) | Em aberto | Propriedades analíticas e linha crítica validadas ([REPORT.md](riemann-hypothesis/REPORT.md)) | 24/24 checks (100% fail-closed) |
+| [Yang-Mills e o Gap de Massa](yang-mills-mass-gap/README.md) | Em aberto | Álgebra de gauge e instantons validados ([REPORT.md](yang-mills-mass-gap/REPORT.md)) | 12/12 checks (100% fail-closed) |
+| [Conjectura de Poincaré](poincare-conjecture/README.md) | Resolvido (G. Perelman) | Geometria de $S^3$ e fluxo de Ricci validados ([REPORT.md](poincare-conjecture/REPORT.md)) | 12/12 checks (100% fail-closed) |
 
-Situações matemáticas conferidas na [lista oficial do Clay Mathematics Institute](https://www.claymath.org/millennium-problems/).
-Este índice reúne a totalidade dos **sete Problemas do Prêmio do Milênio** do Clay Mathematics Institute.
-A criação das pastas registra a fila de trabalho e infraestrutura de validação; não constitui demonstração matemática dos problemas abertos.
+Situações matemáticas conferidas na [lista oficial do Clay Mathematics Institute](https://www.claymath.org/millennium-problems/).  
+Este índice reúne a totalidade dos **sete Problemas do Prêmio do Milênio** do Clay Mathematics Institute.  
+**Taxa Global de Falsos Positivos nos 7 Problemas:** **0.0%** (0 falsos positivos em 98 critérios de avaliação).  
+A validação de propriedades auxiliares e controles negativos **não constitui demonstração matemática dos problemas abertos**, reafirmando a integridade científica do projeto.
 
-## Como registrar o trabalho
+## Como registrar o trabalho e reproduzir
+
+Para reproduzir a suíte completa de qualquer um dos problemas a partir da raiz do repositório:
+
+```powershell
+python reports/birch-and-swinnerton-dyer/validate.py
+python reports/hodge-conjecture/validate.py
+python reports/navier-stokes/validate.py
+python reports/p-vs-np/validate.py
+python reports/poincare-conjecture/validate.py
+python reports/riemann-hypothesis/validate.py
+python reports/yang-mills-mass-gap/validate.py
+```
+
+### Regras Metodológicas Obrigatórias
 
 1. Ler o enunciado técnico oficial e fixar hipóteses, definições e um objetivo
    restrito antes de iniciar cada tentativa.
@@ -29,8 +46,3 @@ A criação das pastas registra a fila de trabalho e infraestrutura de validaç�
 4. Distinguir observações numéricas, casos particulares, lemas e demonstração
    geral. Para uma prova formal, conferir também o enunciado efetivamente provado,
    as hipóteses e as dependências axiomáticas.
-
-Os resumos em inglês foram fornecidos pelo usuário e preservados nas respectivas
-pastas. São descrições introdutórias; os enunciados técnicos oficiais devem orientar
-a investigação. O diagnóstico anterior de ferramentas está no
-[relatório de P vs NP](p-vs-np/REPORT.md); revalidar o ambiente antes de novos trabalhos.

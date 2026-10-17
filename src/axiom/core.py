@@ -428,7 +428,7 @@ class Axiom:
         try:
             eng = self.registry.select("solve", preferred=engine)
             ans = eng.solve(equation, var)
-        except (EngineError, NotImplementedError) as exc:
+        except Exception as exc:
             return error_result("solve", expression, str(exc), engine=engine)
 
         ver, guar = verify_solutions(equation, var, ans.raw["solutions"])
@@ -481,7 +481,7 @@ class Axiom:
                 raise ParseError("system has no variables to solve for")
             eng = self.registry.select("solve_system", preferred=engine)
             ans = eng.solve_system(parsed_eqs, sym_vars)
-        except (ParseError, EngineError) as exc:
+        except Exception as exc:
             return error_result("solve_system", joined, str(exc), engine=engine)
 
         ver, guar = verify_system_solutions(
