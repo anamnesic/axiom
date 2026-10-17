@@ -31,6 +31,7 @@ jobs:
       - name: Run Millennium Research Bench
         run: python benchmarks/millennium/run_millennium_bench.py
       - name: Upload Millennium Scorecard artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: millennium-scorecard-${{ matrix.os }}-py${{ matrix.python-version }}

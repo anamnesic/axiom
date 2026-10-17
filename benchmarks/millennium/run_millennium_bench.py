@@ -74,6 +74,7 @@ def run_problem_suite(name: str, folder: str) -> dict:
     false_pos_rate = 0.0
     true_pos_rate = 1.0
 
+    failed_criteria: list[str] = []
     if validation_json.exists():
         try:
             data = json.loads(validation_json.read_text(encoding="utf-8"))
@@ -81,9 +82,12 @@ def run_problem_suite(name: str, folder: str) -> dict:
             if isinstance(checks_dict, dict) and checks_dict:
                 eval_count = len(checks_dict)
                 passed_count = sum(1 for v in checks_dict.values() if v is True)
+                failed_criteria = [k for k, v in checks_dict.items() if not v]
             else:
                 eval_count = data.get("total_evaluations", 0)
                 passed_count = data.get("passed_evaluations", 0)
+                if isinstance(data.get("test_cases"), list):
+                    failed_criteria = [t.get("id", "unknown") for t in data["test_cases"] if not t.get("passed")]
 
             pos_count = data.get("positive_claims_count", 0)
             tp_count = data.get("true_positives_count", 0)
@@ -110,6 +114,9 @@ def run_problem_suite(name: str, folder: str) -> dict:
                 "fail_closed_rate": fail_closed_rate,
                 "false_positive_rate": false_pos_rate,
                 "true_positive_rate": true_pos_rate,
+                "failed_criteria": failed_criteria,
+                "stdout": proc.stdout,
+                "stderr": proc.stderr,
             }
 
     suite_ok = (proc.returncode == 0) and (passed_count == eval_count) and (fp_count == 0)
@@ -129,6 +136,9 @@ def run_problem_suite(name: str, folder: str) -> dict:
         "fail_closed_rate": fail_closed_rate,
         "false_positive_rate": false_pos_rate,
         "true_positive_rate": true_pos_rate,
+        "failed_criteria": failed_criteria,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr,
     }
 
 
@@ -159,6 +169,15 @@ def main() -> int:
         results.append(res)
         status_sym = "[PASS]" if res["ok"] else "[FAIL]"
         print(f"    {status_sym} ({res['passed']}/{res['evaluations']} criteria passed, {res['fail_closed_rate']*100:.1f}% fail-closed, {res['false_positive_rate']*100:.1f}% FP)")
+        if not res["ok"]:
+            if res.get("failed_criteria"):
+                print(f"    [!] Failed criteria: {', '.join(res['failed_criteria'])}")
+            if res.get("stdout"):
+                for line in res["stdout"].strip().splitlines()[-10:]:
+                    print(f"        {line}")
+            if res.get("stderr") and res["stderr"].strip():
+                for line in res["stderr"].strip().splitlines()[-5:]:
+                    print(f"        [STDERR] {line}")
         total_evals += res["evaluations"]
         total_passed += res["passed"]
         global_pos_claims += res["positive_claims_count"]
