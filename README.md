@@ -4,15 +4,17 @@
 
 *One MCP for mathematical computation, exploration, and verification.*
 
-AXIOM é uma infraestrutura de matemática computacional para agentes de IA, pesquisadores, estudantes e desenvolvedores. Ele conecta qualquer cliente MCP a engines matemáticas especializadas — SymPy, SciPy, SageMath, Lean 4 — através de um contrato unificado, com resultados rastreáveis e **verificados de forma independente**.
+**English** · [简体中文](docs/readme/README_zh.md) · [繁體中文](docs/readme/README_zh-TW.md) · [日本語](docs/readme/README_ja.md) · [한국어](docs/readme/README_ko.md) · [Türkçe](docs/readme/README_tr.md) · [Русский](docs/readme/README_ru.md) · [Tiếng Việt](docs/readme/README_vi.md) · [ไทย](docs/readme/README_th.md) · [Deutsch](docs/readme/README_de.md) · [Español](docs/readme/README_es.md) · [Français](docs/readme/README_fr.md) · [Português (Brasil)](docs/readme/README_pt-BR.md) · [العربية](docs/readme/README_ar.md) · [فارسی](docs/readme/README_fa.md) · [Italiano](docs/readme/README_it.md) · [Ελληνικά](docs/readme/README_el.md)
 
-Não é uma calculadora com IA. Não é outro Mathematica, SageMath ou Lean. É a infraestrutura que permite aos agentes utilizar todos eles por uma interface única.
+AXIOM is a computational mathematics infrastructure for AI agents, researchers, students, and developers. It connects any MCP client to specialized mathematics engines — SymPy, SciPy, SageMath, Lean 4 — through a unified contract, with traceable results that are **independently verified**.
 
-> Inspirado na filosofia do [REA](https://github.com/morluto/rea): *reverse engineer anything* → **analyze mathematics**.
+It is not an AI-powered calculator. It is not another Mathematica, SageMath, or Lean. It is the infrastructure that lets agents use all of them through a single interface.
 
-## Por que AXIOM
+> Inspired by the philosophy of [REA](https://github.com/morluto/rea): *reverse engineer anything* → **analyze mathematics**.
 
-Um agente pode dizer que resolveu uma equação. O AXIOM **exige verificação independente** antes de tratar o resultado como confiável.
+## Why AXIOM
+
+An agent may claim it solved an equation. AXIOM **requires independent verification** before a result is trusted.
 
 ```
 math solve "x^2 - 5*x + 6 = 0"
@@ -20,59 +22,59 @@ math solve "x^2 - 5*x + 6 = 0"
 
 ```text
 ┌─────────────────────────────────────────────────┐
-│ Equação quadrática                             │
+│ Quadratic equation                             │
 │   x² - 5x + 6 = 0                              │
 │                                                 │
-│ Soluções                                        │
-│   x = 2  ou  x = 3                              │
+│ Solutions                                       │
+│   x = 2  or  x = 3                              │
 │                                                 │
 │ Engine        SymPy                             │
-│ Verificação   Substituição exata (frações)      │
-│ Garantia      VERIFIED-SUBSTITUTION             │
-│ Resultado     Ambas as raízes satisfazem a eq.  │
+│ Verification  Exact substitution (fractions)    │
+│ Guarantee     VERIFIED-SUBSTITUTION             │
+│ Result        Both roots satisfy the equation   │
 └─────────────────────────────────────────────────┘
 ```
 
-### Níveis de garantia
+### Guarantee levels
 
-Nem todo resultado matemático tem a mesma força lógica. O AXIOM distingue explicitamente cada nível:
+Not every mathematical result carries the same logical strength. AXIOM explicitly distinguishes each level:
 
-| Nível | Significado |
+| Level | Meaning |
 | --- | --- |
-| `exact-symbolic` | Identidade simbólica verificada (ex.: simplificação canônica) |
-| `verified-substitution` | Solução validada por substituição com aritmética exata |
-| `numerical-approximation` | Aproximação numérica com erro declarado |
-| `formal-proof` | Demonstração verificada por um kernel de prova (Lean 4) |
-| `heuristic` | Resultado provável, sem verificação completa |
-| `unverified` | Cálculo bruto, ainda não verificado |
+| `exact-symbolic` | Verified symbolic identity (e.g., canonical simplification) |
+| `verified-substitution` | Solution validated by substitution with exact arithmetic |
+| `numerical-approximation` | Numerical approximation with a declared error |
+| `formal-proof` | Proof verified by a proof kernel (Lean 4) |
+| `heuristic` | Likely result, not fully verified |
+| `unverified` | Raw computation, not yet verified |
 
-Todo resultado carrega metadados de evidência: `engine`, `engine_version`, `steps`, `limitations` e `reproducible_with`.
+Every result carries evidence metadata: `engine`, `engine_version`, `steps`, `limitations`, and `reproducible_with`.
 
-## Filosofia (herdada do REA)
+## Philosophy (inherited from REA)
 
 | REA | AXIOM |
 | --- | --- |
 | Reverse engineer anything | Analyze mathematics |
-| Análise de binários | Análise de expressões e estruturas |
+| Binary analysis | Expression and structure analysis |
 | Ghidra / Hopper / IDA | SymPy / SageMath / Julia / Lean 4 |
-| Rastreamento de código | Rastreamento de soluções |
-| Evidências de engenharia reversa | Evidências matemáticas |
-| Decompilação | Simplificação e decomposição algébrica |
-| Inspeção de funções | Análise de funções |
-| Comparação de comportamento | Verificação de equivalência |
-| MCP para agentes | MCP para agentes matemáticos |
-| CLI | CLI matemática |
+| Code tracing | Solution tracing |
+| Reverse-engineering evidence | Mathematical evidence |
+| Decompilation | Simplification and algebraic decomposition |
+| Function inspection | Function analysis |
+| Behavior comparison | Equivalence verification |
+| MCP for agents | MCP for mathematical agents |
+| CLI | Mathematical CLI |
 
-## Arquitetura
+## Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│  Agentes de IA                                           │
-│  Codex · Claude Code · Gemini CLI · outros MCP clients   │
+│  AI Agents                                               │
+│  Codex · Claude Code · Gemini CLI · other MCP clients    │
 └────────────────────────┬─────────────────────────────────┘
                          │  MCP / CLI
 ┌────────────────────────▼─────────────────────────────────┐
-│  Núcleo AXIOM                                            │
+│  AXIOM Core                                              │
 │  Parser · Dispatcher · Engine Registry · Evidence ·      │
 │  Verification                                            │
 └──┬──────────┬──────────┬──────────┬───────────────────────┘
@@ -83,31 +85,31 @@ Todo resultado carrega metadados de evidência: `engine`, `engine_version`, `ste
  SageMath   Julia       Mathlib
 ```
 
-O mesmo contrato vale independentemente do software responsável pelo cálculo: trocar de engine não muda o formato do resultado nem o nível de garantia.
+The same contract holds regardless of which software performs the computation: swapping engines changes neither the result format nor the guarantee level.
 
-## Módulos
+## Modules
 
-| Módulo | Capacidades |
+| Module | Capabilities |
 | --- | --- |
-| `arithmetic` | Aritmética exata, frações, precisão arbitrária |
-| `algebra` | Equações, polinômios, fatoração, simplificação |
-| `calculus` | Limites, derivadas, integrais, séries |
-| `linear-algebra` | Matrizes, autovalores, decomposições |
-| `geometry` | Geometria euclidiana, analítica e diferencial |
-| `number-theory` | Primos, congruências, equações diofantinas |
-| `discrete` | Combinatória, grafos, lógica |
-| `statistics` | Probabilidade, distribuições, inferência |
-| `optimization` | Otimização linear, não linear e convexa |
-| `differential-equations` | EDOs, EDPs e sistemas dinâmicos |
-| `numerical` | Métodos numéricos, aproximações e erros |
-| `symbolic` | Manipulação simbólica geral |
-| `proof` | Demonstrações, contraexemplos e verificação formal |
-| `visualization` | Gráficos 2D/3D, animações e campos vetoriais |
-| `research` | Exploração de conjecturas, hipóteses e experimentos |
+| `arithmetic` | Exact arithmetic, fractions, arbitrary precision |
+| `algebra` | Equations, polynomials, factoring, simplification |
+| `calculus` | Limits, derivatives, integrals, series |
+| `linear-algebra` | Matrices, eigenvalues, decompositions |
+| `geometry` | Euclidean, analytic, and differential geometry |
+| `number-theory` | Primes, congruences, Diophantine equations |
+| `discrete` | Combinatorics, graphs, logic |
+| `statistics` | Probability, distributions, inference |
+| `optimization` | Linear, nonlinear, and convex optimization |
+| `differential-equations` | ODEs, PDEs, and dynamical systems |
+| `numerical` | Numerical methods, approximations, and errors |
+| `symbolic` | General symbolic manipulation |
+| `proof` | Proofs, counterexamples, and formal verification |
+| `visualization` | 2D/3D plots, animations, and vector fields |
+| `research` | Conjecture exploration, hypotheses, and experiments |
 
-## Ferramentas MCP
+## MCP tools
 
-Ferramentas pequenas, combináveis:
+Small, composable tools:
 
 ```
 math_parse        math_simplify     math_solve
@@ -117,7 +119,7 @@ math_verify        math_explain      math_compare
 math_explore
 ```
 
-CLI proposta:
+Proposed CLI:
 
 ```bash
 math solve "x^2 - 5*x + 6 = 0"
@@ -129,15 +131,15 @@ math verify solution.json
 
 ## Roadmap
 
-- [ ] **v0.1 — Foundation**: CLI, MCP, parser de expressões, SymPy, resolução de equações e evidências.
-- [ ] **v0.2 — Numerical**: SciPy, matrizes, integração numérica, otimização e avaliação de erros.
-- [ ] **v0.3 — Verification**: verificadores independentes e integração opcional com Lean 4.
-- [ ] **v0.4 — Visualization**: gráficos interativos, geometria e visualização de sistemas dinâmicos.
-- [ ] **v1.0 — Research**: composição automatizada de ferramentas, experimentos reprodutíveis e exploração assistida de conjecturas.
+- [ ] **v0.1 — Foundation**: CLI, MCP, expression parser, SymPy, equation solving, and evidence.
+- [ ] **v0.2 — Numerical**: SciPy, matrices, numerical integration, optimization, and error evaluation.
+- [ ] **v0.3 — Verification**: independent verifiers and optional Lean 4 integration.
+- [ ] **v0.4 — Visualization**: interactive plots, geometry, and dynamical-system visualization.
+- [ ] **v1.0 — Research**: automated tool composition, reproducible experiments, and assisted conjecture exploration.
 
-Começamos com três engines: **SymPy** (simbólico), **SciPy** (numérico) e **Lean 4** (provas formais).
+We start with three engines: **SymPy** (symbolic), **SciPy** (numerical), and **Lean 4** (formal proofs).
 
-## Estrutura do repositório
+## Repository layout
 
 ```
 axiom/
@@ -174,14 +176,14 @@ axiom/
 └── docs/
 ```
 
-## Nome
+## Name
 
-**AXIOM** — *Mathematical Reasoning Engine*. Identidade própria, alinhada à matemática formal e à pesquisa.
+**AXIOM** — *Mathematical Reasoning Engine*. Its own identity, aligned with formal mathematics and research.
 
-## Licença
+## License
 
 MIT
 
-## Relação com o MathTools Offline
+## Relationship with MathTools Offline
 
-Este repositório era o *MathTools Offline* (suíte desktop offline para LaTeX/SymPy/Lean). Foi renomeado para **AXIOM** e reposicionado como infraestrutura de matemática computacional para agentes. Os engines (SymPy, Lean 4) são compartilhados conceitualmente, mas o foco agora é o contrato MCP unificado e a verificação independente de resultados.
+This repository was *MathTools Offline* (an offline desktop suite for LaTeX/SymPy/Lean). It was renamed to **AXIOM** and repositioned as computational mathematics infrastructure for agents. The engines (SymPy, Lean 4) are conceptually shared, but the focus is now the unified MCP contract and independent verification of results.
