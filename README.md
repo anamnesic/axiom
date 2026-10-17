@@ -166,7 +166,7 @@ AXIOM operates as a rigorous neuro-symbolic research harness designed for mathem
 - **[Methodology & Validation (`methodology.md`)](methodology.md)** — Mathematical guarantee hierarchy, invariant contracts, verification protocols, and empirical evaluation metrics.
 - **[Benchmark EXP-0001 (`experiments/exp-0001/`)](experiments/exp-0001/REPORT.md)** — Empirical benchmark of domain integrity: AXIOM achieves **0.0% False Positive Rate** and **100% Fail-Closed Rate** on singular, complex, and adversarial cases vs. 46.2% false positives in naive CAS baselines.
 - **[Theoretical & Implementation Limitations (`limitations.md`)](limitations.md)** — Explicit analysis of undecidability boundaries (Richardson's theorem, Gödel incompleteness, Matiyasevich DPRM) and operational boundaries.
-- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Analytical and numerical property audit of the Riemann Hypothesis ([`reports/riemann-hypothesis/`](reports/riemann-hypothesis/README.md)) and P vs NP ([`reports/p-vs-np/`](reports/p-vs-np/README.md)).
+- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Dedicated research workspaces and property audits for all seven Clay Millennium Prize Problems (Riemann Hypothesis, P vs NP, Navier-Stokes, Birch-Swinnerton-Dyer, Hodge, Yang-Mills, Poincaré).
 - **[Citation Metadata (`CITATION.cff`)](CITATION.cff)** — Machine-readable academic citation schema.
 
 ## Roadmap
@@ -209,8 +209,13 @@ axiom/
 ├── experiments/
 │   └── exp-0001/              # Domain integrity & adversarial benchmark (run.py, results.json, REPORT.md)
 ├── reports/
-│   ├── p-vs-np/               # Clay combinatorial audit
-│   └── riemann-hypothesis/    # Millennium problem property validation
+│   ├── birch-and-swinnerton-dyer/ # Elliptic curves and L-functions queue
+│   ├── hodge-conjecture/          # Algebraic cycles & cohomology queue
+│   ├── navier-stokes/             # 3D fluid existence & smoothness
+│   ├── p-vs-np/                   # Combinatorial verification audit
+│   ├── poincare-conjecture/       # Solved 3-manifold geometrization study
+│   ├── riemann-hypothesis/        # Critical line zero audits (RH)
+│   └── yang-mills-mass-gap/       # Quantum gauge theory mass gap queue
 ├── skills/
 │   └── mathematics/SKILL.md
 ├── examples/

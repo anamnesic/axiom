@@ -1,20 +1,21 @@
-# Problemas do Millennium — fila de investigação AXIOM
+# Problemas do Milênio — Fila de Investigação AXIOM
 
 Registrado em 17 de outubro de 2026 a pedido do usuário. Cada problema tem sua
-própria pasta, com a descrição fornecida, fonte e próximos passos para investigação.
+própria pasta, com a descrição fornecida, fonte técnica e roteiro de investigação.
 
 | Problema | Situação matemática | Situação neste projeto |
 | --- | --- | --- |
 | [Birch and Swinnerton-Dyer](birch-and-swinnerton-dyer/README.md) | Em aberto | Investigação planejada |
-| [Hodge](hodge-conjecture/README.md) | Em aberto | Investigação planejada |
-| [P vs NP](p-vs-np/README.md) | Em aberto | Exemplo e ambiente avaliados; investigação do problema planejada |
-| [Riemann](riemann-hypothesis/README.md) | Em aberto | Propriedades analíticas e controles validados ([REPORT.md](riemann-hypothesis/REPORT.md)) |
-| [Yang-Mills e o gap de massa](yang-mills-mass-gap/README.md) | Em aberto | Investigação planejada |
-| [Poincaré](poincare-conjecture/README.md) | Resolvido | Estudo da demonstração e reprodução de resultados auxiliares planejados |
+| [Conjectura de Hodge](hodge-conjecture/README.md) | Em aberto | Investigação planejada |
+| [Navier-Stokes (Existência e Suavidade)](navier-stokes/README.md) | Em aberto | Formulação registrada; verificação de identidades e soluções exatas planejada |
+| [P vs NP](p-vs-np/README.md) | Em aberto | Exemplo combinatório e ambiente avaliados ([REPORT.md](p-vs-np/REPORT.md)) |
+| [Hipótese de Riemann](riemann-hypothesis/README.md) | Em aberto | Propriedades analíticas e controles validados ([REPORT.md](riemann-hypothesis/REPORT.md)) |
+| [Yang-Mills e o Gap de Massa](yang-mills-mass-gap/README.md) | Em aberto | Investigação planejada |
+| [Conjectura de Poincaré](poincare-conjecture/README.md) | Resolvido (G. Perelman) | Estudo da demonstração e reprodução de resultados auxiliares planejados |
 
 Situações matemáticas conferidas na [lista oficial do Clay Mathematics Institute](https://www.claymath.org/millennium-problems/).
-Este índice reúne os seis problemas enviados pelo usuário. A criação das pastas
-registra a fila de trabalho; não inicia automaticamente investigações ou cálculos.
+Este índice reúne a totalidade dos **sete Problemas do Prêmio do Milênio** do Clay Mathematics Institute.
+A criação das pastas registra a fila de trabalho e infraestrutura de validação; não constitui demonstração matemática dos problemas abertos.
 
 ## Como registrar o trabalho
 
