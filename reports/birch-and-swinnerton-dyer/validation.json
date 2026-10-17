@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T19:05:18.541329+00:00",
+  "timestamp_utc": "2026-10-17T19:25:42.454328+00:00",
   "axiom_version": "0.2.2",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -26,7 +26,7 @@
   },
   "file_hashes": {
     "reports/birch-and-swinnerton-dyer/validate.py": "040b17eefc9d278d1c7f1f51fbdc596488eabfc8283613c76544c80ecb17b0ad",
-    "reports/birch-and-swinnerton-dyer/README.md": "f56a3883bab0d6667452ac6756a127ed1149059ba91a17795e3943396ab00917",
+    "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
   },

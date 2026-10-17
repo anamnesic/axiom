@@ -1,0 +1,53 @@
+{
+  "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
+  "problem": "riemann-hypothesis",
+  "title": "Hipótese de Riemann",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/05/riemann.pdf",
+  "clay_status": "Active (Unsolved)",
+  "maturity_level": "L2",
+  "claims": [
+    {
+      "statement": "Propriedades analíticas clássicas da função zeta de Riemann zeta(s) e zeros na linha crítica",
+      "scope": "Valores pares de Euler, zeros triviais, resíduo no polo simples s=1, representação integral de Mellin e sondagens numéricas de alta precisão na linha crítica Re(s) = 1/2",
+      "assumptions": ["s in C", "Re(s) > 1 para produto de Euler"]
+    }
+  ],
+  "evidence": {
+    "symbolic": [
+      "zeta(2) = pi^2/6 (exact-symbolic)",
+      "zeta(4) = pi^4/90 (exact-symbolic)",
+      "zeta(0) = -1/2 (exact-symbolic)",
+      "zeta(-1) = -1/12 (exact-symbolic)",
+      "zeta(-2) = 0 (exact-symbolic)",
+      "zeta(-4) = 0 (exact-symbolic)"
+    ],
+    "numerical": [
+      "Abs(zeta(1/2 + 14.134725141734693790457251983562*I)) < 1e-25",
+      "Integral de Mellin integral_0^oo x/(exp(x)-1) dx = pi^2/6 com erro < 1e-14"
+    ],
+    "formal": [
+      "Catálogo Mathlib pesquisável",
+      "Suíte Lake Lean 4 formal integrada"
+    ],
+    "counterexamples": [
+      "zeta(2) == pi^2/8 refutado com resíduo 0.411",
+      "Polo bidirecional em s=1 refutado fail-closed",
+      "Integral com polo interno 1/x^2 em [-1, 1] rejeitada"
+    ]
+  },
+  "verification": {
+    "result": "inconclusive",
+    "passed_criteria": 24,
+    "total_criteria": 24,
+    "fail_closed_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "independent_review": "pending"
+  },
+  "reproducibility": {
+    "engine_version": "0.2.2",
+    "script": "reports/riemann-hypothesis/validate.py",
+    "command": "python reports/riemann-hypothesis/validate.py",
+    "evidence_file": "reports/riemann-hypothesis/validation.json",
+    "report_file": "reports/riemann-hypothesis/REPORT.md"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "timestamp_utc": "2026-10-17T19:26:27.126599+00:00",
+  "all_ok": true,
+  "total_criteria": 98,
+  "passed_criteria": 98,
+  "global_fail_closed_rate": 1.0,
+  "global_false_positive_rate": 0.0,
+  "problems": [
+    {
+      "name": "Riemann Hypothesis",
+      "folder": "riemann-hypothesis",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 24,
+      "passed": 24,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "P vs NP",
+      "folder": "p-vs-np",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 11,
+      "passed": 11,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "Navier-Stokes Equation",
+      "folder": "navier-stokes",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 13,
+      "passed": 13,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "Birch and Swinnerton-Dyer",
+      "folder": "birch-and-swinnerton-dyer",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 15,
+      "passed": 15,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "Hodge Conjecture",
+      "folder": "hodge-conjecture",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 11,
+      "passed": 11,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "Yang-Mills and the Mass Gap",
+      "folder": "yang-mills-mass-gap",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 12,
+      "passed": 12,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "name": "Poincaré Conjecture",
+      "folder": "poincare-conjecture",
+      "ok": true,
+      "returncode": 0,
+      "evaluations": 12,
+      "passed": 12,
+      "fail_closed_rate": 1.0,
+      "false_positive_rate": 0.0
+    }
+  ]
+}

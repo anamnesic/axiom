@@ -1,0 +1,47 @@
+{
+  "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
+  "problem": "navier-stokes",
+  "title": "Equação de Navier-Stokes (Existência e Suavidade)",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/06/navierstokes.pdf",
+  "clay_status": "Active (Under Evaluation since Sep 2026)",
+  "maturity_level": "L2",
+  "claims": [
+    {
+      "statement": "Balanço de momento de Navier-Stokes incompressível, divergente nulo e dissipação de energia cinética em L2",
+      "scope": "Vórtice periódico de Taylor-Green em 2D/3D, escoamento de Poiseuille e equação de Poisson para o campo de pressão",
+      "assumptions": ["nu > 0", "mu > 0", "t >= 0", "div(u) = 0"]
+    }
+  ],
+  "evidence": {
+    "symbolic": [
+      "div(u) = 0 para Vórtice de Taylor-Green (exact-symbolic)",
+      "Balanço de momento em x comprovado simbolicamente (exact-symbolic)",
+      "Balanço de dissipação de energia dE/dt + D(t) = 0 (exact-symbolic)",
+      "Identidade da pressão de Poisson comprovada (exact-symbolic)",
+      "Balanço de forças de Poiseuille sob mu > 0 (exact-symbolic)"
+    ],
+    "numerical": [],
+    "formal": [],
+    "counterexamples": [
+      "Campo não-solenoidal (x^2, y^2) refutado",
+      "Parâmetro incorreto de viscosidade refutado",
+      "Conservação de energia espúria sob nu > 0 refutada via contraexemplo relacional",
+      "Condição de contorno incorreta em Poiseuille refutada"
+    ]
+  },
+  "verification": {
+    "result": "inconclusive",
+    "passed_criteria": 13,
+    "total_criteria": 13,
+    "fail_closed_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "independent_review": "pending"
+  },
+  "reproducibility": {
+    "engine_version": "0.2.2",
+    "script": "reports/navier-stokes/validate.py",
+    "command": "python reports/navier-stokes/validate.py",
+    "evidence_file": "reports/navier-stokes/validation.json",
+    "report_file": "reports/navier-stokes/REPORT.md"
+  }
+}

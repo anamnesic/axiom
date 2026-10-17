@@ -1,0 +1,47 @@
+{
+  "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
+  "problem": "poincare-conjecture",
+  "title": "Conjectura de Poincaré",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/05/poincare.pdf",
+  "clay_status": "Solved (Grigori Perelman, 2002-2003)",
+  "maturity_level": "L2",
+  "claims": [
+    {
+      "statement": "Geometria riemanniana da 3-esfera redonda S^3, evolução temporal sob fluxo de Ricci e tempo de colapso finito",
+      "scope": "Curvatura escalar R = 6/R0^2, condição de Einstein, EDO homotética do raio d(r^2)/dt = -4 com tempo de extinção T = R0^2/4 e obstruções topológicas em RP^3 e T^3",
+      "assumptions": ["R0 > 0", "T > 0"]
+    }
+  ],
+  "evidence": {
+    "symbolic": [
+      "Curvatura escalar de S^3 R*R0^2 = 6 (exact-symbolic)",
+      "Condição de variedade de Einstein comprovada (exact-symbolic)",
+      "Derivada da evolução do raio d/dt(R0^2 - 4t) = -4 com antiderivative-roundtrip (exact-symbolic)",
+      "Extinção singular em T = R0^2/4 por substituição exata (exact-substitution)",
+      "Curvatura escalar nula do 3-toro T^3 (exact-symbolic)"
+    ],
+    "numerical": [],
+    "formal": [],
+    "counterexamples": [
+      "Curvatura nula espúria em S^3 refutada com resíduo 6/R0^2",
+      "Quebra da proporcionalidade de Einstein refutada",
+      "Existência global eterna sem cirurgia refutada",
+      "Sonda de homeomorfismo abstrato desprovido de prova recusada fail-closed"
+    ]
+  },
+  "verification": {
+    "result": "proven_auxiliary_lemmas_literature_solved",
+    "passed_criteria": 12,
+    "total_criteria": 12,
+    "fail_closed_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "independent_review": "literature_accepted"
+  },
+  "reproducibility": {
+    "engine_version": "0.2.2",
+    "script": "reports/poincare-conjecture/validate.py",
+    "command": "python reports/poincare-conjecture/validate.py",
+    "evidence_file": "reports/poincare-conjecture/validation.json",
+    "report_file": "reports/poincare-conjecture/REPORT.md"
+  }
+}

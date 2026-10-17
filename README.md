@@ -216,17 +216,22 @@ axiom/
 │   ├── poincare-conjecture/       # Solved 3-manifold geometrization study
 │   ├── riemann-hypothesis/        # Critical line zero audits (RH)
 │   └── yang-mills-mass-gap/       # Quantum gauge theory mass gap queue
+├── research/
+│   ├── conjectures/           # Working hypotheses & empirical claims
+│   ├── lemmas/                # Proven lemmas & Lean 4 kernel-checked proofs
+│   └── counterexamples/       # Systematically cataloged refutations
+├── benchmarks/
+│   ├── millennium/            # Consolidated Millennium Bench (98 criteria, 0% FPR)
+│   └── run_benchmarks.py      # Execution time benchmarks
 ├── skills/
 │   └── mathematics/SKILL.md
 ├── examples/
 │   └── theorems.lean
-├── benchmarks/
-│   └── run_benchmarks.py
 ├── tests/
 │   ├── test_axiom.py          # 45 automated test_* methods
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0011)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0012)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

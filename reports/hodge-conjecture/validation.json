@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T19:08:10.521876+00:00",
+  "timestamp_utc": "2026-10-17T19:25:55.063661+00:00",
   "axiom_version": "0.2.2",
   "problem": "Hodge Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -22,7 +22,7 @@
   },
   "file_hashes": {
     "reports/hodge-conjecture/validate.py": "39ad314cb56af9dc094c3a57695ca6389687088da17991da8495bf0b6428a15c",
-    "reports/hodge-conjecture/README.md": "787f4b923f25dd4dfd28641e55d499cc28636b04d99d04ecd3ab8ced9757262f",
+    "reports/hodge-conjecture/README.md": "2731738affb12b51b00dc1110fff6f35f5806f8b28c3382c8ed99c117c6b6cef",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
   },

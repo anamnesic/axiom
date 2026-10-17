@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T19:12:31.243490+00:00",
+  "timestamp_utc": "2026-10-17T19:26:27.073399+00:00",
   "axiom_version": "0.2.2",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
@@ -23,7 +23,7 @@
   },
   "file_hashes": {
     "reports/poincare-conjecture/validate.py": "8450501b8379b7f5e29202a70248a936d3b79d7b4ae3ccdd452c85907fd66841",
-    "reports/poincare-conjecture/README.md": "c39b1272cd5a60be8e29507561711d368e4d7e168ee859bec107cb1c7103e4ca",
+    "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
   },

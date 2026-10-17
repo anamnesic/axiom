@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T19:01:28.041778+00:00",
+  "timestamp_utc": "2026-10-17T19:25:25.487758+00:00",
   "axiom_version": "0.2.2",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -24,7 +24,7 @@
   },
   "file_hashes": {
     "reports/navier-stokes/validate.py": "11ccebbbcbb150bd2065c4e0c0dd876b3a8c8285ccb2c721c278a81b532cff21",
-    "reports/navier-stokes/README.md": "1bc7ffd90994bbcaa7310e8341ea4181b9c73da0ec6885b5758485253c9181b3",
+    "reports/navier-stokes/README.md": "fe9557ce7fa57743c7feb2432d5dd43b94a78525ea9eea63c39207456a48412f",
     "src/axiom/verification.py": "1cb411e2b9e91cd340c41d8da3bfc28ffa534caa1542eb343b1b95acced6235f",
     "src/axiom/core.py": "bc8c357c86b10b23756f31bf32fec3ff0d76ae74d779a9a43bb125cd0eac1a70"
   },

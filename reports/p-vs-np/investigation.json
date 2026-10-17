@@ -1,0 +1,44 @@
+{
+  "$schema": "https://axiom.chronokairo.com/schemas/investigation-contract-v1.json",
+  "problem": "p-vs-np",
+  "title": "P versus NP",
+  "official_statement": "https://www.claymath.org/wp-content/uploads/2022/06/pvsnp.pdf",
+  "clay_status": "Active (Unsolved)",
+  "maturity_level": "L2",
+  "claims": [
+    {
+      "statement": "Auditoria combinatória do exemplo de Cook (seleção de grupos de 100 alunos em 400) e integridade de verificadores",
+      "scope": "Contagem combinatória C(400, 100) e C(100, 2), conferência independente via biblioteca padrão math.comb e identidade de Pascal, e controles negativos de raízes polinomiais",
+      "assumptions": ["n, k in N"]
+    }
+  ],
+  "evidence": {
+    "symbolic": [
+      "C(400, 100) = 2.24185e96 (exact-symbolic)",
+      "C(100, 2) = 4950 (exact-symbolic)",
+      "Recorrência de Pascal e math.comb validados ortogonalmente"
+    ],
+    "numerical": [],
+    "formal": [
+      "Auditoria de indisponibilidade de ferramentas Lean em ambiente sem lake/lean"
+    ],
+    "counterexamples": [
+      "Raiz espúria x=4 em x^2 - 5x + 6 = 0 refutada com resíduo 2"
+    ]
+  },
+  "verification": {
+    "result": "inconclusive",
+    "passed_criteria": 11,
+    "total_criteria": 11,
+    "fail_closed_rate": 1.0,
+    "false_positive_rate": 0.0,
+    "independent_review": "pending"
+  },
+  "reproducibility": {
+    "engine_version": "0.2.2",
+    "script": "reports/p-vs-np/validate.py",
+    "command": "python reports/p-vs-np/validate.py",
+    "evidence_file": "reports/p-vs-np/validation.json",
+    "report_file": "reports/p-vs-np/REPORT.md"
+  }
+}
