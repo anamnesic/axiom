@@ -522,15 +522,17 @@ class TestAxiom(unittest.TestCase):
         repo_root = Path(__file__).resolve().parent.parent
         for py_file in repo_root.rglob("*.py"):
             src = py_file.read_text(encoding="utf-8")
+            # On Python 3.10, ast.parse itself raises SyntaxError on backslashes in f-strings.
             tree = ast.parse(src, filename=str(py_file))
-            for node in ast.walk(tree):
-                if isinstance(node, ast.FormattedValue):
-                    seg = ast.get_source_segment(src, node) or ""
-                    self.assertNotIn(
-                        "\\",
-                        seg,
-                        f"Python 3.10 incompatible backslash inside f-string at {py_file}:{node.lineno}",
-                    )
+            if sys.version_info >= (3, 12):
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FormattedValue):
+                        seg = ast.get_source_segment(src, node) or ""
+                        self.assertNotIn(
+                            "\\",
+                            seg,
+                            f"Python 3.10 incompatible backslash inside f-string at {py_file}:{node.lineno}",
+                        )
 
     def test_cli_box_and_json_output(self) -> None:
         buf = io.StringIO()

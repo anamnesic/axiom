@@ -46,10 +46,13 @@ def _format_codex_toml_section(server_cfg: dict[str, Any]) -> str:
     """Format the ``[mcp_servers.axiom]`` TOML table for OpenAI Codex ``config.toml``."""
     cmd_escaped = json.dumps(str(server_cfg["command"]))
     args_escaped = ", ".join(json.dumps(str(a)) for a in server_cfg.get("args", []))
-    return (
-        "[mcp_servers.axiom]\n"
-        f"command = {cmd_escaped}\n"
-        f"args = [{args_escaped}]\n"
+    return "\n".join(
+        [
+            "[mcp_servers.axiom]",
+            f"command = {cmd_escaped}",
+            f"args = [{args_escaped}]",
+            "",
+        ]
     )
 
 
