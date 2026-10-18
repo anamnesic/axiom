@@ -251,12 +251,45 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
     }
     all_passed = all(checks.values())
 
+    # Discover available agent skills
+    skills_list: list[dict[str, str]] = []
+    repo_roots = [Path(__file__).resolve().parents[2], Path.cwd()]
+    for root in repo_roots:
+        s_dir = root / "skills"
+        if s_dir.exists() and s_dir.is_dir():
+            for skill_md in sorted(s_dir.glob("**/SKILL.md")):
+                try:
+                    text = skill_md.read_text(encoding="utf-8")
+                    name = skill_md.parent.name
+                    desc = ""
+                    if text.startswith("---"):
+                        parts = text.split("---", 2)
+                        if len(parts) >= 3:
+                            for line in parts[1].splitlines():
+                                if line.startswith("name:"):
+                                    name = line.split(":", 1)[1].strip()
+                                elif line.startswith("description:"):
+                                    desc = line.split(":", 1)[1].strip()
+                    rel_path = str(skill_md.relative_to(root)).replace("\\", "/")
+                    skills_list.append({
+                        "name": name,
+                        "path": rel_path,
+                        "description": desc,
+                    })
+                except Exception:
+                    pass
+            if skills_list:
+                break
+
     return {
         "ok": all_passed,
         "python": sys.version.split()[0],
         "mcp_tools_count": len(TOOL_DEFINITIONS),
+        "skills_count": len(skills_list),
+        "skills": skills_list,
         "packages": packages,
         "external_toolchains": binaries,
         "engines": engines_info,
         "self_tests": checks,
     }
+

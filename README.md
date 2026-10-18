@@ -239,10 +239,13 @@ axiom session status
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0017`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0020`).
+- **[Catálogo de Agent Skills](docs/skills-catalog.md)** — Catálogo de GitHub Agent Skills em 5 pilares para matemática, pesquisa, provas e testes.
+- **[Skills Library (`skills/README.md`)](skills/README.md)** — 15 Agent Skills padronizadas para Claude Code, Codex, Antigravity e Copilot.
+- **[Tutorial AXIOM (`TUTORIAL.md`)](TUTORIAL.md)** — Guia prático de uso via CLI e MCP para humanos e agentes.
 - **[Use Cases & Verification Guide](docs/use-cases.md)** — 10 end-to-end CLI & MCP demonstrations across the Four Epistemic States.
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
-- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`, Cloud MCP, and API MCP Service), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
+- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP, `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
 
 ## Scientific Research & Academic Foundation

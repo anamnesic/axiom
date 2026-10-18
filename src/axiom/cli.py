@@ -447,6 +447,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print("  Toolchains:")
                 for k, v in report["external_toolchains"].items():
                     print(f"    - {k:<12} {v or 'not installed'}")
+            if "skills_count" in report and report["skills_count"] > 0:
+                print(f"  Agent skills: {report['skills_count']} installed")
+                for s in report.get("skills", [])[:6]:
+                    print(f"    - {s['name']:<30} ({s['path']})")
+                if len(report.get("skills", [])) > 6:
+                    print(f"    ... and {len(report['skills']) - 6} more (see skills/README.md)")
             print("  Self-tests:")
             for k, passed in report["self_tests"].items():
                 print(f"    - {k:<26} {'PASSED' if passed else 'FAILED'}")
