@@ -36,6 +36,17 @@ axiom solve "x^2 - 5*x + 6 = 0"
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+### The Four Epistemic States
+
+AXIOM strictly categorizes all mathematical reasoning and computational output into **four mutually exclusive epistemic states** ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md)):
+
+| Epistemic State | Core Guarantees & Status | Definition & Invariants | Fail-Closed Verification Criteria |
+| :--- | :--- | :--- | :--- |
+| **Proof** *(Prova)* | `formal-proof`, `exact-symbolic`, `verified-substitution` | Certified mathematical truth. An exact symbolic identity, machine-checked Lean 4 kernel derivation (`#print axioms`), or verified equation roots. | `Verification.passed == True`, exact symbolic residual $0$, no unverified axioms/hypotheses, congruent spec alignment. |
+| **Approximation** *(Aproximação)* | `numerical-approximation`, `approximately_equal` | Numerical evaluation or bounded sequence probing within specified tolerance $\epsilon$. Inexact float absorption is rejected. | Finite error $\le \epsilon$, `equivalent == False`, `approximately_equal == True`. Never granted `EXACT_SYMBOLIC`. |
+| **Refutation** *(Refutação)* | `refuted`, `disproven` | Concrete counterexample discovered, candidate root fails substitution ($f(r) \neq 0$), or reflexive tautology rejected. | Independent verification proves the claim is false. `Verification.passed == False`, `value_str == "refuted"`. |
+| **Inconclusive** *(Inconclusão)* | `inconclusive`, `unverified` | Truth or equivalence cannot be determined within available symbolic algorithms, samples, or timeouts. | Fail-closed state. `guarantee == Guarantee.UNVERIFIED`. Never promoted to proof. |
+
 ### Guarantee levels
 
 Not every operation carries the same logical strength. AXIOM separates **mathematical correctness claims** (`guarantee.is_mathematical_claim == True`, which strictly require an executed `Verification(passed=True)` in `MathResult`) from **operational / structural states** (`is_mathematical_claim == False`):
@@ -133,7 +144,81 @@ axiom mcp
 | **4. Catalog Lookup** | 1 | `math_search_mathlib` (`catalog-lookup`) |
 | **5. Visualization & Session** | 2 | `math_plot` (`sampled-visualization`), `math_session` (weakest-link `chain_guarantee`) |
 
-### CLI Examples
+### Use Cases: The Four Epistemic States in Action (CLI & MCP)
+
+AXIOM ensures that AI agents and human researchers can reliably trigger and inspect each epistemic state via both the command line (`axiom`) and MCP tools:
+
+#### 1. Proof (Certified Mathematical Truth)
+- **CLI (Equation Root Verification)**:
+  ```bash
+  axiom solve "x^2 - 5*x + 6 = 0"
+  # Output: Guarantee: [VERIFIED] VERIFIED-SUBSTITUTION (residual 0.00e+00)
+  ```
+- **CLI (Lean 4 Formal Proof Audit)**:
+  ```bash
+  axiom prove "theorem nat_add_comm (n m : Nat) : n + m = m + n := by omega" --engine lean
+  # Output: Guarantee: [VERIFIED] FORMAL-PROOF (Lean 4 kernel checked, #print axioms verified)
+  ```
+- **MCP Tool (`math_solve` / `math_prove`)**:
+  ```json
+  // Request: math_solve {"equation": "x^2 - 5*x + 6 = 0"}
+  // Result: {"value": [2, 3], "guarantee": "verified-substitution", "verification": {"passed": true}}
+  ```
+
+#### 2. Approximation (Bounded Numerical Evidence)
+- **CLI (High-Precision Numerical Comparison)**:
+  ```bash
+  axiom compare "pi" "3.141592653589793" --tolerance 1e-12
+  # Output: Guarantee: [APPROXIMATE] NUMERICAL-APPROXIMATION (approximately_equal=true, equivalent=false)
+  ```
+- **CLI (Arbitrary-Precision Arithmetic)**:
+  ```bash
+  axiom evaluate "sqrt(2)" --precision 50
+  # Output: Guarantee: [APPROXIMATE] NUMERICAL-APPROXIMATION (50 decimal places)
+  ```
+- **MCP Tool (`math_compare` / `math_evaluate`)**:
+  ```json
+  // Request: math_compare {"a": "pi", "b": "3.141592653589793", "tolerance": 1e-12}
+  // Result: {"value": "approximately_equal", "guarantee": "numerical-approximation", "verification": {"passed": true}}
+  ```
+
+#### 3. Refutation (Active Counterexample Discovery)
+- **CLI (Refuting Adversarial Identity Claim)**:
+  ```bash
+  # Claim: P(x) = (x+1)*(x-2)*(x^2+1)*(x^2-2*x+2) == 0
+  axiom compare "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)" "0"
+  # Output: Guarantee: [REFUTED] UNVERIFIED (counterexample discovered at x=3: P(3)=130 != 0)
+  ```
+- **CLI (Rejecting Fake/Trivial Tautology in Lean)**:
+  ```bash
+  axiom prove "theorem fake : 1 = 2 := by admit" --engine lean
+  # Output: Verification: FAILED (sorry/admit detected, UNVERIFIED)
+  ```
+- **MCP Tool (`math_compare` / `math_verify`)**:
+  ```json
+  // Request: math_compare {"a": "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)", "b": "0"}
+  // Result: {"value": "refuted", "guarantee": "unverified", "verification": {"passed": false, "counterexample": {"x": 3}}}
+  ```
+
+#### 4. Inconclusive & Multi-Step Derivation Chains
+- **CLI (Multi-Step Research Session with Isolated Step vs. Chain Validity)**:
+  ```bash
+  axiom session new --title "Navier-Stokes Dissipation"
+  axiom session record --step 1 --command "axiom solve 'x - 1 = 0'"
+  axiom session record --step 2 --command "axiom prove 'x = 2' --engine sympy" --depends-on 1
+  axiom session status
+  # Step 1: step_valid=True, chain_valid=True
+  # Step 2: step_valid=False, chain_valid=False (broken dependency triggers fail-closed chain)
+  ```
+- **MCP Tool (`math_session` / `math_plot`)**:
+  ```json
+  // Request: math_session {"action": "record", "expression": "x = 2", "depends_on": [1]}
+  // Result: {"step_valid": false, "chain_valid": false, "chain_guarantee": "unverified"}
+  // Request: math_plot {"expression": "sin(x)/x", "output": "sinc.svg"}
+  // Result: {"guarantee": "sampled-visualization", "verification": {"passed": true}}
+  ```
+
+### CLI Quick Reference
 
 ```bash
 axiom solve "x^2 - 5*x + 6 = 0"
@@ -146,11 +231,13 @@ axiom search-mathlib "binomial square"
 axiom plot "sin(x)/x" --range -10:10 --output sinc.svg
 axiom prove examples/theorems.lean --engine lean
 axiom verify solution.json
+axiom session status
 ```
 
 ## Documentation & ADR Log
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0011`).
+- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0017`).
+- **[Use Cases & Verification Guide](docs/use-cases.md)** — 10 end-to-end CLI & MCP demonstrations across the Four Epistemic States.
 - **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
 - **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP (`AgentTools`, Cloud MCP, and API MCP Service), `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
 - **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
@@ -180,6 +267,7 @@ AXIOM operates as a rigorous neuro-symbolic research harness designed for mathem
 - [x] **v0.2.3 — Scientific Benchmark Integrity & Millenium Research Bench**: Dynamic computation of fail-closed and false-positive rates from test records, Taylor-Green analytical kinetic energy $E(t) = \pi^2 e^{-4\nu t}$, strict contemporary evidence isolation in benchmark runners, and 100% fail-closed open problem boundary probes across all 7 Clay Millennium problems (`49` tests).
 - [x] **v0.2.4 — Formal Specification Soundness & Alignment Governance**: Semantic specification alignment auditor (`_audit_specification_alignment`) decoupling declared from verified alignment, SymPy kernel validity strictly gated to `False` (`status: not_applicable`), transparent fail-closed assumptions audit (`warning_undeclared_hypotheses`), zero-fallback evidence isolation, Navier-Stokes viscous dissipation $D(t) = 4\nu\pi^2 e^{-4\nu t}$ completely derived by spatial integration from velocity fields, and formal Lean 4 forced variant model with anti-drift control (`51` tests).
 - [x] **v0.2.5 — Formal Statement Integrity & Four-State Semantic Alignment**: Comment stripping and Lean 4 proposition signature parsing preventing keyword spoofing, canonical 4-state alignment (`verified`, `scoped`, `candidate`, `unaligned`), strict decoupling of Lean 4 kernel validity from spec alignment, fail-closed blocking of canonical certification on undeclared hypotheses, and Navier-Stokes Taylor-Green kinetic energy $E(t) = \pi^2 e^{-4\nu t}$ fully derived by double spatial integration of velocity fields (`54` tests).
+- [x] **v0.2.6 — Four Epistemic States & Adversarial Soundness**: Complete 4-epistemic-state separation (Proof, Approximation, Refutation, Inconclusive), zero lexical match to verified, depth-aware Lean binder parsing, revalidation gating on imported results, step vs. chain validity tracking, untrusted Lean sandbox with memory/heartbeat/timeout limits, MCP authorized path restriction, benchmark invariant enforcement, and zero-mock adversarial test suite ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md), `63` `pytest` tests).
 - [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
 
 ## Repository Layout
@@ -232,9 +320,10 @@ axiom/
 │   └── theorems.lean
 ├── tests/
 │   ├── test_axiom.py          # 54 automated test_* methods
+│   ├── test_adversarial.py    # 9 adversarial soundness & isolation tests
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0016)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0017)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

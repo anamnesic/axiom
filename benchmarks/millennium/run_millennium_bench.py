@@ -190,15 +190,57 @@ def run_problem_suite(name: str, folder: str) -> dict:
 
     shutil.rmtree(temp_dir, ignore_errors=True)
 
+    # Item 8: Benchmarks reject inconsistent metrics and missing outputs
+    if not proc.stdout or not proc.stdout.strip():
+        failed_criteria.append("missing_stdout_output")
+
     if eval_count == 0:
         failed_criteria.append("empty_evaluation_suite")
+
+    # Count range checks
+    if any(c < 0 for c in (pos_count, tp_count, neg_count, fc_count, fp_count, eval_count, passed_count)):
+        failed_criteria.append("negative_count_metric")
+
+    if tp_count > pos_count:
+        failed_criteria.append(f"inconsistent_true_positives ({tp_count} > {pos_count})")
+
+    if fc_count > neg_count:
+        failed_criteria.append(f"inconsistent_fail_closed ({fc_count} > {neg_count})")
+
+    if fp_count > neg_count:
+        failed_criteria.append(f"inconsistent_false_positives ({fp_count} > {neg_count})")
+
+    if passed_count > eval_count:
+        failed_criteria.append(f"inconsistent_passed_evaluations ({passed_count} > {eval_count})")
+
+    if pos_count + neg_count > eval_count:
+        failed_criteria.append(f"inconsistent_claims_exceed_total ({pos_count} + {neg_count} > {eval_count})")
+
+    if neg_count > 0 and (fc_count + fp_count != neg_count):
+        failed_criteria.append(f"inconsistent_negative_controls_sum ({fc_count} + {fp_count} != {neg_count})")
+
+    # Rate consistency checks
+    if neg_count > 0:
+        expected_fc = fc_count / neg_count
+        expected_fp = fp_count / neg_count
+        if abs(fail_closed_rate - expected_fc) > 1e-4:
+            failed_criteria.append("inconsistent_fail_closed_rate")
+        if abs(false_pos_rate - expected_fp) > 1e-4:
+            failed_criteria.append("inconsistent_false_positive_rate")
+
+    if pos_count > 0:
+        expected_tp = tp_count / pos_count
+        if abs(true_pos_rate - expected_tp) > 1e-4:
+            failed_criteria.append("inconsistent_true_positive_rate")
 
     suite_ok = (
         (proc.returncode == 0)
         and (eval_count > 0)
         and (passed_count == eval_count)
         and (fp_count == 0)
+        and (len(failed_criteria) == 0)
     )
+
 
     return {
         "name": name,

@@ -9,6 +9,8 @@ from typing import Callable
 from axiom import Axiom
 
 
+import sys
+
 def run_suite() -> dict[str, object]:
     ax = Axiom()
     tasks: list[tuple[str, Callable[[], object]]] = [
@@ -27,10 +29,27 @@ def run_suite() -> dict[str, object]:
     ]
 
     results = []
+    inconsistencies = []
     for name, fn in tasks:
         t0 = time.perf_counter()
         res = fn()
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
+
+        # Reject missing outputs
+        if res is None:
+            inconsistencies.append(f"task '{name}' returned None output")
+            continue
+        if not getattr(res, "ok", False):
+            inconsistencies.append(f"task '{name}' failed with ok=False: {getattr(res, 'error', '')}")
+        if getattr(res, "value", None) is None:
+            inconsistencies.append(f"task '{name}' produced missing value (None)")
+
+        # Reject inconsistent metrics
+        if elapsed_ms < 0:
+            inconsistencies.append(f"task '{name}' produced negative elapsed time")
+        if res.verified and res.guarantee.value == "unverified":
+            inconsistencies.append(f"task '{name}' marked verified with guarantee 'unverified'")
+
         results.append(
             {
                 "task": name,
@@ -41,13 +60,23 @@ def run_suite() -> dict[str, object]:
             }
         )
 
+    all_verified = (
+        len(inconsistencies) == 0
+        and len(results) == len(tasks)
+        and all(r["verified"] for r in results)
+    )
+
     return {
         "tasks_count": len(results),
-        "all_verified": all(r["verified"] for r in results),
+        "all_verified": all_verified,
         "total_ms": round(sum(r["elapsed_ms"] for r in results), 2),
+        "inconsistencies": inconsistencies,
         "benchmarks": results,
     }
 
 
 if __name__ == "__main__":
-    print(json.dumps(run_suite(), indent=2))
+    suite = run_suite()
+    print(json.dumps(suite, indent=2))
+    sys.exit(0 if suite["all_verified"] else 1)
+

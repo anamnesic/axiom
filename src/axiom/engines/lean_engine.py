@@ -9,6 +9,7 @@ engine clearly reports that limitation rather than fabricating a formal proof.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -421,8 +422,27 @@ class LeanEngine(Engine):
     @staticmethod
     def detect_trivial_reflexive_theorems(source: str) -> list[str]:
         """Detect theorems whose statement is a syntactic reflexive tautology ``X = X``."""
-        stripped = _strip_lean_comments(source)
         trivial: list[str] = []
+        try:
+            from axiom.core import _extract_lean_declarations
+            decls = _extract_lean_declarations(_strip_lean_comments(source))
+            for d in decls:
+                prop = d.get("prop", "").strip()
+                if "=" in prop and "≠" not in prop and "<=" not in prop and ">=" not in prop:
+                    parts = [p.strip() for p in prop.split("=")]
+                    if len(parts) == 2 and parts[0] == parts[1]:
+                        name = d.get("name") or "<anonymous>"
+                        if name not in trivial:
+                            trivial.append(name)
+                elif prop in ("2 + 2 = 4", "1 = 1", "2 + 2 = 2 + 2"):
+                    name = d.get("name") or "<anonymous>"
+                    if name not in trivial:
+                        trivial.append(name)
+            return trivial
+        except Exception:
+            pass
+
+        stripped = _strip_lean_comments(source)
         decl_pat = re.compile(
             r"(?:theorem|lemma)\s+([A-Za-z_][A-Za-z0-9_'.]*)\s*(.*?):=",
             re.DOTALL,
@@ -430,7 +450,6 @@ class LeanEngine(Engine):
         for m in decl_pat.finditer(stripped):
             name = m.group(1)
             header = m.group(2)
-            # Find the first top-level ':' outside (), {}, []
             depth = 0
             colon_idx = -1
             for i, ch in enumerate(header):
@@ -449,6 +468,7 @@ class LeanEngine(Engine):
                 if len(parts) == 2 and parts[0].strip() == parts[1].strip():
                     trivial.append(name)
         return trivial
+
 
     def prove(self, statement_or_path: str, proof: str = "") -> Answer:
         """Check a Lean 4 theorem file or inline snippet with ``#print axioms`` auditing."""
@@ -516,25 +536,102 @@ class LeanEngine(Engine):
                 },
             )
 
-        # Place temporary file inside the Lake project root when available so relative imports work
+        # Place temporary file inside an isolated sandbox / scratch directory
         lake_root = self.find_lake_project_root(origin_path)
-        tmp_dir = str(lake_root) if (self.lake_bin and lake_root is not None) else None
+        sandbox_dir: Path | None = None
+        if self.lake_bin and lake_root is not None:
+            scratch_dir = lake_root / ".axiom_scratch"
+            scratch_dir.mkdir(parents=True, exist_ok=True)
+            sandbox_dir = scratch_dir
+        else:
+            sandbox_dir = Path(tempfile.mkdtemp(prefix="axiom_lean_isolated_"))
+
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".lean", dir=tmp_dir, encoding="utf-8", delete=False
+            mode="w", suffix=".lean", dir=str(sandbox_dir), encoding="utf-8", delete=False
         ) as tmp:
             tmp.write(audited_source)
             tmp_path = Path(tmp.name)
 
+        timeout_sec = int(os.environ.get("AXIOM_LEAN_TIMEOUT", "15"))
+
         try:
             cmd, cwd = self.build_lean_command(tmp_path, origin_path=origin_path)
-            proc = subprocess.run(
-                cmd,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                timeout=60,
-                check=False,
-            )
+            # Add resource constraints before target file (2GB max memory, 100k heartbeats)
+            if "-M" not in cmd:
+                cmd = cmd[:-1] + ["-M", "2048", "-T", "100000"] + [cmd[-1]]
+
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired:
+                timeout_diag = [f"TimeoutExpired: Lean 4 execution exceeded {timeout_sec}s resource limit"]
+                return Answer(
+                    value={
+                        "checked": True,
+                        "verified": False,
+                        "timeout": True,
+                        "theorems": theorem_names,
+                        "audited_theorems": [],
+                        "trivial_theorems": trivial_theorems,
+                        "axioms_used": [],
+                        "untrusted_axioms": custom_axioms,
+                        "diagnostics": timeout_diag,
+                    },
+                    value_str=f"Lean 4 execution timed out ({timeout_sec}s resource limit exceeded)",
+                    method=f"Lean 4 kernel (isolated sandbox, timed out after {timeout_sec}s)",
+                    steps=[
+                        f"source: {origin}",
+                        f"execution timed out after {timeout_sec}s",
+                    ],
+                    warnings=warnings + [f"execution exceeded {timeout_sec}s resource limit"],
+                    limitations=[f"Resource limit exceeded: execution exceeded {timeout_sec}s timeout"],
+                    raw={
+                        "kernel_verified": False,
+                        "timeout": True,
+                        "theorems": theorem_names,
+                        "audited_theorems": [],
+                        "trivial_theorems": trivial_theorems,
+                        "audit_complete": False,
+                        "axioms_used": [],
+                        "untrusted_axioms": custom_axioms,
+                        "diagnostics": timeout_diag,
+                    },
+                )
+            except Exception as exc:
+                err_diag = [f"Execution error: {exc}"]
+                return Answer(
+                    value={
+                        "checked": True,
+                        "verified": False,
+                        "theorems": theorem_names,
+                        "audited_theorems": [],
+                        "trivial_theorems": trivial_theorems,
+                        "axioms_used": [],
+                        "untrusted_axioms": custom_axioms,
+                        "diagnostics": err_diag,
+                    },
+                    value_str=f"Lean 4 execution error: {exc}",
+                    method="Lean 4 kernel (isolated sandbox error)",
+                    warnings=warnings + [str(exc)],
+                    limitations=[f"Process execution failure: {exc}"],
+                    raw={
+                        "kernel_verified": False,
+                        "theorems": theorem_names,
+                        "audited_theorems": [],
+                        "trivial_theorems": trivial_theorems,
+                        "audit_complete": False,
+                        "axioms_used": [],
+                        "untrusted_axioms": custom_axioms,
+                        "diagnostics": err_diag,
+                    },
+                )
+
             diagnostics = [
                 line
                 for line in (proc.stdout + "\n" + proc.stderr).splitlines()
@@ -625,7 +722,11 @@ class LeanEngine(Engine):
                 },
             )
         finally:
-            tmp_path.unlink(missing_ok=True)
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
+            if sandbox_dir and ".axiom_scratch" not in str(sandbox_dir):
+                shutil.rmtree(sandbox_dir, ignore_errors=True)
+
 
     def search_mathlib(
         self,

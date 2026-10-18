@@ -24,11 +24,15 @@ out-of-the-box in any environment.
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 import sys
+import tempfile
 from typing import Any
 
 from axiom.contract import MathResult, error_result
 from axiom.core import Axiom
+
 
 _ASSUMPTIONS_PROPERTY: dict[str, Any] = {
     "oneOf": [
@@ -539,6 +543,55 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 ]
 
 
+def get_authorized_roots() -> list[Path]:
+    """Return authorized directory roots for MCP file reads and writes."""
+    roots = [Path.cwd().resolve(), Path(tempfile.gettempdir()).resolve()]
+    env_dirs = os.environ.get("AXIOM_ALLOWED_DIRS", "")
+    if env_dirs:
+        for p in env_dirs.split(os.pathsep):
+            if p.strip():
+                try:
+                    roots.append(Path(p.strip()).resolve())
+                except Exception:
+                    pass
+    return roots
+
+
+def validate_mcp_path(path_str: str, mode: str = "r") -> tuple[bool, Path | None, str]:
+    """Validate that path_str resolves to an authorized directory with permitted access."""
+    if not path_str or not isinstance(path_str, str):
+        return False, None, "Path cannot be empty"
+    try:
+        p = Path(path_str).resolve()
+    except Exception as exc:
+        return False, None, f"Invalid path syntax: {exc}"
+
+    roots = get_authorized_roots()
+    is_authorized = any(p == r or r in p.parents for r in roots)
+    if not is_authorized:
+        return (
+            False,
+            p,
+            f"Permission denied: path '{path_str}' is outside authorized MCP directories {roots}",
+        )
+
+    if mode == "r":
+        if not p.exists():
+            return False, p, f"File not found: '{path_str}'"
+        if not p.is_file():
+            return False, p, f"Path is not a regular file: '{path_str}'"
+    elif mode == "w":
+        if p.exists() and p.is_dir():
+            return False, p, f"Path is an existing directory, not a file target: '{path_str}'"
+        parent = p.parent
+        if not parent.exists():
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+            except Exception as exc:
+                return False, p, f"Cannot create directory for path '{path_str}': {exc}"
+    return True, p, ""
+
+
 def dispatch_tool(
     name: str,
     arguments: dict[str, Any] | None = None,
@@ -563,8 +616,11 @@ def dispatch_tool(
         return ax.simplify(args["expression"], assumptions=assump, engine=eng)
 
     if name == "math_solve":
+        expr = args.get("expression") or args.get("equation")
+        if not expr:
+            return error_result("math_solve", "", "missing required parameter 'expression'")
         return ax.solve(
-            args["expression"],
+            expr,
             variable=args.get("variable"),
             assumptions=args.get("assumptions"),
             engine=args.get("engine"),
@@ -608,17 +664,39 @@ def dispatch_tool(
     if name == "math_plot":
         x_min = float(args.get("min", -10.0))
         x_max = float(args.get("max", 10.0))
+        range_str = args.get("range_str")
+        if range_str and ":" in str(range_str):
+            try:
+                parts = str(range_str).split(":")
+                x_min, x_max = float(parts[0]), float(parts[1])
+            except Exception:
+                pass
+        output_path = args.get("output")
+        if output_path:
+            ok, valid_path, err = validate_mcp_path(output_path, mode="w")
+            if not ok:
+                return error_result("math_plot", output_path, err)
+            output_path = str(valid_path)
         return ax.plot(
             args["expression"],
             variable=args.get("variable"),
             range_=(x_min, x_max),
             points=int(args.get("points", 101)),
-            output=args.get("output"),
+            output=output_path,
         )
 
     if name == "math_prove":
+        stmt = args["statement"]
+        if (
+            stmt.endswith(".lean")
+            or (len(stmt) < 260 and "\n" not in stmt and Path(stmt).is_file())
+        ) and not stmt.startswith(("theorem ", "lemma ", "def ", "example ", "--")):
+            ok, valid_path, err = validate_mcp_path(stmt, mode="r")
+            if not ok:
+                return error_result("math_prove", stmt, err)
+            stmt = str(valid_path)
         return ax.prove(
-            args["statement"],
+            stmt,
             proof=args.get("proof", ""),
             engine=args.get("engine", "lean"),
             canonical_statement=args.get("canonical_statement"),
@@ -627,12 +705,22 @@ def dispatch_tool(
         )
 
     if name == "math_verify":
+        target = args["target"]
+        if isinstance(target, str) and (
+            target.endswith(".json")
+            or (len(target) < 260 and "\n" not in target and Path(target).is_file())
+        ):
+            ok, valid_path, err = validate_mcp_path(target, mode="r")
+            if not ok:
+                return error_result("math_verify", target, err)
+            target = str(valid_path)
         return ax.verify(
-            args["target"],
+            target,
             candidate=args.get("candidate"),
             variable=args.get("variable"),
             assumptions=args.get("assumptions"),
         )
+
 
     if name == "math_explain":
         return ax.explain(

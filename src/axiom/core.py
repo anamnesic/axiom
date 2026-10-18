@@ -166,44 +166,129 @@ _CANONICAL_DOMAINS: dict[str, dict[str, Any]] = {
 
 
 def _strip_lean_comments(text: str) -> str:
-    """Strip Lean 4 single-line and nested block comments."""
-    result = []
+    """Strip Lean 4 single-line and nested block comments, respecting string literals."""
+    result: list[str] = []
     i = 0
     n = len(text)
-    depth = 0
+    block_depth = 0
+    in_line_comment = False
+    in_string = False
+
     while i < n:
-        if i + 1 < n and text[i : i + 2] == "/-":
-            depth += 1
-            i += 2
-        elif i + 1 < n and text[i : i + 2] == "-/":
-            if depth > 0:
-                depth -= 1
-            i += 2
-        elif depth > 0:
+        ch = text[i]
+        next_ch = text[i + 1] if i + 1 < n else ""
+
+        if in_line_comment:
+            if ch == "\n":
+                in_line_comment = False
+                result.append("\n")
             i += 1
+        elif block_depth > 0:
+            if ch == "/" and next_ch == "-":
+                block_depth += 1
+                i += 2
+            elif ch == "-" and next_ch == "/":
+                block_depth -= 1
+                i += 2
+                if block_depth == 0:
+                    result.append(" ")
+            elif ch == "\n":
+                result.append("\n")
+                i += 1
+            else:
+                i += 1
+        elif in_string:
+            result.append(ch)
+            if ch == "\\" and i + 1 < n:
+                result.append(text[i + 1])
+                i += 2
+            elif ch == '"':
+                in_string = False
+                i += 1
+            else:
+                i += 1
         else:
-            result.append(text[i])
-            i += 1
-    no_block = "".join(result)
-    lines = []
-    for line in no_block.splitlines():
-        clean_line = re.sub(r"--.*$", "", line)
-        lines.append(clean_line)
-    return "\n".join(lines)
+            if ch == "-" and next_ch == "-":
+                in_line_comment = True
+                i += 2
+            elif ch == "/" and next_ch == "-":
+                block_depth = 1
+                i += 2
+            elif ch == '"':
+                in_string = True
+                result.append(ch)
+                i += 1
+            else:
+                result.append(ch)
+                i += 1
+
+    return "".join(result)
 
 
 def _extract_lean_declarations(clean_source: str) -> list[dict[str, str]]:
     """Extract formal declaration names, parameter binders, and return propositions from Lean source."""
-    decls = []
-    pattern = re.compile(
-        r"\b(theorem|lemma|example|def)\s+([A-Za-z0-9_']+)?\s*([^{:=]*?)\s*:\s*([^:=]+?)(?::=|where|\bby\b|$)",
-        re.MULTILINE,
-    )
-    for m in pattern.finditer(clean_source):
-        kind = m.group(1).strip()
-        name = (m.group(2) or "").strip()
-        binders = (m.group(3) or "").strip()
-        prop = (m.group(4) or "").strip()
+    clean_source = _strip_lean_comments(clean_source)
+    decls: list[dict[str, str]] = []
+    kw_pat = re.compile(r"\b(theorem|lemma|def|example)\b")
+    n = len(clean_source)
+    for m in kw_pat.finditer(clean_source):
+        kind = m.group(1)
+        pos = m.end()
+        while pos < n and clean_source[pos].isspace():
+            pos += 1
+        name = ""
+        if kind != "example" or (pos < n and clean_source[pos] not in ":({["):
+            nm = re.match(r"([A-Za-z0-9_'.]+)", clean_source[pos:])
+            if nm:
+                name = nm.group(1)
+                pos += nm.end()
+
+        # Scan for top-level ':' outside (), {}, [] separating binders from proposition
+        binders_start = pos
+        depth = 0
+        colon_pos = -1
+        while pos < n:
+            ch = clean_source[pos]
+            if ch in "({[":
+                depth += 1
+            elif ch in ")}]":
+                depth = max(0, depth - 1)
+            elif ch == ":" and depth == 0:
+                if pos + 1 < n and clean_source[pos + 1] == "=":
+                    break
+                colon_pos = pos
+                pos += 1
+                break
+            elif depth == 0 and (
+                clean_source[pos : pos + 2] == ":="
+                or re.match(r"\b(where|by)\b", clean_source[pos:])
+            ):
+                break
+            pos += 1
+
+        if colon_pos == -1:
+            continue
+
+        binders = clean_source[binders_start:colon_pos].strip()
+        prop_start = pos
+        depth = 0
+        end_pos = n
+        while pos < n:
+            ch = clean_source[pos]
+            if ch in "({[":
+                depth += 1
+            elif ch in ")}]":
+                depth = max(0, depth - 1)
+            elif depth == 0:
+                if clean_source[pos : pos + 2] == ":=":
+                    end_pos = pos
+                    break
+                elif re.match(r"\b(where|by)\b", clean_source[pos:]):
+                    end_pos = pos
+                    break
+            pos += 1
+
+        prop = clean_source[prop_start:end_pos].strip()
         decls.append({
             "kind": kind,
             "name": name,
@@ -211,6 +296,7 @@ def _extract_lean_declarations(clean_source: str) -> list[dict[str, str]]:
             "prop": prop,
         })
     return decls
+
 
 
 def _audit_specification_alignment(
@@ -257,17 +343,23 @@ def _audit_specification_alignment(
             "Declared as tautology control theorem; cannot serve as proof of canonical mathematical statements.",
         )
 
-    has_taut = False
-    for d in decls:
-        p = d["prop"].strip()
-        parts = [s.strip() for s in p.split("=")]
+    def _is_taut_prop(p: str) -> bool:
+        p_clean = p.strip()
+        parts = [s.strip() for s in p_clean.split("=")]
         if len(parts) == 2 and parts[0] == parts[1]:
-            has_taut = True
-            break
-        if p in ("2 + 2 = 4", "1 = 1", "2 + 2 = 2 + 2"):
-            has_taut = True
-            break
-    if (has_taut and ("by rfl" in combined_clean or "rfl" in combined_clean)) or "fake" in combined_clean:
+            return True
+        return p_clean in ("2 + 2 = 4", "1 = 1", "2 + 2 = 2 + 2")
+
+    is_tautology = False
+    if decls:
+        if len(decls) == 1 and _is_taut_prop(decls[0]["prop"]):
+            is_tautology = True
+        elif all(_is_taut_prop(d["prop"]) for d in decls):
+            is_tautology = True
+    elif _is_taut_prop(statement):
+        is_tautology = True
+
+    if (is_tautology and ("by rfl" in combined_clean or "rfl" in combined_clean)) or "fake" in combined_clean:
         return (
             "tautology_control",
             False,
@@ -275,6 +367,7 @@ def _audit_specification_alignment(
             "tautology_detector",
             "Syntactic reflexive tautology detected in formal proposition; rejected as proof of canonical statement.",
         )
+
 
     c_lower = canonical_statement.lower()
 
@@ -345,6 +438,134 @@ def _audit_specification_alignment(
                 )
 
     # 4. Generic / Non-Millennium canonical statements
+    # Step A: Attempt CERTIFIED mathematical / symbolic equivalence proof.
+    # Specification soundness rule: No lexical match on its own produces 'verified'.
+    # A formal statement can only receive 'verified' (certified congruence) if mathematical
+    # equivalence is verified by symbolic or structural proof, NEVER solely by lexical keyword matching.
+    symbolic_verified = False
+    verified_reason = ""
+
+    prop_to_check = statement.strip()
+    if decls:
+        prop_to_check = decls[0]["prop"].strip()
+
+    c_is_add_zero = any(k in c_lower for k in ("addzero", "add_zero", "additive identity", "additive zero"))
+    c_is_mul_one = any(k in c_lower for k in ("mulone", "mul_one", "multiplicative identity", "multiplication by one"))
+    c_is_comm = any(k in c_lower for k in ("add_comm", "additive commutativity", "commutativity of addition"))
+
+    if c_is_add_zero:
+        eq_split = _split_top_level_equality(prop_to_check)
+        if eq_split:
+            l_str, r_str = eq_split
+            try:
+                p = Parser()
+                l_expr = p.parse_expression(l_str)
+                r_expr = p.parse_expression(r_str)
+                diff = sp.simplify(l_expr - r_expr)
+                free_syms = l_expr.free_symbols | r_expr.free_symbols
+                if diff == 0 and len(free_syms) == 1 and (
+                    "+ 0" in l_str or "0 +" in l_str or "+ 0" in r_str or "0 +" in r_str
+                ):
+                    symbolic_verified = True
+                    verified_reason = "Formal statement is certified congruent as canonical additive identity (x + 0 = x)."
+            except Exception:
+                pass
+
+    elif c_is_mul_one:
+        eq_split = _split_top_level_equality(prop_to_check)
+        if eq_split:
+            l_str, r_str = eq_split
+            try:
+                p = Parser()
+                l_expr = p.parse_expression(l_str)
+                r_expr = p.parse_expression(r_str)
+                diff = sp.simplify(l_expr - r_expr)
+                free_syms = l_expr.free_symbols | r_expr.free_symbols
+                if diff == 0 and len(free_syms) == 1 and (
+                    "* 1" in l_str or "1 *" in l_str or "* 1" in r_str or "1 *" in r_str
+                ):
+                    symbolic_verified = True
+                    verified_reason = "Formal statement is certified congruent as canonical multiplicative identity (x * 1 = x)."
+            except Exception:
+                pass
+
+    elif c_is_comm:
+        eq_split = _split_top_level_equality(prop_to_check)
+        if eq_split:
+            l_str, r_str = eq_split
+            try:
+                p = Parser()
+                l_expr = p.parse_expression(l_str)
+                r_expr = p.parse_expression(r_str)
+                diff = sp.simplify(l_expr - r_expr)
+                free_syms = l_expr.free_symbols | r_expr.free_symbols
+                if diff == 0 and len(free_syms) == 2:
+                    u, v = list(free_syms)
+                    if (
+                        (sp.simplify(l_expr - (u + v)) == 0 and sp.simplify(r_expr - (v + u)) == 0)
+                        or (sp.simplify(l_expr - (v + u)) == 0 and sp.simplify(r_expr - (u + v)) == 0)
+                    ):
+                        symbolic_verified = True
+                        verified_reason = "Formal statement is certified congruent as canonical additive commutativity."
+            except Exception:
+                pass
+
+    if not symbolic_verified and ("=" in canonical_statement or "==" in canonical_statement):
+        canon_eq = _split_top_level_equality(canonical_statement)
+        prop_eq = _split_top_level_equality(prop_to_check)
+        if canon_eq and prop_eq:
+            try:
+                import itertools
+
+                p = Parser()
+                l_c, r_c = p.parse_expression(canon_eq[0]), p.parse_expression(canon_eq[1])
+                l_p, r_p = p.parse_expression(prop_eq[0]), p.parse_expression(prop_eq[1])
+                canon_vars = sorted(list(l_c.free_symbols | r_c.free_symbols), key=str)
+                prop_vars = sorted(list(l_p.free_symbols | r_p.free_symbols), key=str)
+
+                if len(canon_vars) == len(prop_vars):
+                    perms = (
+                        [dict(zip(prop_vars, canon_vars))]
+                        if len(canon_vars) <= 1
+                        else [
+                            dict(zip(prop_vars, p_vars))
+                            for p_vars in itertools.permutations(canon_vars)
+                        ]
+                    )
+                    for sub in perms:
+                        sub_lp = l_p.subs(sub)
+                        sub_rp = r_p.subs(sub)
+
+                        side_by_side = (
+                            (sp.simplify(l_c - sub_lp) == 0 and sp.simplify(r_c - sub_rp) == 0)
+                            or (sp.simplify(l_c - sub_rp) == 0 and sp.simplify(r_c - sub_lp) == 0)
+                        )
+                        if side_by_side:
+                            symbolic_verified = True
+                            verified_reason = "Formal statement equation is symbolically certified congruent to canonical equation."
+                            break
+
+                        diff_c = sp.simplify(l_c - r_c)
+                        diff_p = sp.simplify(sub_lp - sub_rp)
+                        if diff_c != 0 and diff_p != 0:
+                            if sp.simplify(diff_c - diff_p) == 0 or sp.simplify(diff_c + diff_p) == 0:
+                                symbolic_verified = True
+                                verified_reason = "Formal statement equation is symbolically verified congruent to canonical equation."
+                                break
+            except Exception:
+                pass
+
+    if symbolic_verified:
+        return (
+            "verified",
+            True,
+            True,
+            "symbolic_equivalence_certified",
+            verified_reason,
+        )
+
+    # Step B: If NOT symbolically certified, evaluate lexical overlap.
+    # Lexical overlap on its own can ONLY yield 'candidate', NEVER 'verified'!
     c_words = {
         w for w in re.findall(r"[a-z0-9]+", c_lower)
         if len(w) >= 3 and w not in {"for", "the", "and", "with", "that", "this", "real", "numbers"}
@@ -352,16 +573,13 @@ def _audit_specification_alignment(
     f_words = {w for w in re.findall(r"[a-z0-9]+", combined_clean) if len(w) >= 3}
     overlap = c_words.intersection(f_words)
 
-    if ("addzero" in c_lower or "identity" in c_lower) and ("0" in statement or "zero" in combined_clean or "+" in statement):
-        overlap.add("identity")
-
     if overlap:
         return (
-            "verified",
+            "candidate",
             True,
-            True,
-            "lexical_semantic_overlap",
-            "Formal statement is verified congruent with the declared canonical identity.",
+            False,
+            "lexical_thematic_candidate",
+            f"Formal statement shares lexical concept(s) [{', '.join(sorted(overlap)[:4])}] with canonical statement '{canonical_statement}', but mathematical equivalence is uncertified.",
         )
     else:
         return (
@@ -371,6 +589,7 @@ def _audit_specification_alignment(
             "lexical_semantic_mismatch",
             f"Formal statement does not align with canonical statement '{canonical_statement}'.",
         )
+
 
 
 class Axiom:
@@ -857,6 +1076,10 @@ class Axiom:
             return error_result("integrate", expression, str(exc), engine=engine)
 
         ver, guar = verify_integral(expr, ans.raw["object"], var, limits=limits)
+        if limits:
+            ver.data["lower"] = str(lower)
+            ver.data["upper"] = str(upper)
+            ver.data["limits"] = [str(limits[0]), str(limits[1])]
         dom = parser.domain_info(sorted(parser.seen_symbols | expr.free_symbols, key=str))
         if dom["assumptions"]:
             ver.data["assumptions"] = dom["assumptions"]
@@ -1242,14 +1465,40 @@ class Axiom:
             parser = Parser(assumptions=assumptions)
             try:
                 integrand = parser.parse_expression(inp)
-                antideriv = parser.parse_expression(str(val))
+                val_expr = parser.parse_expression(str(val))
                 sym_var = _pick_variable(integrand, var, parser)
             except ParseError as exc:
                 return error_result("verify", inp, str(exc))
-            ver, guar = verify_integral(integrand, antideriv, sym_var)
+
+            # Retrieve lower and upper limits if this is a definite integral
+            limits = None
+            verif_data = (payload.get("verification") or {}).get("data") or {}
+            lower = payload.get("lower") or verif_data.get("lower")
+            upper = payload.get("upper") or verif_data.get("upper")
+            if lower is None and upper is None and verif_data.get("limits"):
+                lims = verif_data.get("limits")
+                if isinstance(lims, (list, tuple)) and len(lims) == 2:
+                    lower, upper = lims[0], lims[1]
+            if lower is None and upper is None:
+                repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+                m_lim = re.search(r"--from\s+([^\s]+)\s+--to\s+([^\s]+)", repro)
+                if m_lim:
+                    lower, upper = m_lim.group(1), m_lim.group(2)
+
+            if lower is not None and upper is not None:
+                try:
+                    limits = (
+                        parser.parse_expression(str(lower)),
+                        parser.parse_expression(str(upper)),
+                    )
+                except Exception:
+                    limits = None
+
+            ver, guar = verify_integral(integrand, val_expr, sym_var, limits=limits)
+            label = f"integral({inp}" + (f", from={lower}, to={upper}" if limits else "") + f") == {val}"
             return MathResult(
                 kind="verify",
-                input=f"integral({inp}) == {val}",
+                input=label,
                 ok=True,
                 value={"verified": ver.passed},
                 value_str="verified" if ver.passed else "refuted",
@@ -1258,15 +1507,53 @@ class Axiom:
                 evidence=Evidence(
                     engine="sympy",
                     engine_version=sp.__version__,
-                    method="antiderivative differentiation check",
+                    method="symbolic/numerical definite integration check" if limits else "antiderivative differentiation check",
                 ),
                 verification=ver,
             )
+
+        # Item 3: Imported/cached results never get formal-proof without revalidation
+        if kind == "prove" or payload.get("guarantee") == Guarantee.FORMAL_PROOF.value:
+            stmt = inp or str(payload.get("input", ""))
+            eng_name = str((payload.get("evidence") or {}).get("engine", "lean"))
+            canon = payload.get("canonical_statement") or (
+                (payload.get("verification") or {})
+                .get("data", {})
+                .get("formal_manifest", {})
+                .get("spec_alignment", {})
+                .get("canonical_statement")
+            )
+            decl_hyps = (
+                (payload.get("verification") or {})
+                .get("data", {})
+                .get("formal_manifest", {})
+                .get("assumptions_audit", {})
+                .get("declared_hypotheses")
+            )
+            proof_code = payload.get("proof") or (payload.get("evidence") or {}).get("proof", "")
+            reval_res = self.prove(
+                stmt,
+                proof=proof_code,
+                engine=eng_name,
+                canonical_statement=canon,
+                declared_hypotheses=decl_hyps,
+            )
+            if not reval_res.verified or reval_res.guarantee != Guarantee.FORMAL_PROOF:
+                reval_res.guarantee = Guarantee.UNVERIFIED
+                if reval_res.verification:
+                    reval_res.verification.passed = False
+                    reval_res.verification.detail = (
+                        "Imported result cannot receive formal-proof without active kernel revalidation: "
+                        + reval_res.verification.detail
+                    )
+            return reval_res
+
         return error_result(
             "verify",
             json.dumps(payload),
             f"unsupported result payload kind for re-verification: {kind!r}",
         )
+
 
     # --------------------------------------------- explain, explore, prove, plot
 
@@ -1545,9 +1832,14 @@ class Axiom:
             "implicit_hypotheses": implicit_hypotheses,
             "status": status_hyp,
         }
+        decls = _extract_lean_declarations(source_text)
 
         if engine.lower() == "sympy":
-            res = self.verify(statement)
+            stmt_to_verify = statement
+            if decls and not _split_top_level_equality(statement):
+                stmt_to_verify = decls[0]["prop"]
+            res = self.verify(stmt_to_verify)
+
             res.kind = "prove"
             # SymPy is an algebraic engine, not a formal interactive proof assistant kernel
             kernel_validity = {
@@ -1575,23 +1867,31 @@ class Axiom:
                 "assumptions_audit": assumptions_audit,
                 "spec_alignment": spec_alignment_record,
             }
-            if res.verification is not None:
+            if res.verification is None:
+                res.verification = Verification(
+                    kind="sympy-verification",
+                    passed=False,
+                    detail=res.error or "SymPy algebraic verification did not pass",
+                    data={"formal_manifest": formal_manifest},
+                )
+            else:
                 if res.verification.data is None:
                     res.verification.data = {}
                 res.verification.data["formal_manifest"] = formal_manifest
-                if verified_alignment == "tautology_control":
-                    res.verification.passed = False
-                    res.verification.detail = "Tautology control theorem rejected as proof of canonical statement"
-                    res.guarantee = Guarantee.UNVERIFIED
-                elif canonical_statement and not is_congruent:
-                    res.verification.passed = False
-                    res.verification.detail = f"Formal statement does not align with canonical statement '{canonical_statement}': {verified_alignment} ({scope_notes})"
-                    res.guarantee = Guarantee.UNVERIFIED
-                elif canonical_statement and assumptions_audit["implicit_hypotheses_flagged"]:
-                    res.verification.passed = False
-                    res.verification.detail = f"Formal proof contains undeclared hypotheses: {', '.join(assumptions_audit['implicit_hypotheses'])}"
-                    res.guarantee = Guarantee.UNVERIFIED
+            if verified_alignment == "tautology_control":
+                res.verification.passed = False
+                res.verification.detail = "Tautology control theorem rejected as proof of canonical statement"
+                res.guarantee = Guarantee.UNVERIFIED
+            elif canonical_statement and not is_congruent:
+                res.verification.passed = False
+                res.verification.detail = f"Formal statement does not align with canonical statement '{canonical_statement}': {verified_alignment} ({scope_notes})"
+                res.guarantee = Guarantee.UNVERIFIED
+            elif canonical_statement and assumptions_audit["implicit_hypotheses_flagged"]:
+                res.verification.passed = False
+                res.verification.detail = f"Formal proof contains undeclared hypotheses: {', '.join(assumptions_audit['implicit_hypotheses'])}"
+                res.guarantee = Guarantee.UNVERIFIED
             return res
+
 
         try:
             lean_eng = self.registry.get(engine)

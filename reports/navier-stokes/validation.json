@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T00:56:37.032966+00:00",
+  "timestamp_utc": "2026-10-18T02:17:42.233795+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -250,7 +250,7 @@
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
     "reports/navier-stokes/REPORT.md": "d4a0c9f066553be1519948bda5a103cb6bc0e0b9f95e2ba6965fa76a25bd9e8e",
     "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "f2ae26542533b798f628b6be1092c7309962c66897c2d01758e28314858ee3b2"
+    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a"
   },
   "runs": {
     "doctor": {
@@ -824,7 +824,15 @@
           "passed": true,
           "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
           "checks": 20,
-          "max_error": 9.015928752147464e-42
+          "max_error": 9.015928752147464e-42,
+          "data": {
+            "lower": "0",
+            "upper": "2*pi",
+            "limits": [
+              "0",
+              "2*pi"
+            ]
+          }
         }
       }
     },
@@ -872,7 +880,15 @@
           "passed": true,
           "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == pi**2*exp(-4*nu*t)",
           "checks": 20,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "lower": "0",
+            "upper": "2*pi",
+            "limits": [
+              "0",
+              "2*pi"
+            ]
+          }
         }
       }
     },
@@ -964,7 +980,15 @@
           "passed": true,
           "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == 2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
           "checks": 20,
-          "max_error": 3.606371500858986e-41
+          "max_error": 3.606371500858986e-41,
+          "data": {
+            "lower": "0",
+            "upper": "2*pi",
+            "limits": [
+              "0",
+              "2*pi"
+            ]
+          }
         }
       }
     },
@@ -1012,7 +1036,15 @@
           "passed": true,
           "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == 4*pi**2*exp(-4*nu*t)",
           "checks": 20,
-          "max_error": 0.0
+          "max_error": 0.0,
+          "data": {
+            "lower": "0",
+            "upper": "2*pi",
+            "limits": [
+              "0",
+              "2*pi"
+            ]
+          }
         }
       }
     },
@@ -1505,7 +1537,7 @@
               "is_aligned": false,
               "congruent": false,
               "audit_method": "domain_ontology_mismatch",
-              "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
+              "scope_notes": "Formal proposition is elementary arithmetic; does not model mathematical concepts of Navier-Stokes Existence and Smoothness."
             }
           },
           "manifest": {
@@ -1550,7 +1582,7 @@
               "is_aligned": false,
               "congruent": false,
               "audit_method": "domain_ontology_mismatch",
-              "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
+              "scope_notes": "Formal proposition is elementary arithmetic; does not model mathematical concepts of Navier-Stokes Existence and Smoothness."
             }
           }
         },
@@ -1575,7 +1607,7 @@
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Formal statement does not align with canonical statement 'Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)': unaligned (Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness.)",
+          "detail": "Formal statement does not align with canonical statement 'Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)': unaligned (Formal proposition is elementary arithmetic; does not model mathematical concepts of Navier-Stokes Existence and Smoothness.)",
           "checks": 1,
           "data": {
             "theorems": [
@@ -1633,7 +1665,7 @@
                 "is_aligned": false,
                 "congruent": false,
                 "audit_method": "domain_ontology_mismatch",
-                "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
+                "scope_notes": "Formal proposition is elementary arithmetic; does not model mathematical concepts of Navier-Stokes Existence and Smoothness."
               }
             }
           }
