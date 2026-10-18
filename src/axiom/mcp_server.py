@@ -687,10 +687,15 @@ def dispatch_tool(
 
     if name == "math_prove":
         stmt = args["statement"]
-        if (
+        is_path_like = (
             stmt.endswith(".lean")
-            or (len(stmt) < 260 and "\n" not in stmt and Path(stmt).is_file())
-        ) and not stmt.startswith(("theorem ", "lemma ", "def ", "example ", "--")):
+            or (
+                len(stmt) < 260
+                and "\n" not in stmt
+                and ("/" in stmt or "\\" in stmt or Path(stmt).is_file())
+            )
+        ) and not stmt.startswith(("theorem ", "lemma ", "def ", "example ", "--"))
+        if is_path_like:
             ok, valid_path, err = validate_mcp_path(stmt, mode="r")
             if not ok:
                 return error_result("math_prove", stmt, err)
@@ -708,7 +713,11 @@ def dispatch_tool(
         target = args["target"]
         if isinstance(target, str) and (
             target.endswith(".json")
-            or (len(target) < 260 and "\n" not in target and Path(target).is_file())
+            or (
+                len(target) < 260
+                and "\n" not in target
+                and ("/" in target or "\\" in target or Path(target).is_file())
+            )
         ):
             ok, valid_path, err = validate_mcp_path(target, mode="r")
             if not ok:

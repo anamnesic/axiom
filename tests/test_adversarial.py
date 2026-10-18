@@ -297,7 +297,7 @@ class TestAdversarialSoundness(unittest.TestCase):
         self.assertIn("existing directory", err_dir)
 
         # Unauthorized absolute path traversal outside project / temp
-        outside_path = "C:\\Windows\\System32\\drivers\\etc\\hosts" if os.name == "nt" else "/etc/shadow"
+        outside_path = "C:\\Windows\\System32\\drivers\\etc\\hosts" if os.name == "nt" else "/etc/hosts"
         ok_out, _, err = validate_mcp_path(outside_path, mode="r")
         self.assertFalse(ok_out)
         self.assertIn("Permission denied", err)
