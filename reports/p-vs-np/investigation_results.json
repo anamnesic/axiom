@@ -1,0 +1,345 @@
+{
+  "timestamp_utc": "2026-10-18T03:59:03.340066+00:00",
+  "investigation_version": "0.2.7-research",
+  "axiom_version": "0.2.6",
+  "total_runtime_seconds": 0.4696846008300781,
+  "experiments": {
+    "experiment_1_asymptotics_and_certificates": {
+      "asymptotic_limits": {
+        "limit_n1_div_2n": {
+          "expression": "n^1 / 2^n",
+          "value": "0",
+          "guarantee": "Guarantee.NUMERICAL_APPROXIMATION",
+          "verified": true
+        },
+        "limit_n2_div_2n": {
+          "expression": "n^2 / 2^n",
+          "value": "0",
+          "guarantee": "Guarantee.NUMERICAL_APPROXIMATION",
+          "verified": true
+        },
+        "limit_n3_div_2n": {
+          "expression": "n^3 / 2^n",
+          "value": "0",
+          "guarantee": "Guarantee.NUMERICAL_APPROXIMATION",
+          "verified": true
+        }
+      },
+      "sat_benchmarks": [
+        {
+          "n_variables": 4,
+          "m_clauses": 4,
+          "search_space_size": 16,
+          "search_time_sec": 1.3400014722719789e-05,
+          "certificate_verify_time_sec": 1.300009898841381e-06,
+          "speedup_ratio": 10.307625145518044,
+          "certificate_valid": true,
+          "certificate": {
+            "1": false,
+            "2": true,
+            "3": false,
+            "4": false
+          }
+        },
+        {
+          "n_variables": 8,
+          "m_clauses": 10,
+          "search_space_size": 256,
+          "search_time_sec": 8.080000407062471e-05,
+          "certificate_verify_time_sec": 2.100015990436077e-06,
+          "speedup_ratio": 38.475899440102005,
+          "certificate_valid": true,
+          "certificate": {
+            "1": false,
+            "2": true,
+            "3": false,
+            "4": false,
+            "5": false,
+            "6": true,
+            "7": false,
+            "8": false
+          }
+        },
+        {
+          "n_variables": 14,
+          "m_clauses": 16,
+          "search_space_size": 16384,
+          "search_time_sec": 0.0017321000050287694,
+          "certificate_verify_time_sec": 3.2999960239976645e-06,
+          "speedup_ratio": 524.879421803205,
+          "certificate_valid": true,
+          "certificate": {
+            "1": true,
+            "2": false,
+            "3": true,
+            "4": false,
+            "5": false,
+            "6": true,
+            "7": false,
+            "8": false,
+            "9": false,
+            "10": true,
+            "11": false,
+            "12": false,
+            "13": false,
+            "14": false
+          }
+        }
+      ],
+      "summary": "Verified that certificate verification is O(m) deterministic, while brute-force search scales as 2^n."
+    },
+    "experiment_2_cook_levin_algebraic_sat": {
+      "sat_polynomial_solving": {
+        "system": "(1 - x)*(1 - y) = 0; x*(1 - y) = 0",
+        "solutions": [
+          {
+            "x": "x",
+            "y": "1"
+          }
+        ],
+        "guarantee": "Guarantee.VERIFIED_SUBSTITUTION",
+        "verification_passed": true
+      },
+      "unsat_fail_closed_solving": {
+        "system": "x = 1; x = 0",
+        "solutions": [],
+        "guarantee": "Guarantee.HEURISTIC",
+        "verification_passed": false
+      },
+      "demorgan_algebraic_proof": {
+        "status": "proven",
+        "equivalent": true,
+        "guarantee": "Guarantee.EXACT_SYMBOLIC",
+        "verification_passed": true
+      },
+      "resolution_algebraic_proof": {
+        "status": "proven",
+        "equivalent": true,
+        "guarantee": "Guarantee.EXACT_SYMBOLIC",
+        "verification_passed": true
+      }
+    },
+    "experiment_3_sensitivity_and_huang_theorem": {
+      "huang_recurrence_square_verification": {
+        "A1_squared_equals_1_I": true,
+        "A2_squared_equals_2_I": true,
+        "A3_squared_equals_3_I": true
+      },
+      "A2_eigenvalues_via_axiom": {
+        "eigenvalues": [
+          {
+            "eigenvalue": "-sqrt(2)",
+            "multiplicity": 2,
+            "eigenvectors": [
+              [
+                [
+                  "-sqrt(2)"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "0"
+                ]
+              ],
+              [
+                [
+                  "1"
+                ],
+                [
+                  "-sqrt(2)"
+                ],
+                [
+                  "0"
+                ],
+                [
+                  "1"
+                ]
+              ]
+            ]
+          },
+          {
+            "eigenvalue": "sqrt(2)",
+            "multiplicity": 2,
+            "eigenvectors": [
+              [
+                [
+                  "sqrt(2)"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "0"
+                ]
+              ],
+              [
+                [
+                  "1"
+                ],
+                [
+                  "sqrt(2)"
+                ],
+                [
+                  "0"
+                ],
+                [
+                  "1"
+                ]
+              ]
+            ]
+          }
+        ],
+        "guarantee": "Guarantee.VERIFIED_SUBSTITUTION",
+        "verified": true
+      },
+      "A3_trace_via_axiom": {
+        "trace": "0",
+        "guarantee": "Guarantee.EXACT_SYMBOLIC",
+        "verified": true
+      },
+      "boolean_functions_sensitivity_vs_degree": [
+        {
+          "name": "PARITY_3",
+          "formula": "x1 ^ x2 ^ x3",
+          "multilinear_polynomial": "x1 + x2 + x3 - 2*(x1*x2 + x2*x3 + x1*x3) + 4*x1*x2*x3",
+          "degree": 3,
+          "sensitivity": 3,
+          "block_sensitivity": 3,
+          "huang_bound_satisfied": true
+        },
+        {
+          "name": "MAJORITY_3",
+          "formula": "MAJ(x1, x2, x3)",
+          "multilinear_polynomial": "x1*x2 + x2*x3 + x1*x3 - 2*x1*x2*x3",
+          "degree": 3,
+          "sensitivity": 2,
+          "block_sensitivity": 2,
+          "huang_bound_satisfied": true
+        },
+        {
+          "name": "AND_3",
+          "formula": "x1 & x2 & x3",
+          "multilinear_polynomial": "x1*x2*x3",
+          "degree": 3,
+          "sensitivity": 3,
+          "block_sensitivity": 3,
+          "huang_bound_satisfied": true
+        }
+      ],
+      "implication": "Hao Huang (2019) proved any induced subgraph H of Q_n with |V(H)| > 2^{n-1} has Delta(H) >= sqrt(n). This confirms deg(f) <= s(f)^2 for all boolean functions."
+    },
+    "experiment_4_classical_barriers": {
+      "baker_gill_solovay_diagonalization": {
+        "stages": [
+          {
+            "n": 3,
+            "query_budget_poly_n": 9,
+            "total_strings_2_pow_n": 8,
+            "unqueried_escape_strings_count": 1,
+            "diagonalization_success": true,
+            "selected_witness": "111"
+          },
+          {
+            "n": 4,
+            "query_budget_poly_n": 16,
+            "total_strings_2_pow_n": 16,
+            "unqueried_escape_strings_count": 1,
+            "diagonalization_success": true,
+            "selected_witness": "1111"
+          },
+          {
+            "n": 5,
+            "query_budget_poly_n": 25,
+            "total_strings_2_pow_n": 32,
+            "unqueried_escape_strings_count": 7,
+            "diagonalization_success": true,
+            "selected_witness": "11001"
+          },
+          {
+            "n": 6,
+            "query_budget_poly_n": 36,
+            "total_strings_2_pow_n": 64,
+            "unqueried_escape_strings_count": 28,
+            "diagonalization_success": true,
+            "selected_witness": "100100"
+          }
+        ],
+        "theorem": "There exist oracles A, B such that P^A = NP^A (e.g. A=TQBF) and P^B != NP^B.",
+        "barrier_conclusion": "Relativizing proof techniques cannot separate P from NP or prove P = NP."
+      },
+      "razborov_rudich_natural_proofs": {
+        "conditions": [
+          "Constructivity (poly in truth table size 2^n)",
+          "Largeness (fraction >= 1/poly(n))",
+          "Usefulness (lower bounds against C)"
+        ],
+        "prf_assumptions": [
+          {
+            "primitive": "Blum-Blum-Shub / Factoring",
+            "circuit_class": "TC^0",
+            "prf_security": "Superpolynomial"
+          },
+          {
+            "primitive": "Decisional Diffie-Hellman",
+            "circuit_class": "TC^0",
+            "prf_security": "Exponential"
+          },
+          {
+            "primitive": "Learning With Errors (LWE)",
+            "circuit_class": "NC^1",
+            "prf_security": "Sub-exponential"
+          }
+        ],
+        "barrier_conclusion": "Any Natural Proof against P/poly breaks pseudorandom functions computable in P/poly."
+      },
+      "aaronson_wigderson_algebrization": {
+        "concept": "Oracles extended as low-degree polynomials over finite fields (arithmetization).",
+        "barrier_conclusion": "Techniques like IP=PSPACE and PCP algebrize; algebrizing techniques cannot separate P from NP."
+      }
+    },
+    "experiment_5_anti_drift_and_fail_closed": {
+      "anti_drift_p_vs_np_rejection": {
+        "statement": "2 + 2 = 4",
+        "canonical_target": "P vs NP",
+        "guarantee": "Guarantee.UNVERIFIED",
+        "verification_passed": false,
+        "spec_alignment": null,
+        "correctly_rejected": true
+      },
+      "negative_root_refutation": {
+        "equation": "x^2 - 5*x + 6 = 0",
+        "candidate": "4",
+        "guarantee": "Guarantee.UNVERIFIED",
+        "verification_passed": false,
+        "correctly_refuted": true
+      },
+      "false_equality_refutation": {
+        "statement": "2 + 2 = 5",
+        "guarantee": "Guarantee.UNVERIFIED",
+        "verification_passed": false,
+        "correctly_refuted": true
+      },
+      "cook_combinatorics": {
+        "C_400_100": {
+          "value": 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320,
+          "matches_math_comb": true,
+          "guarantee": "Guarantee.EXACT_SYMBOLIC"
+        },
+        "C_100_2": {
+          "value": 4950,
+          "matches_math_comb": true,
+          "guarantee": "Guarantee.EXACT_SYMBOLIC"
+        }
+      }
+    }
+  },
+  "status": "completed",
+  "mathematical_open_problem_status": "UNSOLVED (Millennium Prize Problem)"
+}

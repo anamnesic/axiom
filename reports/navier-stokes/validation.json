@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T02:17:42.233795+00:00",
+  "timestamp_utc": "2026-10-18T06:52:37.976746+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -246,11 +246,11 @@
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "690953b13bf1733d52f7fb029c5b88ae27ffe426fdd6c4f211b61b3506bfa631",
+    "reports/navier-stokes/validate.py": "fa1d43a86a9b9396b8bd6d3a54788be7971b9a6935c8b261fb64ec73a4d58f2f",
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
     "reports/navier-stokes/REPORT.md": "d4a0c9f066553be1519948bda5a103cb6bc0e0b9f95e2ba6965fa76a25bd9e8e",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a"
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
   },
   "runs": {
     "doctor": {
@@ -276,10 +276,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -316,7 +316,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"
@@ -1280,30 +1280,50 @@
         "input": "examples/navier_stokes_forced.lean",
         "ok": true,
         "value": {
-          "checked": false,
-          "complete": true,
+          "checked": true,
+          "verified": true,
+          "returncode": 0,
           "theorems": [
             "forced_navier_stokes_has_external_forcing"
           ],
-          "audited_theorems": [],
+          "audited_theorems": [
+            "forced_navier_stokes_has_external_forcing"
+          ],
           "trivial_theorems": [],
+          "axioms_used": [
+            "propext",
+            "Classical.choice",
+            "Quot.sound"
+          ],
           "untrusted_axioms": [],
-          "source": "-- Navier-Stokes External Forcing Variant Specification Control (Mock Model)\n-- NOTE: This file does NOT formalize or solve the 3D analytical Navier-Stokes PDE.\n-- It serves strictly as a specification-drift metadata probe to verify that AXIOM's\n-- specification auditor correctly flags external forcing variants as `scoped`\n-- rather than allowing them to be spoofed as proofs of the unforced Clay Millennium Problem.\n\nstructure FluidDomain where\n  dim : Nat\n  viscosity : Float\n\nstructure NavierStokesForcedSystem (domain : FluidDomain) where\n  external_forcing_norm : Float\n  forcing_non_zero : external_forcing_norm > 0.0\n\ntheorem forced_navier_stokes_has_external_forcing (domain : FluidDomain) (sys : NavierStokesForcedSystem domain) :\n    sys.external_forcing_norm > 0.0 := by\n  exact sys.forcing_non_zero\n",
+          "diagnostics": [
+            "'forced_navier_stokes_has_external_forcing' depends on axioms: [propext, Classical.choice, Quot.sound]"
+          ],
           "formal_manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "forced_navier_stokes_has_external_forcing"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "forced_navier_stokes_has_external_forcing"
+              ],
               "trivial_theorems": [],
-              "axioms": [],
-              "axioms_used": [],
+              "axioms": [
+                "propext",
+                "Classical.choice",
+                "Quot.sound"
+              ],
+              "axioms_used": [
+                "propext",
+                "Classical.choice",
+                "Quot.sound"
+              ],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1335,19 +1355,29 @@
           },
           "manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "forced_navier_stokes_has_external_forcing"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "forced_navier_stokes_has_external_forcing"
+              ],
               "trivial_theorems": [],
-              "axioms": [],
-              "axioms_used": [],
+              "axioms": [
+                "propext",
+                "Classical.choice",
+                "Quot.sound"
+              ],
+              "axioms_used": [
+                "propext",
+                "Classical.choice",
+                "Quot.sound"
+              ],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1378,21 +1408,20 @@
             }
           }
         },
-        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "value_str": "verified by Lean 4 kernel (#print axioms clean)",
         "guarantee": "unverified",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
-          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "method": "Lean 4 typechecker kernel + #print axioms (lean)",
           "steps": [
-            "loaded Lean source from examples\\navier_stokes_forced.lean",
-            "audited declarations: ['forced_navier_stokes_has_external_forcing']",
-            "kernel validity: False (0 theorem(s) audited)",
+            "source: examples\\navier_stokes_forced.lean",
+            "runner: lean (exit code: 0)",
+            "audited theorems: ['forced_navier_stokes_has_external_forcing']",
+            "axioms used: ['propext', 'Classical.choice', 'Quot.sound']",
+            "kernel validity: True (1 theorem(s) audited)",
             "assumptions audit: warning_undeclared_hypotheses",
             "spec alignment: scoped_forced_variant"
-          ],
-          "limitations": [
-            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
           ],
           "reproducible_with": "axiom prove \"examples/navier_stokes_forced.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"scoped_forced_variant\""
         },
@@ -1405,28 +1434,44 @@
             "theorems": [
               "forced_navier_stokes_has_external_forcing"
             ],
-            "audited_theorems": [],
+            "audited_theorems": [
+              "forced_navier_stokes_has_external_forcing"
+            ],
             "trivial_theorems": [],
             "diagnostics": [
-              "lean binary not found in PATH or ~/.elan/bin"
+              "'forced_navier_stokes_has_external_forcing' depends on axioms: [propext, Classical.choice, Quot.sound]"
             ],
-            "axioms_used": [],
+            "axioms_used": [
+              "propext",
+              "Classical.choice",
+              "Quot.sound"
+            ],
             "untrusted_axioms": [],
             "formal_manifest": {
               "kernel_validity": {
-                "verified": false,
+                "verified": true,
                 "theorems": [
                   "forced_navier_stokes_has_external_forcing"
                 ],
-                "audited_theorems": [],
+                "audited_theorems": [
+                  "forced_navier_stokes_has_external_forcing"
+                ],
                 "trivial_theorems": [],
-                "axioms": [],
-                "axioms_used": [],
+                "axioms": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
+                "axioms_used": [
+                  "propext",
+                  "Classical.choice",
+                  "Quot.sound"
+                ],
                 "untrusted_axioms": [],
                 "has_sorry": false,
-                "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-                "status": "kernel_failed"
+                "audit_complete": true,
+                "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+                "status": "kernel_verified"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],
@@ -1483,26 +1528,37 @@
         "input": "examples/theorems.lean",
         "ok": true,
         "value": {
-          "checked": false,
-          "complete": true,
+          "checked": true,
+          "verified": true,
+          "returncode": 0,
           "theorems": [
             "add_zero_right",
             "eq_refl_nat"
           ],
-          "audited_theorems": [],
+          "audited_theorems": [
+            "add_zero_right",
+            "eq_refl_nat"
+          ],
           "trivial_theorems": [
             "eq_refl_nat"
           ],
+          "axioms_used": [],
           "untrusted_axioms": [],
-          "source": "-- Example formal theorems for `axiom prove examples/theorems.lean --engine lean`\n\ntheorem add_zero_right (n : Nat) : n + 0 = n := by\n  rfl\n\ntheorem eq_refl_nat (a : Nat) : a = a := by\n  rfl\n",
+          "diagnostics": [
+            "'add_zero_right' does not depend on any axioms",
+            "'eq_refl_nat' does not depend on any axioms"
+          ],
           "formal_manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -1510,9 +1566,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1542,12 +1598,15 @@
           },
           "manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -1555,9 +1614,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1586,21 +1645,20 @@
             }
           }
         },
-        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "value_str": "verified by Lean 4 kernel (#print axioms clean)",
         "guarantee": "unverified",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
-          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "method": "Lean 4 typechecker kernel + #print axioms (lean)",
           "steps": [
-            "loaded Lean source from examples\\theorems.lean",
-            "audited declarations: ['add_zero_right', 'eq_refl_nat']",
-            "kernel validity: False (0 theorem(s) audited)",
+            "source: examples\\theorems.lean",
+            "runner: lean (exit code: 0)",
+            "audited theorems: ['add_zero_right', 'eq_refl_nat']",
+            "axioms used: ['none (constructive)']",
+            "kernel validity: True (2 theorem(s) audited)",
             "assumptions audit: warning_undeclared_hypotheses",
             "spec alignment: unaligned"
-          ],
-          "limitations": [
-            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
           ],
           "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"congruent\""
         },
@@ -1614,23 +1672,30 @@
               "add_zero_right",
               "eq_refl_nat"
             ],
-            "audited_theorems": [],
+            "audited_theorems": [
+              "add_zero_right",
+              "eq_refl_nat"
+            ],
             "trivial_theorems": [
               "eq_refl_nat"
             ],
             "diagnostics": [
-              "lean binary not found in PATH or ~/.elan/bin"
+              "'add_zero_right' does not depend on any axioms",
+              "'eq_refl_nat' does not depend on any axioms"
             ],
             "axioms_used": [],
             "untrusted_axioms": [],
             "formal_manifest": {
               "kernel_validity": {
-                "verified": false,
+                "verified": true,
                 "theorems": [
                   "add_zero_right",
                   "eq_refl_nat"
                 ],
-                "audited_theorems": [],
+                "audited_theorems": [
+                  "add_zero_right",
+                  "eq_refl_nat"
+                ],
                 "trivial_theorems": [
                   "eq_refl_nat"
                 ],
@@ -1638,9 +1703,9 @@
                 "axioms_used": [],
                 "untrusted_axioms": [],
                 "has_sorry": false,
-                "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-                "status": "kernel_failed"
+                "audit_complete": true,
+                "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+                "status": "kernel_verified"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],

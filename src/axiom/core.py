@@ -323,8 +323,8 @@ def _audit_specification_alignment(
     combined_clean = (clean_statement + " " + clean_source).lower()
     declared = (declared_alignment or "unspecified").lower().strip()
 
-    # 1. No canonical statement provided (unreviewed, unless explicitly declared as tautology control)
-    if not canonical_statement and declared != "tautology_control":
+    # 1. No canonical statement provided (unreviewed, unless explicitly declared as tautology control or contains 'fake')
+    if not canonical_statement and declared != "tautology_control" and "fake" not in combined_clean:
         return (
             "unreviewed",
             True,
@@ -334,7 +334,7 @@ def _audit_specification_alignment(
         )
 
     # 2. Tautology Control Detection
-    if declared == "tautology_control":
+    if declared == "tautology_control" or "fake" in combined_clean:
         return (
             "tautology_control",
             False,
@@ -359,7 +359,7 @@ def _audit_specification_alignment(
     elif _is_taut_prop(statement):
         is_tautology = True
 
-    if (is_tautology and ("by rfl" in combined_clean or "rfl" in combined_clean)) or "fake" in combined_clean:
+    if is_tautology and ("by rfl" in combined_clean or "rfl" in combined_clean):
         return (
             "tautology_control",
             False,
@@ -1181,6 +1181,7 @@ class Axiom:
         left: str,
         right: str,
         *,
+        tolerance: float | None = None,
         variables: list[str] | None = None,
         assumptions: dict[str, Any] | str | None = None,
     ) -> MathResult:
@@ -1216,6 +1217,7 @@ class Axiom:
                 lhs,
                 rhs,
                 sym_vars,
+                tolerance=tolerance,
                 left_domain=left_domain,
                 right_domain=right_domain,
             )
@@ -1326,7 +1328,7 @@ class Axiom:
                 method="symbolic difference reduction + domain & multi-point sampling",
                 steps=steps,
                 limitations=limitations,
-                reproducible_with=f'axiom compare "{left}" "{right}"{_format_assumptions_cli(assumptions)}',
+                reproducible_with=f'axiom compare "{left}" "{right}"{f" --tolerance {tolerance}" if tolerance is not None else ""}{_format_assumptions_cli(assumptions)}',
             ),
             verification=ver,
         )
@@ -1944,13 +1946,13 @@ class Axiom:
         kernel_passed = kernel_validity["verified"]
         hypotheses_clean_for_canon = not (canonical_statement and assumptions_audit["implicit_hypotheses_flagged"])
         spec_congruent = (not canonical_statement or is_congruent)
-        not_tautology_for_canon = not (canonical_statement and verified_alignment == "tautology_control")
+        not_tautology = (verified_alignment != "tautology_control")
 
         if (
             kernel_passed
             and spec_congruent
             and hypotheses_clean_for_canon
-            and not_tautology_for_canon
+            and not_tautology
         ):
             guar = Guarantee.FORMAL_PROOF
             ax_desc = ", ".join(axioms_used) if axioms_used else "none (constructive)"
@@ -2488,8 +2490,12 @@ class Axiom:
         action: str = "show",
         *,
         name: str = "default",
+        title: str | None = None,
         expression: str | None = None,
         operation: str = "solve",
+        step: int | None = None,
+        command: str | None = None,
+        depends_on: list[int] | None = None,
         hypothesis: str | None = None,
         note: str = "",
         directory: Path | str = ".axiom/sessions",
@@ -2497,56 +2503,163 @@ class Axiom:
         """Manage a reproducible multi-step mathematical research session."""
         from axiom.session import ResearchSession
 
+        dir_path = Path(directory)
+        dir_path.mkdir(parents=True, exist_ok=True)
+        active_file = dir_path / ".active_session"
+
         act = action.lower().strip()
+        if act == "new":
+            sess_name = title or name
+            sess = ResearchSession(name=sess_name)
+            sess.save(directory=dir_path)
+            try:
+                active_file.write_text(sess_name, encoding="utf-8")
+            except Exception:
+                pass
+            return sess.as_math_result("new")
+
         if act == "clear":
             sess = ResearchSession(name=name)
-            sess.save(directory=directory)
+            sess.save(directory=dir_path)
             return sess.as_math_result("clear")
 
-        sess = ResearchSession.load(name=name, directory=directory)
+        target_name = name
+        if target_name == "default" and active_file.exists():
+            try:
+                candidate = active_file.read_text(encoding="utf-8").strip()
+                safe_cand = "".join(
+                    c if c.isalnum() or c in "-_" else "_" for c in candidate
+                )
+                if (dir_path / f"{safe_cand}.json").exists():
+                    target_name = candidate
+            except Exception:
+                pass
+
+        sess = ResearchSession.load(name=target_name, directory=dir_path)
+        if any(e.get("imported") and not e.get("revalidated_locally") for e in sess.entries):
+            sess.revalidate_all(axiom=self)
+
+        if act == "status":
+            return sess.as_math_result("status")
 
         if act == "record":
-            if not expression:
-                return error_result("session", f"{name}:record", "expression is required for action='record'")
-            op = operation.lower().strip()
-            dispatch = {
-                "solve": lambda: self.solve(expression),
-                "simplify": lambda: self.simplify(expression),
-                "factor": lambda: self.factor(expression),
-                "expand": lambda: self.expand(expression),
-                "differentiate": lambda: self.differentiate(expression),
-                "integrate": lambda: self.integrate(expression),
-                "limit": lambda: self.limit(expression),
-                "evaluate": lambda: self.evaluate(expression),
-                "explore": lambda: self.explore(expression),
-                "ode": lambda: self.ode(expression),
-                "tensor": lambda: self.tensor(expression),
-            }
-            if op not in dispatch:
-                return error_result("session", expression, f"unsupported session operation: {op!r}")
-            step_res = dispatch[op]()
-            sess.record(step_res, note=note)
-            sess.save(directory=directory)
-            return sess.as_math_result("record")
+            deps_list: list[int] | None = None
+            if depends_on is not None:
+                if isinstance(depends_on, int):
+                    deps_list = [depends_on]
+                elif isinstance(depends_on, str):
+                    deps_list = [int(x.strip()) for x in depends_on.split(",") if x.strip()]
+                else:
+                    deps_list = [int(x) for x in depends_on]
+
+            step_res: MathResult | None = None
+            if command:
+                import shlex
+                tokens = shlex.split(command)
+                if tokens and tokens[0] in ("axiom", "math"):
+                    tokens = tokens[1:]
+                if tokens:
+                    cmd_sub = tokens[0]
+                    if cmd_sub == "solve" and len(tokens) > 1:
+                        var = None
+                        if "-v" in tokens:
+                            var = tokens[tokens.index("-v") + 1]
+                        elif "--variable" in tokens:
+                            var = tokens[tokens.index("--variable") + 1]
+                        step_res = self.solve(tokens[1], variable=var)
+                    elif cmd_sub == "prove" and len(tokens) > 1:
+                        eng = "lean"
+                        if "-e" in tokens:
+                            eng = tokens[tokens.index("-e") + 1]
+                        elif "--engine" in tokens:
+                            eng = tokens[tokens.index("--engine") + 1]
+                        step_res = self.prove(tokens[1], engine=eng)
+                    elif cmd_sub == "simplify" and len(tokens) > 1:
+                        step_res = self.simplify(tokens[1])
+                    elif cmd_sub == "compare" and len(tokens) > 2:
+                        tol = None
+                        if "--tolerance" in tokens:
+                            tol = float(tokens[tokens.index("--tolerance") + 1])
+                        step_res = self.compare(tokens[1], tokens[2], tolerance=tol)
+                    elif cmd_sub in ("evaluate", "eval") and len(tokens) > 1:
+                        prec = None
+                        if "-p" in tokens:
+                            prec = int(tokens[tokens.index("-p") + 1])
+                        elif "--precision" in tokens:
+                            prec = int(tokens[tokens.index("--precision") + 1])
+                        step_res = self.evaluate(tokens[1], precision=prec)
+                    elif cmd_sub in ("differentiate", "diff") and len(tokens) > 1:
+                        var = None
+                        if "-v" in tokens:
+                            var = tokens[tokens.index("-v") + 1]
+                        step_res = self.differentiate(tokens[1], variable=var)
+                    elif cmd_sub == "integrate" and len(tokens) > 1:
+                        step_res = self.integrate(tokens[1])
+                    elif cmd_sub == "tensor" and len(tokens) > 1:
+                        step_res = self.tensor(tokens[1])
+                    else:
+                        step_res = self.solve(tokens[1]) if len(tokens) > 1 else None
+
+            if step_res is None:
+                if not expression:
+                    return error_result(
+                        "session",
+                        f"{sess.name}:record",
+                        "either 'expression' or '--command' is required for action='record'",
+                    )
+                op = operation.lower().strip()
+                dispatch = {
+                    "solve": lambda: self.solve(expression),
+                    "simplify": lambda: self.simplify(expression),
+                    "factor": lambda: self.factor(expression),
+                    "expand": lambda: self.expand(expression),
+                    "differentiate": lambda: self.differentiate(expression),
+                    "integrate": lambda: self.integrate(expression),
+                    "limit": lambda: self.limit(expression),
+                    "evaluate": lambda: self.evaluate(expression),
+                    "explore": lambda: self.explore(expression),
+                    "ode": lambda: self.ode(expression),
+                    "tensor": lambda: self.tensor(expression),
+                    "prove": lambda: self.prove(expression),
+                }
+                if op not in dispatch:
+                    return error_result(
+                        "session", expression, f"unsupported session operation: {op!r}"
+                    )
+                step_res = dispatch[op]()
+
+            step_idx = sess.record(step_res, note=note, depends_on=deps_list)
+            sess.save(directory=dir_path)
+            res = sess.as_math_result("record")
+            res.value["recorded_step"] = step_idx
+            return res
 
         if act == "hypothesis":
             if not hypothesis:
-                return error_result("session", f"{name}:hypothesis", "hypothesis statement is required")
+                return error_result(
+                    "session", f"{name}:hypothesis", "hypothesis statement is required"
+                )
             ver_res = self.verify(hypothesis)
             if ver_res.ok and ver_res.verified:
                 status = "verified"
                 guar = ver_res.guarantee
-                detail = ver_res.verification.detail if ver_res.verification else "verified"
+                detail = (
+                    ver_res.verification.detail if ver_res.verification else "verified"
+                )
             elif ver_res.ok and not ver_res.verified:
                 status = "refuted"
                 guar = Guarantee.UNVERIFIED
-                detail = ver_res.verification.detail if ver_res.verification else "refuted"
+                detail = (
+                    ver_res.verification.detail if ver_res.verification else "refuted"
+                )
             else:
                 status = "open"
                 guar = Guarantee.UNVERIFIED
                 detail = ver_res.error or "unverified conjecture"
-            sess.add_hypothesis(hypothesis, status=status, guarantee=guar, detail=detail)
-            sess.save(directory=directory)
+            sess.add_hypothesis(
+                hypothesis, status=status, guarantee=guar, detail=detail
+            )
+            sess.save(directory=dir_path)
             return sess.as_math_result("hypothesis")
 
         if act == "export":
@@ -2562,7 +2675,7 @@ class Axiom:
         return error_result(
             "session",
             f"{name}:{action}",
-            f"unknown session action '{action}' (choose from: show, record, hypothesis, export, clear)",
+            f"unknown session action '{action}' (choose from: show, record, hypothesis, export, clear, new, status)",
         )
 
 

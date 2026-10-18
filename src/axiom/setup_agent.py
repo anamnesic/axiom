@@ -218,6 +218,18 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
                     binaries[b] = str(cand)
                     break
 
+    # Also check LOCALAPPDATA/Programs for Julia on Windows
+    if not binaries.get("julia"):
+        import os
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            programs = Path(local_app_data) / "Programs"
+            if programs.exists():
+                for p in sorted(programs.glob("Julia*/bin/julia.exe"), reverse=True):
+                    if p.exists():
+                        binaries["julia"] = str(p)
+                        break
+
     engines_info = [
         {
             "name": info.name,

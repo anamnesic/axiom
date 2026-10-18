@@ -182,8 +182,7 @@ class TestAdversarialSoundness(unittest.TestCase):
         self.assertTrue(v_int.verified)
         self.assertEqual(v_int.guarantee, Guarantee.EXACT_SYMBOLIC)
 
-        # Loading session with imported formal-proof step
-        sess = ResearchSession(name="test_import_session")
+        # Loading session with imported step: zero trust for math guarantees, step_valid, or forged revalidated_locally
         with tempfile.TemporaryDirectory() as td:
             sess_file = Path(td) / "test_import_session.json"
             data = {
@@ -193,26 +192,58 @@ class TestAdversarialSoundness(unittest.TestCase):
                     {
                         "step_index": 1,
                         "kind": "prove",
-                        "input": "theorem t : 1 = 1",
+                        "input": "theorem bad : 1 = 2",
                         "ok": True,
                         "guarantee": "formal-proof",
                         "step_guarantee": "formal-proof",
                         "chain_guarantee": "formal-proof",
                         "step_valid": True,
                         "chain_valid": True,
-                    }
+                        "revalidated_locally": True,
+                        "dag_structural_integrity": True,
+                        "logical_implication_proven": True,
+                    },
+                    {
+                        "step_index": 2,
+                        "kind": "solve",
+                        "input": "x - 1 = 0",
+                        "ok": True,
+                        "value": ["1"],
+                        "guarantee": "verified-substitution",
+                        "step_guarantee": "verified-substitution",
+                        "chain_guarantee": "verified-substitution",
+                        "step_valid": True,
+                        "chain_valid": True,
+                        "revalidated_locally": True,
+                        "depends_on": [1],
+                    },
                 ],
             }
             sess_file.write_text(json.dumps(data), encoding="utf-8")
             loaded = ResearchSession.load("test_import_session", directory=td)
-            # Must be marked imported and un-revalidated
-            self.assertTrue(loaded.entries[0]["imported"])
-            self.assertFalse(loaded.entries[0]["revalidated"])
-            # Entries and session chain guarantee must NOT grant formal-proof
-            self.assertEqual(loaded.entries[0]["guarantee"], Guarantee.UNVERIFIED.value)
-            self.assertEqual(loaded.entries[0]["step_guarantee"], Guarantee.UNVERIFIED.value)
-            self.assertEqual(loaded.entries[0]["chain_guarantee"], Guarantee.UNVERIFIED.value)
+            # All imported entries start unverified with zero trust
+            for e in loaded.entries:
+                self.assertTrue(e["imported"])
+                self.assertFalse(e["revalidated"])
+                self.assertFalse(e["revalidated_locally"])
+                self.assertFalse(e["step_valid"])
+                self.assertFalse(e["chain_valid"])
+                self.assertFalse(e["dag_structural_integrity"])
+                self.assertFalse(e["logical_implication_proven"])
+                self.assertEqual(e["guarantee"], Guarantee.UNVERIFIED.value)
+                self.assertEqual(e["step_guarantee"], Guarantee.UNVERIFIED.value)
+                self.assertEqual(e["chain_guarantee"], Guarantee.UNVERIFIED.value)
             self.assertEqual(loaded.chain_guarantee, Guarantee.UNVERIFIED)
+
+            # Revalidating all: step 1 (bad theorem) FAILS local revalidation, while step 2 (x - 1 = 0) passes
+            loaded.revalidate_all(axiom=self.ax)
+            self.assertFalse(loaded.entries[0]["step_valid"])
+            self.assertEqual(loaded.entries[0]["guarantee"], Guarantee.UNVERIFIED.value)
+            self.assertTrue(loaded.entries[1]["step_valid"])
+            # Step 2 depends on step 1, which failed; so chain_valid remains False and dag integrity is broken
+            self.assertFalse(loaded.entries[1]["chain_valid"])
+            self.assertFalse(loaded.entries[1]["dag_structural_integrity"])
+            self.assertFalse(loaded.entries[1]["logical_implication_proven"])
 
     # -------------------------------------------- Check 4: Step vs Chain validity separation
     def test_step_validity_and_chain_validity_separated(self) -> None:
@@ -241,6 +272,8 @@ class TestAdversarialSoundness(unittest.TestCase):
         # Isolated step validity is True, but dependency chain validity is False!
         self.assertTrue(sess.entries[2]["step_valid"])
         self.assertFalse(sess.entries[2]["chain_valid"])
+        self.assertFalse(sess.entries[2]["dag_structural_integrity"])
+        self.assertFalse(sess.entries[2]["logical_implication_proven"])
         self.assertIn(2, sess.entries[2]["broken_dependencies"])
         self.assertEqual(sess.entries[2]["chain_guarantee"], Guarantee.UNVERIFIED.value)
 
@@ -250,6 +283,8 @@ class TestAdversarialSoundness(unittest.TestCase):
         self.assertEqual(idx4, 4)
         self.assertTrue(sess.entries[3]["step_valid"])
         self.assertFalse(sess.entries[3]["chain_valid"])
+        self.assertFalse(sess.entries[3]["dag_structural_integrity"])
+        self.assertFalse(sess.entries[3]["logical_implication_proven"])
         self.assertIn(3, sess.entries[3]["broken_dependencies"])
 
         # Step 5: Forward reference / cycle rejection
@@ -257,6 +292,8 @@ class TestAdversarialSoundness(unittest.TestCase):
         idx5 = sess.record(res5, note="Forward reference test", depends_on=[99])
         self.assertTrue(sess.entries[4]["step_valid"])
         self.assertFalse(sess.entries[4]["chain_valid"])
+        self.assertFalse(sess.entries[4]["dag_structural_integrity"])
+        self.assertFalse(sess.entries[4]["logical_implication_proven"])
         self.assertIn(99, sess.entries[4]["broken_dependencies"])
 
         # Session level summary
@@ -264,6 +301,9 @@ class TestAdversarialSoundness(unittest.TestCase):
         self.assertFalse(sess.chain_valid)
         self.assertEqual(sess.step_validity["valid_count"], 4)
         self.assertEqual(sess.step_validity["total_count"], 5)
+        self.assertIn("dag_structural_integrity", sess.to_dict())
+        self.assertFalse(sess.to_dict()["dag_structural_integrity"])
+        self.assertFalse(sess.to_dict()["logical_implication_proven"])
         self.assertIn(2, sess.dependency_chain_validity["broken_steps"])
         self.assertIn(3, sess.dependency_chain_validity["broken_steps"])
         self.assertIn(4, sess.dependency_chain_validity["broken_steps"])
@@ -271,14 +311,38 @@ class TestAdversarialSoundness(unittest.TestCase):
 
     # --------------------------------------- Check 5: Untrusted Lean isolation & resource limits
     def test_untrusted_lean_isolation_and_resource_limits(self) -> None:
-        """Untrusted Lean execution runs in isolated sandbox with resource constraints and timeout."""
+        """Untrusted Lean execution runs in isolated sandbox with environment scrubbing and resource bounds."""
+        from axiom.engines.lean_engine import LeanEngine, _build_sandboxed_env
         lean_eng = self.ax.registry.get("lean")
-        # Test timeout handling without unhandled exception
+        self.assertIsInstance(lean_eng, LeanEngine)
+
+        # 1. Environment scrubbing audit: secret tokens, AWS keys, GitHub credentials stripped
+        fake_secrets = {
+            "OPENAI_API_KEY": "sk-secret-adversarial-123",
+            "GITHUB_TOKEN": "ghp_super_secret_token",
+            "AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "SLACK_BOT_TOKEN": "xoxb-secret-token",
+        }
+        for k, v in fake_secrets.items():
+            os.environ[k] = v
+        try:
+            with tempfile.TemporaryDirectory() as scratch_td:
+                sandboxed = _build_sandboxed_env(Path(scratch_td), None, None)
+                for secret_key in fake_secrets:
+                    self.assertNotIn(secret_key, sandboxed)
+                self.assertEqual(sandboxed["HOME"], str((Path(scratch_td) / ".isolated_home").resolve()))
+                self.assertEqual(sandboxed["TMP"], str((Path(scratch_td) / ".isolated_tmp").resolve()))
+                if os.name == "nt":
+                    self.assertEqual(sandboxed["USERPROFILE"], str((Path(scratch_td) / ".isolated_home").resolve()))
+        finally:
+            for k in fake_secrets:
+                os.environ.pop(k, None)
+
+        # 2. Test prove returns safe Answer object
         ans = lean_eng.prove(
             statement_or_path="theorem test : 1 = 1 := by rfl",
             proof="",
         )
-        # Even without lean installed, prove returns safe Answer object
         self.assertIsInstance(ans.value, dict)
         self.assertIsInstance(ans.warnings, list)
         self.assertIsInstance(ans.limitations, list)
@@ -335,12 +399,64 @@ class TestAdversarialSoundness(unittest.TestCase):
 
     # ------------------------------------------ Check 8: Benchmark metric consistency rejection
     def test_benchmark_runner_rejects_inconsistent_metrics(self) -> None:
-        """Benchmarks reject inconsistent metrics and missing outputs."""
-        from benchmarks.millennium.run_millennium_bench import run_problem_suite
-        # Running an invalid folder must fail-closed with empty evaluations rejection
+        """Benchmarks reject inconsistent metrics, adulterated reports, and missing outputs."""
+        from benchmarks.millennium.run_millennium_bench import (
+            evaluate_validation_report,
+            run_problem_suite,
+        )
+
+        # 1. Running an invalid folder must fail-closed with empty evaluations rejection
         res = run_problem_suite("Fake Problem", "non-existent-problem-folder")
         self.assertFalse(res["ok"])
         self.assertEqual(res["evaluations"], 0)
+        self.assertIsNone(res["fail_closed_rate"])
+
+        # 2. Adulterated report injecting contradictory total evaluations
+        adulterated_evals = {
+            "total_evaluations": 999,
+            "passed_evaluations": 999,
+            "test_cases": [
+                {"id": "t1", "kind": "positive_claim", "passed": True},
+                {"id": "t2", "kind": "negative_control", "passed": True, "is_fail_closed": True},
+            ],
+        }
+        res_adv1 = evaluate_validation_report(adulterated_evals)
+        self.assertFalse(res_adv1["ok"])
+        self.assertTrue(
+            any("inconsistent_total_evaluations" in crit for crit in res_adv1["failed_criteria"])
+        )
+
+        # 3. Adulterated report claiming forged positive claims count
+        adulterated_pos = {
+            "total_evaluations": 2,
+            "passed_evaluations": 2,
+            "positive_claims_count": 100,
+            "test_cases": [
+                {"id": "t1", "kind": "positive_claim", "passed": True},
+                {"id": "t2", "kind": "negative_control", "passed": True, "is_fail_closed": True},
+            ],
+        }
+        res_adv2 = evaluate_validation_report(adulterated_pos)
+        self.assertFalse(res_adv2["ok"])
+        self.assertTrue(
+            any("inconsistent_positive_claims_count" in crit for crit in res_adv2["failed_criteria"])
+        )
+
+        # 4. Zero-division guard: 0 negative controls must return None rate, and reject forged 1.0 rate
+        adulterated_rate = {
+            "total_evaluations": 1,
+            "passed_evaluations": 1,
+            "fail_closed_rate": 1.0,
+            "test_cases": [
+                {"id": "t1", "kind": "positive_claim", "passed": True},
+            ],
+        }
+        res_adv3 = evaluate_validation_report(adulterated_rate)
+        self.assertFalse(res_adv3["ok"])
+        self.assertIsNone(res_adv3["fail_closed_rate"])
+        self.assertTrue(
+            any("inconsistent_fail_closed_rate" in crit for crit in res_adv3["failed_criteria"])
+        )
 
     # ------------------------------------ Check 9: Epistemic four-state semantic differentiation
     def test_epistemic_four_state_differentiation(self) -> None:

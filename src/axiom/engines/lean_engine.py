@@ -56,6 +56,16 @@ def _strip_lean_comments(source: str) -> str:
     return re.sub(r"--[^\n]*", "", without_block)
 
 
+def _preexec_lean_resource_bounds() -> None:
+    """Enforce POSIX process resource limits (address space / memory)."""
+    try:
+        import resource
+        mem_limit = 3 * 1024 * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (mem_limit, mem_limit))
+    except Exception:
+        pass
+
+
 # Curated offline Mathlib4 & Lean 4 Core theorem catalog for zero-network resilience
 _MATHLIB_CATALOG: tuple[dict[str, str], ...] = (
     {
@@ -469,6 +479,69 @@ class LeanEngine(Engine):
                     trivial.append(name)
         return trivial
 
+    @staticmethod
+    def _build_sandboxed_env(sandbox_dir: Path, lean_bin: str | None = None, lake_bin: str | None = None) -> dict[str, str]:
+        """Construct a scrubbed, isolated environment dictionary for untrusted Lean processes."""
+        isolated_home = sandbox_dir / ".isolated_home"
+        isolated_home.mkdir(parents=True, exist_ok=True)
+        isolated_tmp = sandbox_dir / ".isolated_tmp"
+        isolated_tmp.mkdir(parents=True, exist_ok=True)
+
+        minimal_path_dirs: list[str] = []
+        for bin_path in (lean_bin, lake_bin):
+            if bin_path:
+                d = str(Path(bin_path).parent.resolve())
+                if d not in minimal_path_dirs:
+                    minimal_path_dirs.append(d)
+
+        system_defaults = (
+            [r"C:\Windows\System32", r"C:\Windows"]
+            if os.name == "nt"
+            else ["/usr/bin", "/bin", "/usr/local/bin"]
+        )
+        for d in system_defaults:
+            if Path(d).exists() and d not in minimal_path_dirs:
+                minimal_path_dirs.append(d)
+
+        scrubbed_path = os.pathsep.join(minimal_path_dirs)
+
+        env: dict[str, str] = {
+            "PATH": scrubbed_path,
+            "HOME": str(isolated_home),
+            "USERPROFILE": str(isolated_home),
+            "TMP": str(isolated_tmp),
+            "TEMP": str(isolated_tmp),
+            "TMPDIR": str(isolated_tmp),
+            "LEAN_NO_TELEMETRY": "1",
+            "LAKE_NO_NET": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+
+        if "ELAN_HOME" in os.environ:
+            env["ELAN_HOME"] = os.environ["ELAN_HOME"]
+        elif lean_bin and ".elan" in lean_bin:
+            p = Path(lean_bin).resolve()
+            for parent in p.parents:
+                if parent.name == ".elan":
+                    env["ELAN_HOME"] = str(parent)
+                    break
+
+        safe_keys = {
+            "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "LANG", "LC_ALL", "TERM"
+        }
+        drop_patterns = (
+            "KEY", "TOKEN", "SECRET", "AUTH", "PASS", "CRED", "API",
+            "AWS", "GITHUB", "OPENAI", "GEMINI", "COPILOT"
+        )
+
+        for k, v in os.environ.items():
+            k_upper = k.upper()
+            if any(p in k_upper for p in drop_patterns):
+                continue
+            if k_upper in safe_keys:
+                env[k] = v
+
+        return env
 
     def prove(self, statement_or_path: str, proof: str = "") -> Answer:
         """Check a Lean 4 theorem file or inline snippet with ``#print axioms`` auditing."""
@@ -552,7 +625,7 @@ class LeanEngine(Engine):
             tmp.write(audited_source)
             tmp_path = Path(tmp.name)
 
-        timeout_sec = int(os.environ.get("AXIOM_LEAN_TIMEOUT", "15"))
+        timeout_sec = int(os.environ.get("AXIOM_LEAN_TIMEOUT", "30"))
 
         try:
             cmd, cwd = self.build_lean_command(tmp_path, origin_path=origin_path)
@@ -561,11 +634,17 @@ class LeanEngine(Engine):
                 cmd = cmd[:-1] + ["-M", "2048", "-T", "100000"] + [cmd[-1]]
 
             try:
+                sandboxed_env = self._build_sandboxed_env(
+                    sandbox_dir, lean_bin=self.lean_bin, lake_bin=self.lake_bin
+                )
+                preexec_fn = _preexec_lean_resource_bounds if os.name != "nt" else None
                 proc = subprocess.run(
                     cmd,
                     cwd=cwd,
                     capture_output=True,
                     text=True,
+                    env=sandboxed_env,
+                    preexec_fn=preexec_fn,
                     timeout=timeout_sec,
                     check=False,
                 )
@@ -883,4 +962,7 @@ class LeanEngine(Engine):
         if not tactic.startswith("by"):
             tactic = f"by\n  {tactic}"
         return f"theorem axiom_identity {binders}: {lhs_lean} = {rhs_lean} :=\n  {tactic}\n"
+
+
+_build_sandboxed_env = LeanEngine._build_sandboxed_env
 

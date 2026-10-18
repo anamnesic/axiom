@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T02:18:01.609738+00:00",
+  "timestamp_utc": "2026-10-18T06:53:45.975265+00:00",
   "axiom_version": "0.2.3",
   "problem": "Hodge Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -153,8 +153,8 @@
     "reports/hodge-conjecture/validate.py": "44a4b32b9be56e36ed724542a4a3b295725983b98830dc7d0548282b6b5ba7d9",
     "reports/hodge-conjecture/README.md": "2731738affb12b51b00dc1110fff6f35f5806f8b28c3382c8ed99c117c6b6cef",
     "reports/hodge-conjecture/REPORT.md": "52507bab9518dc30091fe330b6e07ddeb1292aebbfc998713075c9cd521c9bca",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a"
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
   },
   "runs": {
     "doctor": {
@@ -180,10 +180,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -220,7 +220,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"

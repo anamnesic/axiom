@@ -7,38 +7,55 @@
   "maturity_level": "L2",
   "claims": [
     {
-      "statement": "Auditoria combinatória do exemplo de Cook (seleção de grupos de 100 alunos em 400) e integridade de verificadores",
-      "scope": "Contagem combinatória C(400, 100) e C(100, 2), conferência independente via biblioteca padrão math.comb e identidade de Pascal, e controles negativos de raízes polinomiais",
-      "assumptions": ["n, k in N"]
+      "statement": "Auditoria combinatória do exemplo de Cook, barreiras estruturais da complexidade (Relativização, Provas Naturais, Algebrização) e integridade de verificadores no motor AXIOM",
+      "scope": "Contagem C(400, 100) e C(100, 2); divergência assintótica lim n^k / 2^n = 0; arithmetização de Cook-Levin e resolução algébrica de SAT; espectro assinado de Hao Huang (A_n^2 = n*I) e limites de sensibilidade booleana; controles negativos e auditoria semântica anti-drift",
+      "assumptions": ["n, k in N", "x_i in {0, 1} para variáveis booleanas"]
     }
   ],
   "evidence": {
     "symbolic": [
       "C(400, 100) = 2.24185e96 (exact-symbolic)",
       "C(100, 2) = 4950 (exact-symbolic)",
-      "Recorrência de Pascal e math.comb validados ortogonalmente"
+      "Recorrência de Pascal e math.comb validados ortogonalmente",
+      "Leis de De Morgan algébricas verificadas (exact-symbolic)",
+      "Regra de resolução proposicional (1-A)(1-B) verificada (exact-symbolic)",
+      "Recorrência matricial de Huang A_1^2 = I, A_2^2 = 2*I, A_3^2 = 3*I verificada exata",
+      "Traço tr(A_3) = 0 verificado (exact-symbolic)"
     ],
-    "numerical": [],
+    "numerical": [
+      "Assintótica lim_{n -> oo} n^3 / 2^n = 0 (numerical-approximation, resíduo 0.0)"
+    ],
     "formal": [
-      "Auditoria de indisponibilidade de ferramentas Lean em ambiente sem lake/lean"
+      "Auditoria de indisponibilidade de ferramentas Lean em ambiente sem lake/lean",
+      "Auditoria anti-drift: rejeição fail-closed de 2+2=4 reivindicado como 'P vs NP'"
     ],
     "counterexamples": [
-      "Raiz espúria x=4 em x^2 - 5x + 6 = 0 refutada com resíduo 2"
+      "Raiz espúria x=4 em x^2 - 5x + 6 = 0 refutada com resíduo 2",
+      "Falsa igualdade 2+2=5 refutada fail-closed",
+      "Sistema SAT contraditório x=1; x=0 rejeitado com 0 soluções (heuristic, verification passed=false)"
     ]
   },
   "verification": {
     "result": "inconclusive",
-    "passed_criteria": 12,
-    "total_criteria": 12,
+    "passed_criteria": 18,
+    "total_criteria": 18,
+    "positive_claims_count": 9,
+    "true_positives_count": 9,
+    "true_positive_rate": 1.0,
+    "negative_controls_count": 4,
+    "fail_closed_count": 4,
     "fail_closed_rate": 1.0,
     "false_positive_rate": 0.0,
     "independent_review": "pending"
   },
   "reproducibility": {
-    "engine_version": "0.2.3",
+    "engine_version": "0.2.6",
     "script": "reports/p-vs-np/validate.py",
+    "investigation_script": "reports/p-vs-np/investigation.py",
     "command": "python reports/p-vs-np/validate.py",
     "evidence_file": "reports/p-vs-np/validation.json",
-    "report_file": "reports/p-vs-np/REPORT.md"
+    "investigation_results": "reports/p-vs-np/investigation_results.json",
+    "report_file": "reports/p-vs-np/REPORT.md",
+    "research_file": "reports/p-vs-np/RESEARCH.md"
   }
 }

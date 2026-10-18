@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-18T02:17:14.252720+00:00",
+  "generated_at_utc": "2026-10-18T06:50:35.983060+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -10,12 +10,12 @@
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/engines/lean_engine.py": "ed27154066a4775c39e986c7fc0eb443341ca3904859604ddcea017169ab0c79",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a",
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/engines/lean_engine.py": "763694089684689108a0aef41e0cf68702585d61e01000a09e98d6b3ddf0984c",
     "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
-    "src/axiom/mcp_server.py": "5fe4f0f1bc2a6353391bb14e4d662bb22fe57df8d94d6239e4e41b417e6fa708",
-    "src/axiom/cli.py": "144e0a8a177dfbc5069b08ab90ace8466566bce2a8352b3443389e5330a7e2d0",
+    "src/axiom/mcp_server.py": "56578a7a430dd049d4e30f71076fb7bf2143a2a96dd594f936e3bad320aedcf1",
+    "src/axiom/cli.py": "4ce26593586b7c06d25542892f530cfe12138ad4a18ca8860b5ffc3921a04807",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
   },
   "independent_checks": {
@@ -51,10 +51,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -91,7 +91,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"
@@ -1217,7 +1217,7 @@
         "guarantee": "catalog-lookup",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
           "method": "Mathlib4 semantic & signature search (axiom-mathlib-catalog)",
           "steps": [
             "query: 'prime'",
@@ -1261,7 +1261,7 @@
         "guarantee": "unverified",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
           "method": "Mathlib4 semantic & signature search (axiom-mathlib-catalog)",
           "steps": [
             "query: 'nonexistent_riemann_proof_xyz_999'",
@@ -1411,26 +1411,37 @@
         "input": "examples/theorems.lean",
         "ok": true,
         "value": {
-          "checked": false,
-          "complete": true,
+          "checked": true,
+          "verified": true,
+          "returncode": 0,
           "theorems": [
             "add_zero_right",
             "eq_refl_nat"
           ],
-          "audited_theorems": [],
+          "audited_theorems": [
+            "add_zero_right",
+            "eq_refl_nat"
+          ],
           "trivial_theorems": [
             "eq_refl_nat"
           ],
+          "axioms_used": [],
           "untrusted_axioms": [],
-          "source": "-- Example formal theorems for `axiom prove examples/theorems.lean --engine lean`\n\ntheorem add_zero_right (n : Nat) : n + 0 = n := by\n  rfl\n\ntheorem eq_refl_nat (a : Nat) : a = a := by\n  rfl\n",
+          "diagnostics": [
+            "'add_zero_right' does not depend on any axioms",
+            "'eq_refl_nat' does not depend on any axioms"
+          ],
           "formal_manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -1438,9 +1449,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1470,12 +1481,15 @@
           },
           "manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -1483,9 +1497,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1514,51 +1528,53 @@
             }
           }
         },
-        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
-        "guarantee": "unverified",
+        "value_str": "verified by Lean 4 kernel (#print axioms clean)",
+        "guarantee": "formal-proof",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
-          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "method": "Lean 4 typechecker kernel + #print axioms (lean)",
           "steps": [
-            "loaded Lean source from examples\\theorems.lean",
-            "audited declarations: ['add_zero_right', 'eq_refl_nat']",
-            "kernel validity: False (0 theorem(s) audited)",
+            "source: examples\\theorems.lean",
+            "runner: lean (exit code: 0)",
+            "audited theorems: ['add_zero_right', 'eq_refl_nat']",
+            "axioms used: ['none (constructive)']",
+            "kernel validity: True (2 theorem(s) audited)",
             "assumptions audit: warning_undeclared_hypotheses",
             "spec alignment: unreviewed"
-          ],
-          "limitations": [
-            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
           ],
           "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean"
         },
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
-          "passed": false,
-          "detail": "Formal proof contains undeclared hypotheses: n : Nat, a : Nat",
-          "checks": 1,
+          "passed": true,
+          "detail": "Typechecked by Lean 4 kernel and audited 2 declaration(s) [add_zero_right, eq_refl_nat] via #print axioms (axioms: none (constructive))",
+          "checks": 3,
           "data": {
             "theorems": [
               "add_zero_right",
               "eq_refl_nat"
             ],
-            "audited_theorems": [],
-            "trivial_theorems": [
+            "audited_theorems": [
+              "add_zero_right",
               "eq_refl_nat"
             ],
-            "diagnostics": [
-              "lean binary not found in PATH or ~/.elan/bin"
+            "trivial_theorems": [
+              "eq_refl_nat"
             ],
             "axioms_used": [],
             "untrusted_axioms": [],
             "formal_manifest": {
               "kernel_validity": {
-                "verified": false,
+                "verified": true,
                 "theorems": [
                   "add_zero_right",
                   "eq_refl_nat"
                 ],
-                "audited_theorems": [],
+                "audited_theorems": [
+                  "add_zero_right",
+                  "eq_refl_nat"
+                ],
                 "trivial_theorems": [
                   "eq_refl_nat"
                 ],
@@ -1566,9 +1582,9 @@
                 "axioms_used": [],
                 "untrusted_axioms": [],
                 "has_sorry": false,
-                "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-                "status": "kernel_failed"
+                "audit_complete": true,
+                "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+                "status": "kernel_verified"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],
@@ -1621,24 +1637,32 @@
         "input": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
         "ok": true,
         "value": {
-          "checked": false,
-          "complete": true,
+          "checked": true,
+          "verified": true,
+          "returncode": 0,
           "theorems": [
             "fake_rh"
           ],
-          "audited_theorems": [],
+          "audited_theorems": [
+            "fake_rh"
+          ],
           "trivial_theorems": [
             "fake_rh"
           ],
+          "axioms_used": [],
           "untrusted_axioms": [],
-          "source": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
+          "diagnostics": [
+            "'fake_rh' does not depend on any axioms"
+          ],
           "formal_manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "fake_rh"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "fake_rh"
+              ],
               "trivial_theorems": [
                 "fake_rh"
               ],
@@ -1646,9 +1670,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1661,22 +1685,24 @@
               "canonical_statement": null,
               "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
               "declared_alignment": "unspecified",
-              "verified_alignment": "unreviewed",
-              "status": "unreviewed",
-              "alignment_status": "unreviewed",
-              "is_aligned": true,
-              "congruent": true,
-              "audit_method": "no_canonical_reference",
-              "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
+              "verified_alignment": "tautology_control",
+              "status": "tautology_control",
+              "alignment_status": "tautology_control",
+              "is_aligned": false,
+              "congruent": false,
+              "audit_method": "tautology_detector",
+              "scope_notes": "Declared as tautology control theorem; cannot serve as proof of canonical mathematical statements."
             }
           },
           "manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "fake_rh"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "fake_rh"
+              ],
               "trivial_theorems": [
                 "fake_rh"
               ],
@@ -1684,9 +1710,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -1699,59 +1725,62 @@
               "canonical_statement": null,
               "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
               "declared_alignment": "unspecified",
-              "verified_alignment": "unreviewed",
-              "status": "unreviewed",
-              "alignment_status": "unreviewed",
-              "is_aligned": true,
-              "congruent": true,
-              "audit_method": "no_canonical_reference",
-              "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
+              "verified_alignment": "tautology_control",
+              "status": "tautology_control",
+              "alignment_status": "tautology_control",
+              "is_aligned": false,
+              "congruent": false,
+              "audit_method": "tautology_detector",
+              "scope_notes": "Declared as tautology control theorem; cannot serve as proof of canonical mathematical statements."
             }
           }
         },
-        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "value_str": "verified by Lean 4 kernel (#print axioms clean)",
         "guarantee": "unverified",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
-          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "method": "Lean 4 typechecker kernel + #print axioms (lean)",
           "steps": [
-            "loaded Lean source from inline snippet",
-            "audited declarations: ['fake_rh']",
-            "kernel validity: False (0 theorem(s) audited)",
+            "source: inline snippet",
+            "runner: lean (exit code: 0)",
+            "audited theorems: ['fake_rh']",
+            "axioms used: ['none (constructive)']",
+            "kernel validity: True (1 theorem(s) audited)",
             "assumptions audit: clean",
-            "spec alignment: unreviewed"
-          ],
-          "limitations": [
-            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
+            "spec alignment: tautology_control"
           ],
           "reproducible_with": "axiom prove \"theorem fake_rh : 2 + 2 = 2 + 2 := by rfl\" --engine lean"
         },
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "detail": "Tautology control theorem rejected as proof of canonical statement",
           "checks": 1,
           "data": {
             "theorems": [
               "fake_rh"
             ],
-            "audited_theorems": [],
+            "audited_theorems": [
+              "fake_rh"
+            ],
             "trivial_theorems": [
               "fake_rh"
             ],
             "diagnostics": [
-              "lean binary not found in PATH or ~/.elan/bin"
+              "'fake_rh' does not depend on any axioms"
             ],
             "axioms_used": [],
             "untrusted_axioms": [],
             "formal_manifest": {
               "kernel_validity": {
-                "verified": false,
+                "verified": true,
                 "theorems": [
                   "fake_rh"
                 ],
-                "audited_theorems": [],
+                "audited_theorems": [
+                  "fake_rh"
+                ],
                 "trivial_theorems": [
                   "fake_rh"
                 ],
@@ -1759,9 +1788,9 @@
                 "axioms_used": [],
                 "untrusted_axioms": [],
                 "has_sorry": false,
-                "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-                "status": "kernel_failed"
+                "audit_complete": true,
+                "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+                "status": "kernel_verified"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],
@@ -1774,13 +1803,13 @@
                 "canonical_statement": null,
                 "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
                 "declared_alignment": "unspecified",
-                "verified_alignment": "unreviewed",
-                "status": "unreviewed",
-                "alignment_status": "unreviewed",
-                "is_aligned": true,
-                "congruent": true,
-                "audit_method": "no_canonical_reference",
-                "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
+                "verified_alignment": "tautology_control",
+                "status": "tautology_control",
+                "alignment_status": "tautology_control",
+                "is_aligned": false,
+                "congruent": false,
+                "audit_method": "tautology_detector",
+                "scope_notes": "Declared as tautology control theorem; cannot serve as proof of canonical mathematical statements."
               }
             }
           }
@@ -2323,7 +2352,7 @@
             },
             {
               "name": "math_compare",
-              "description": "Compare two mathematical expressions for equivalence via symbolic reduction and multi-point counterexample search.",
+              "description": "Compare two mathematical expressions for equivalence via symbolic reduction, numerical tolerance check, and multi-point counterexample search.",
               "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -2334,6 +2363,18 @@
                   "right": {
                     "type": "string",
                     "description": "Right-hand expression."
+                  },
+                  "a": {
+                    "type": "string",
+                    "description": "Alias for left-hand expression."
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "Alias for right-hand expression."
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "Optional numerical tolerance threshold for approximate equivalence."
                   },
                   "variables": {
                     "type": "array",
@@ -2355,11 +2396,7 @@
                     ],
                     "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
                   }
-                },
-                "required": [
-                  "left",
-                  "right"
-                ]
+                }
               }
             },
             {
@@ -2574,7 +2611,9 @@
                       "record",
                       "hypothesis",
                       "export",
-                      "clear"
+                      "clear",
+                      "new",
+                      "status"
                     ],
                     "default": "show"
                   },
@@ -2582,6 +2621,35 @@
                     "type": "string",
                     "default": "default",
                     "description": "Session name."
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Title for new session."
+                  },
+                  "step": {
+                    "type": "integer",
+                    "description": "Step index for record."
+                  },
+                  "command": {
+                    "type": "string",
+                    "description": "Command to run and record."
+                  },
+                  "depends_on": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "Antecedent step index or list of indices."
                   },
                   "expression": {
                     "type": "string",
@@ -2601,10 +2669,7 @@
                     "default": "",
                     "description": "Optional research note for recorded step."
                   }
-                },
-                "required": [
-                  "action"
-                ]
+                }
               }
             },
             {
@@ -2616,6 +2681,10 @@
                   "metric": {
                     "type": "string",
                     "description": "Metric matrix literal (e.g. '[[1, 0], [0, r^2]]') or preset name ('polar', 'sphere', 'spherical_2d', 'cylindrical', 'minkowski', 'schwarzschild')."
+                  },
+                  "metric_type": {
+                    "type": "string",
+                    "description": "Alias for metric preset name (e.g. 'sphere')."
                   },
                   "coordinates": {
                     "oneOf": [
@@ -2644,10 +2713,7 @@
                     ],
                     "default": "all"
                   }
-                },
-                "required": [
-                  "metric"
-                ]
+                }
               }
             },
             {
@@ -2904,5 +2970,5 @@
   "false_positives_count": 0,
   "false_positive_rate": 0.0,
   "validation_passed": true,
-  "formal_verification_available_locally": false
+  "formal_verification_available_locally": true
 }

@@ -82,6 +82,11 @@ class ResearchSession:
                 g = Guarantee.UNVERIFIED
             chain_guar = chain_guar.weakest(g)
 
+        if not step_valid:
+            for d in deps:
+                if d not in broken_deps:
+                    broken_deps.append(d)
+
         chain_valid = step_valid and len(broken_deps) == 0
         if not chain_valid:
             chain_guar = Guarantee.UNVERIFIED
@@ -91,9 +96,12 @@ class ResearchSession:
         item["step_guarantee"] = step_guar.value
         item["chain_valid"] = chain_valid
         item["chain_guarantee"] = chain_guar.value
+        item["dag_structural_integrity"] = chain_valid
+        item["logical_implication_proven"] = False
         item["broken_dependencies"] = broken_deps
         item["imported"] = False
         item["revalidated"] = True
+        item["revalidated_locally"] = True
 
         self.entries.append(item)
         return idx
@@ -144,16 +152,26 @@ class ResearchSession:
 
     @property
     def dependency_chain_validity(self) -> dict[str, Any]:
-        """Summary of dependency chain validity across all derivation steps."""
+        """Summary of dependency chain validity across all derivation steps.
+
+        Note: chain_valid certifies structural dependency DAG integrity,
+        not formal semantic logical deduction between arbitrary steps.
+        """
         broken_steps = [
             e["step_index"] for e in self.entries if not e.get("chain_valid", False)
         ]
         return {
             "chain_valid": self.chain_valid,
             "chain_guarantee": self.chain_guarantee.value,
+            "dag_structural_integrity": self.chain_valid,
+            "logical_implication_proven": False,
             "broken_steps": broken_steps,
             "unbroken_count": len(self.entries) - len(broken_steps),
             "total_count": len(self.entries),
+            "note": (
+                "chain_valid certifies structural dependency DAG integrity, "
+                "not formal semantic logical deduction between arbitrary steps"
+            ),
         }
 
     @property
@@ -165,13 +183,17 @@ class ResearchSession:
         for entry in self.entries:
             if not entry.get("ok", False):
                 return Guarantee.UNVERIFIED
+            # Any unverified step or imported un-revalidated step breaks mathematical guarantees
+            if not entry.get("step_valid", False) or not entry.get("chain_valid", False):
+                return Guarantee.UNVERIFIED
+            if entry.get("imported") and not (
+                entry.get("revalidated", False) or entry.get("revalidated_locally", False)
+            ):
+                return Guarantee.UNVERIFIED
             g_str = entry.get("chain_guarantee", entry.get("guarantee", Guarantee.UNVERIFIED.value))
             try:
                 g = Guarantee(g_str)
             except ValueError:
-                g = Guarantee.UNVERIFIED
-            # Item 3: Imported/cached results never get formal-proof without revalidation
-            if g == Guarantee.FORMAL_PROOF and entry.get("imported") and not entry.get("revalidated", False):
                 g = Guarantee.UNVERIFIED
             current = current.weakest(g)
         return current
@@ -180,16 +202,29 @@ class ResearchSession:
         """Recompute chain validity and chain guarantees across all entries in topological order."""
         for idx, entry in enumerate(self.entries, start=1):
             entry["step_index"] = idx
-            step_valid = bool(entry.get("step_valid", False))
-            step_guar_str = entry.get("step_guarantee") or entry.get("guarantee", Guarantee.UNVERIFIED.value)
-            try:
-                step_guar = Guarantee(step_guar_str)
-            except ValueError:
-                step_guar = Guarantee.UNVERIFIED
+            is_unrevalidated_import = bool(
+                entry.get("imported")
+                and not (
+                    entry.get("revalidated", False)
+                    or entry.get("revalidated_locally", False)
+                )
+            )
 
-            if entry.get("imported") and not entry.get("revalidated", False) and step_guar == Guarantee.FORMAL_PROOF:
+            if is_unrevalidated_import:
+                step_valid = False
                 step_guar = Guarantee.UNVERIFIED
+                entry["step_valid"] = False
                 entry["step_guarantee"] = Guarantee.UNVERIFIED.value
+                entry["guarantee"] = Guarantee.UNVERIFIED.value
+            else:
+                step_valid = bool(entry.get("step_valid", False))
+                step_guar_str = entry.get("step_guarantee") or entry.get(
+                    "guarantee", Guarantee.UNVERIFIED.value
+                )
+                try:
+                    step_guar = Guarantee(step_guar_str)
+                except ValueError:
+                    step_guar = Guarantee.UNVERIFIED
 
             deps = entry.get("depends_on", [])
             broken: list[int] = []
@@ -204,15 +239,26 @@ class ResearchSession:
                         broken.append(d)
                     else:
                         try:
-                            prev_cg = Guarantee(prev.get("chain_guarantee", Guarantee.UNVERIFIED.value))
+                            prev_cg = Guarantee(
+                                prev.get("chain_guarantee", Guarantee.UNVERIFIED.value)
+                            )
                             cg = cg.weakest(prev_cg)
                         except ValueError:
                             cg = Guarantee.UNVERIFIED
 
+            if not step_valid:
+                for d in deps:
+                    if d not in broken:
+                        broken.append(d)
+
             chain_valid = step_valid and len(broken) == 0
             entry["broken_dependencies"] = broken
             entry["chain_valid"] = chain_valid
-            entry["chain_guarantee"] = cg.value if chain_valid else Guarantee.UNVERIFIED.value
+            entry["chain_guarantee"] = (
+                cg.value if chain_valid else Guarantee.UNVERIFIED.value
+            )
+            entry["dag_structural_integrity"] = chain_valid
+            entry["logical_implication_proven"] = False
 
     def revalidate_step(self, step_idx: int, axiom: Any = None) -> bool:
         """Revalidate an imported or cached step on the current host."""
@@ -226,9 +272,44 @@ class ResearchSession:
         step_valid = bool(res.ok and res.verified)
         entry["step_valid"] = step_valid
         entry["step_guarantee"] = res.guarantee.value
+        entry["guarantee"] = res.guarantee.value
         entry["revalidated"] = True
+        entry["revalidated_locally"] = True
         self._recompute_chain_states()
         return step_valid
+
+    def revalidate_all(self, axiom: Any = None) -> bool:
+        """Revalidate all entries in the session on the current host."""
+        if axiom is None:
+            from axiom.core import Axiom
+            axiom = Axiom()
+        for idx in range(1, len(self.entries) + 1):
+            self.revalidate_step(idx, axiom=axiom)
+        return self.all_steps_valid
+
+    def format_status(self) -> str:
+        """Format human-readable derivation step status."""
+        lines: list[str] = []
+        for e in self.entries:
+            s_idx = e.get("step_index", "?")
+            sv = e.get("step_valid", False)
+            cv = e.get("chain_valid", False)
+            sg = e.get("step_guarantee", e.get("guarantee", "unverified"))
+            bd = e.get("broken_dependencies", [])
+            if bd:
+                lines.append(
+                    f"Step {s_idx}: step_valid={sv}, chain_valid={cv}, broken_dependencies={bd}"
+                )
+            else:
+                lines.append(
+                    f"Step {s_idx}: step_valid={sv}, chain_valid={cv}, guarantee={sg}"
+                )
+        lines.append(
+            f"Session: all_steps_valid={self.all_steps_valid}, "
+            f"chain_valid={self.chain_valid}, "
+            f"chain_guarantee={self.chain_guarantee.value}"
+        )
+        return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -237,6 +318,8 @@ class ResearchSession:
             "steps_count": len(self.entries),
             "step_validity": self.step_validity,
             "dependency_chain_validity": self.dependency_chain_validity,
+            "dag_structural_integrity": self.chain_valid,
+            "logical_implication_proven": False,
             "chain_guarantee": self.chain_guarantee.value,
             "hypotheses": [asdict(h) for h in self.hypotheses],
             "entries": self.entries,
@@ -322,16 +405,20 @@ class ResearchSession:
         entries = list(data.get("entries", []))
         for e in entries:
             e["imported"] = True
-            is_reval = bool(e.get("revalidated_locally", False))
-            e["revalidated"] = is_reval
-            if not is_reval:
-                if e.get("guarantee") == Guarantee.FORMAL_PROOF.value:
-                    e["unverified_claimed_guarantee"] = Guarantee.FORMAL_PROOF.value
-                    e["guarantee"] = Guarantee.UNVERIFIED.value
-                if e.get("step_guarantee") == Guarantee.FORMAL_PROOF.value:
-                    e["step_guarantee"] = Guarantee.UNVERIFIED.value
-                if e.get("chain_guarantee") == Guarantee.FORMAL_PROOF.value:
-                    e["chain_guarantee"] = Guarantee.UNVERIFIED.value
+            # Never trust JSON revalidated_locally or revalidated fields
+            e["revalidated"] = False
+            e["revalidated_locally"] = False
+            # Never trust any mathematical guarantee or step_valid from imported JSON
+            for g_field in ("guarantee", "step_guarantee", "chain_guarantee"):
+                val = e.get(g_field)
+                if val and val != Guarantee.UNVERIFIED.value:
+                    if "unverified_claimed_guarantee" not in e:
+                        e["unverified_claimed_guarantee"] = val
+                e[g_field] = Guarantee.UNVERIFIED.value
+            e["step_valid"] = False
+            e["chain_valid"] = False
+            e["dag_structural_integrity"] = False
+            e["logical_implication_proven"] = False
         session = cls(
             name=data.get("name", name),
             created_at=data.get("created_at", ""),
@@ -345,17 +432,21 @@ class ResearchSession:
 
     def as_math_result(self, action: str) -> MathResult:
         payload = self.to_dict()
+        if action == "status":
+            val_str = self.format_status()
+        else:
+            val_str = (
+                f"session '{self.name}': {len(self.entries)} step(s), "
+                f"step_validity={self.step_validity['valid_count']}/{len(self.entries)}, "
+                f"chain_valid={self.chain_valid}, "
+                f"chain_guarantee={self.chain_guarantee.value}"
+            )
         return MathResult(
             kind="session",
             input=f"{self.name}:{action}",
             ok=True,
             value=payload,
-            value_str=(
-                f"session '{self.name}': {len(self.entries)} step(s), "
-                f"step_validity={self.step_validity['valid_count']}/{len(self.entries)}, "
-                f"chain_valid={self.chain_valid}, "
-                f"chain_guarantee={self.chain_guarantee.value}"
-            ),
+            value_str=val_str,
             guarantee=self.chain_guarantee,
             evidence=Evidence(
                 engine="axiom-session",
@@ -375,6 +466,8 @@ class ResearchSession:
                 data={
                     "step_validity": self.step_validity,
                     "dependency_chain_validity": self.dependency_chain_validity,
+                    "dag_structural_integrity": self.chain_valid,
+                    "logical_implication_proven": False,
                     "chain_valid": self.chain_valid,
                     "chain_guarantee": self.chain_guarantee.value,
                 },

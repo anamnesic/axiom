@@ -53,6 +53,12 @@ def main():
         ),
         "constant_equality_probe": cli("verify", "2 + 2 = 5"),
         "lean_control": cli("prove", "examples/theorems.lean", "--engine", "lean"),
+        "limit_n3_div_2n": cli("limit", "n^3 / 2^n", "--to", "oo", "-v", "n"),
+        "sat_solve": cli("solve", "(1 - x)*(1 - y) = 0; x*(1 - y) = 0", "-v", "x,y"),
+        "unsat_solve": cli("solve", "x = 1; x = 0", "-v", "x"),
+        "demorgan_compare": cli("compare", "1 - (1 - (1 - x))*(1 - (1 - y))", "1 - x*y"),
+        "huang_matrix_eigen": cli("matrix", "[[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, -1], [0, 1, -1, 0]]", "--op", "eigen"),
+        "anti_drift_probe": cli("prove", "2 + 2 = 4", "-e", "sympy", "--canonical", "P vs NP"),
     }
     requests = [
         {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
@@ -96,6 +102,31 @@ def main():
         "mcp_tool_catalog": len(indexed.get(2, {}).get("result", {}).get("tools", [])) == doctor["mcp_tools_count"],
         "mcp_binomial_verified": verified(mcp_result) and mcp_result.get("value") == comb(400, 100),
         "mcp_exit_success": proc.returncode == 0,
+        "asymptotic_limit_n3_div_2n_verified": (
+            verified(runs["limit_n3_div_2n"]["result"])
+            and runs["limit_n3_div_2n"]["result"].get("value") == "0"
+        ),
+        "sat_algebraic_system_verified": (
+            verified(runs["sat_solve"]["result"])
+            and len(runs["sat_solve"]["result"].get("value", [])) > 0
+        ),
+        "demorgan_algebraic_verified": (
+            verified(runs["demorgan_compare"]["result"])
+            and runs["demorgan_compare"]["result"]["value"].get("equivalent") is True
+        ),
+        "huang_matrix_A2_eigen_verified": (
+            verified(runs["huang_matrix_eigen"]["result"])
+            and any("sqrt(2)" in str(item.get("eigenvalue")) for item in runs["huang_matrix_eigen"]["result"].get("value", []))
+        ),
+        "unsat_contradiction_fail_closed": (
+            runs["unsat_solve"]["result"].get("guarantee") in {"heuristic", "unverified"}
+            and runs["unsat_solve"]["result"].get("verification", {}).get("passed") is False
+            and len(runs["unsat_solve"]["result"].get("value", [])) == 0
+        ),
+        "anti_drift_p_vs_np_rejected": (
+            runs["anti_drift_probe"]["result"].get("guarantee") == "unverified"
+            and runs["anti_drift_probe"]["result"].get("verification", {}).get("passed") is False
+        ),
     }
     equality_probe = runs["constant_equality_probe"]["result"]
     checks["false_equality_2plus2_refuted"] = (
@@ -113,9 +144,18 @@ def main():
     positive_keys = [
         "groups_verified_exact", "groups_independent_math_comb",
         "pairs_verified_exact", "pairs_independent_math_comb",
-        "mcp_binomial_verified"
+        "mcp_binomial_verified",
+        "asymptotic_limit_n3_div_2n_verified",
+        "sat_algebraic_system_verified",
+        "demorgan_algebraic_verified",
+        "huang_matrix_A2_eigen_verified",
     ]
-    negative_keys = ["incorrect_root_refuted", "false_equality_2plus2_refuted"]
+    negative_keys = [
+        "incorrect_root_refuted",
+        "false_equality_2plus2_refuted",
+        "unsat_contradiction_fail_closed",
+        "anti_drift_p_vs_np_rejected",
+    ]
     positive_claims_count = len(positive_keys)
     true_positives_count = sum(1 for k in positive_keys if checks.get(k) is True)
     true_positive_rate = true_positives_count / positive_claims_count if positive_claims_count > 0 else 1.0
@@ -134,8 +174,8 @@ def main():
     ]
     record = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "axiom_version": "0.2.3",
-        "scope": "Clay finite combinatorial example and AXIOM environment only",
+        "axiom_version": "0.2.6",
+        "scope": "Clay finite combinatorial example, structural complexity barriers, and AXIOM environment validation",
         "p_vs_np_proven": False,
         "sources": [
             "https://www.claymath.org/millennium/p-vs-np/",

@@ -419,11 +419,13 @@ def verify_equivalence(
     variables: list[sp.Symbol] | None = None,
     *,
     tol: float = 1e-20,
+    tolerance: float | None = None,
     left_domain: dict[str, object] | None = None,
     right_domain: dict[str, object] | None = None,
 ) -> tuple[Verification, Guarantee]:
     """Verify ``left == right`` via domain preservation, symbolic reduction, and multi-point sampling."""
     diff = left - right
+    active_tol = float(tolerance) if tolerance is not None else tol
     free = sorted(diff.free_symbols, key=str) if variables is None else list(variables)
 
     left_excl: dict[str, list[str]] = dict((left_domain or {}).get("excluded_points") or {})
@@ -532,7 +534,7 @@ def verify_equivalence(
                 continue
             checks += 1
             max_error = max(max_error, err)
-            if err > tol:
+            if err > active_tol:
                 counterexample = {str(k): str(v) for k, v in subs.items()}
                 data_out = dict(domain_meta)
                 data_out["counterexample"] = counterexample
@@ -558,32 +560,44 @@ def verify_equivalence(
                 err = abs(complex(diff.evalf(40)))
             except Exception:
                 err = 1.0
-            if err > tol:
+            if err > active_tol:
                 data_out["status"] = "disproven"
                 data_out["proven"] = False
                 return (
                     Verification(
                         kind="approximate-disproof",
                         passed=False,
-                        detail=f"approximate constant values differ by {err:.3e} (exceeds tolerance {tol:.1e})",
+                        detail=f"approximate constant values differ by {err:.3e} (exceeds tolerance {active_tol:.1e})",
                         checks=1,
                         max_error=err,
                         data=data_out,
                     ),
                     Guarantee.UNVERIFIED,
                 )
-            # Within numerical tolerance: numerical agreement does NOT prove exact equality
+            # Within numerical tolerance
             data_out["status"] = "approximately_equal"
             data_out["proven"] = False
             data_out["approximately_equal"] = True
-            data_out["tolerance"] = tol
+            data_out["tolerance"] = active_tol
             data_out["max_error"] = err
+            if tolerance is not None:
+                return (
+                    Verification(
+                        kind="numerical-tolerance",
+                        passed=True,
+                        detail=f"numerical-tolerance: PASSED (error <= {active_tol:g})",
+                        checks=1,
+                        max_error=err,
+                        data=data_out,
+                    ),
+                    Guarantee.NUMERICAL_APPROXIMATION,
+                )
             return (
                 Verification(
                     kind="numerical-approximation",
                     passed=False,
                     detail=(
-                        f"Constant values are approximately equal within tolerance {tol:.1e} "
+                        f"Constant values are approximately equal within tolerance {active_tol:.1e} "
                         f"(|diff| = {err:.2e}); exact equality cannot be established due to inexact float inputs"
                     ),
                     checks=1,
@@ -636,13 +650,30 @@ def verify_equivalence(
                 pass
 
         if is_exact_nonzero:
-            data_out["status"] = "disproven"
-            data_out["proven"] = False
             if err_val is None:
                 try:
                     err_val = abs(complex(diff.evalf(40)))
                 except Exception:
                     err_val = 1.0
+            if tolerance is not None and err_val <= active_tol:
+                data_out["status"] = "approximately_equal"
+                data_out["proven"] = False
+                data_out["approximately_equal"] = True
+                data_out["tolerance"] = active_tol
+                data_out["max_error"] = err_val
+                return (
+                    Verification(
+                        kind="numerical-tolerance",
+                        passed=True,
+                        detail=f"numerical-tolerance: PASSED (error <= {active_tol:g})",
+                        checks=1,
+                        max_error=err_val,
+                        data=data_out,
+                    ),
+                    Guarantee.NUMERICAL_APPROXIMATION,
+                )
+            data_out["status"] = "disproven"
+            data_out["proven"] = False
             return (
                 Verification(
                     kind="constant-exact-disproof",
@@ -689,7 +720,7 @@ def verify_equivalence(
             continue
         checks += 1
         max_error = max(max_error, err)
-        if err > tol:
+        if err > active_tol:
             counterexample = {str(k): str(v) for k, v in subs.items()}
             data_out = dict(domain_meta)
             data_out["counterexample"] = counterexample
@@ -708,6 +739,25 @@ def verify_equivalence(
             )
         if checks >= target_checks:
             break
+
+    if tolerance is not None and checks > 0 and max_error <= active_tol:
+        data_out = dict(domain_meta)
+        data_out["status"] = "approximately_equal"
+        data_out["proven"] = False
+        data_out["approximately_equal"] = True
+        data_out["tolerance"] = active_tol
+        data_out["max_error"] = max_error
+        return (
+            Verification(
+                kind="numerical-tolerance",
+                passed=True,
+                detail=f"numerical-tolerance: PASSED (error <= {active_tol:g})",
+                checks=checks,
+                max_error=max_error,
+                data=data_out,
+            ),
+            Guarantee.NUMERICAL_APPROXIMATION,
+        )
 
     if symbolic_ok and not has_float:
         data_out = dict(domain_meta)
@@ -733,7 +783,7 @@ def verify_equivalence(
     data_out = dict(domain_meta)
     data_out["status"] = "inconclusive"
     data_out["proven"] = False
-    data_out["consistent_with_samples"] = bool(checks >= 3 and max_error <= tol)
+    data_out["consistent_with_samples"] = bool(checks >= 3 and max_error <= active_tol)
     return (
         Verification(
             kind="numerical-spot-check",

@@ -2,7 +2,7 @@
 
 **Mathematical Reasoning Engine**
 
-*One MCP for mathematical computation, exploration, and verification.*
+*One MCP for mathematical investigation, computation, and verification.*
 
 **[Research Math for All Time by Chronokairo](https://chronokairo.com)**
 
@@ -12,7 +12,7 @@ AXIOM is a computational mathematics infrastructure for AI agents, researchers, 
 
 It is not an AI-powered calculator. It is not another Mathematica, SageMath, or Lean. It is the infrastructure that lets agents use all of them through a single interface.
 
-> Inspired by the philosophy of [REA](https://github.com/morluto/rea): *reverse engineer anything* → **analyze mathematics**.
+> Inspired by the philosophy of [REA](https://github.com/morluto/rea): *reverse engineer anything* → **investigate mathematics with agents**.
 
 ## Why AXIOM
 
@@ -67,18 +67,21 @@ Every result carries structured `Evidence` metadata: `engine`, `engine_version`,
 
 ## Philosophy (inherited from REA)
 
-| REA | AXIOM |
+| REA (Reverse Engineer Anything) | AXIOM (Investigate Mathematics) |
 | --- | --- |
-| Reverse engineer anything | Analyze mathematics |
-| Binary analysis | Expression and structure analysis |
-| Ghidra / Hopper / IDA | SymPy / SageMath / Julia / Lean 4 |
-| Code tracing | Solution tracing |
-| Reverse-engineering evidence | Mathematical evidence |
-| Decompilation | Simplification and algebraic decomposition |
-| Function inspection | Function analysis |
-| Behavior comparison | Equivalence verification |
-| MCP for agents | MCP for mathematical agents |
-| CLI | Mathematical CLI |
+| Reverse engineer anything | Investigate mathematics |
+| Target binary, app, or behavior | Equation, conjecture, theorem, or mathematical model |
+| Decompilation & disassembly | Symbolic decomposition, binders & formal signature extraction |
+| Call graph & control flow graph (CFG) | Proof Dependency Graph (DAG of lemmas and premises) |
+| Static & symbolic analysis | Algebraic reduction, domain invariants & FTC verification |
+| Dynamic analysis & fuzzing | Complex Gaussian probing, numerical quadrature & counterexamples |
+| Function tracing | Proof step tracing & derivation tracking |
+| Behavior comparison | Equivalence verification (ternary: proven / disproven / inconclusive) |
+| Ghidra / Hopper / IDA / GDB | SymPy / mpmath / SageMath / Julia / Lean 4 |
+| Evidence bundle (`get_evidence_bundle`) | Mathematical Evidence Bundle (`.axiom/investigations/<id>/bundle.json`) |
+| Unknowns catalog (`list_unknowns`) | **Unknown Ledger**: explicit gaps and open proof obligations |
+| MCP for reverse engineering agents | One MCP for mathematical investigation, computation & verification |
+| Interactive CLI | Rigorous Mathematical CLI |
 
 ## Architecture
 
@@ -268,13 +271,16 @@ AXIOM operates as a rigorous neuro-symbolic research harness designed for mathem
 - [x] **v0.2.4 — Formal Specification Soundness & Alignment Governance**: Semantic specification alignment auditor (`_audit_specification_alignment`) decoupling declared from verified alignment, SymPy kernel validity strictly gated to `False` (`status: not_applicable`), transparent fail-closed assumptions audit (`warning_undeclared_hypotheses`), zero-fallback evidence isolation, Navier-Stokes viscous dissipation $D(t) = 4\nu\pi^2 e^{-4\nu t}$ completely derived by spatial integration from velocity fields, and formal Lean 4 forced variant model with anti-drift control (`51` tests).
 - [x] **v0.2.5 — Formal Statement Integrity & Four-State Semantic Alignment**: Comment stripping and Lean 4 proposition signature parsing preventing keyword spoofing, canonical 4-state alignment (`verified`, `scoped`, `candidate`, `unaligned`), strict decoupling of Lean 4 kernel validity from spec alignment, fail-closed blocking of canonical certification on undeclared hypotheses, and Navier-Stokes Taylor-Green kinetic energy $E(t) = \pi^2 e^{-4\nu t}$ fully derived by double spatial integration of velocity fields (`54` tests).
 - [x] **v0.2.6 — Four Epistemic States & Adversarial Soundness**: Complete 4-epistemic-state separation (Proof, Approximation, Refutation, Inconclusive), zero lexical match to verified, depth-aware Lean binder parsing, revalidation gating on imported results, step vs. chain validity tracking, untrusted Lean sandbox with memory/heartbeat/timeout limits, MCP authorized path restriction, benchmark invariant enforcement, and zero-mock adversarial test suite ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md), `63` `pytest` tests).
-- [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
+- [x] **v0.2.7 — Evidence Integrity, Process Sandboxing & Interface Alignment**: Fail-closed distrust of imported JSON sessions (`imported=True`, `revalidated_locally=False`), sanitized process environment for Lean execution, DAG dependency integrity decoupled from mathematical implication, `--tolerance` and session subcommands (`new`, `status`, `record`) fully aligned with use-cases guide, and atomic benchmark metric recalculation ([ADR-0018](docs/adr/0018-evidence-integrity-sandboxing-and-interface-alignment.md), `73` `pytest` tests).
+- [ ] **v0.3.0 — The Mathematical Investigation Layer (Porting REA to Mathematics)**: Mathematical Investigation Dossiers (`.axiom/investigations/<id>/`), Proof Dependency Graphs (DAG), the **Unknown Ledger** (`list_unknowns`), Evidence Bundles with SHA-256 provenance hashes (`get_evidence_bundle`), 8 high-level investigation primitives, and reproducible cross-engine validation across Lean 4, SymPy, SageMath, and Julia ([ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md)).
 
 ## Repository Layout
 
 ```text
 axiom/
 ├── README.md
+├── TUTORIAL.md                # Comprehensive user tutorial & agent guide
+├── TODO.md                    # Gap audit & roadmap tracking
 ├── LICENSE
 ├── CITATION.cff               # Academic citation metadata
 ├── AGENTS.md
@@ -303,7 +309,7 @@ axiom/
 │   ├── birch-and-swinnerton-dyer/ # Elliptic curves and L-functions queue
 │   ├── hodge-conjecture/          # Algebraic cycles & cohomology queue
 │   ├── navier-stokes/             # 3D fluid existence & smoothness
-│   ├── p-vs-np/                   # Combinatorial verification audit
+│   ├── p-vs-np/                   # Combinatorial verification audit & barrier research
 │   ├── poincare-conjecture/       # Solved 3-manifold geometrization study
 │   ├── riemann-hypothesis/        # Critical line zero audits (RH)
 │   └── yang-mills-mass-gap/       # Quantum gauge theory mass gap queue
@@ -312,7 +318,7 @@ axiom/
 │   ├── lemmas/                # Proven lemmas & Lean 4 kernel-checked proofs
 │   └── counterexamples/       # Systematically cataloged refutations
 ├── benchmarks/
-│   ├── millennium/            # Consolidated Millennium Bench (98 criteria, 0% FPR)
+│   ├── millennium/            # Consolidated Millennium Bench (105 criteria, 0% FPR)
 │   └── run_benchmarks.py      # Execution time benchmarks
 ├── skills/
 │   └── mathematics/SKILL.md
@@ -323,7 +329,8 @@ axiom/
 │   ├── test_adversarial.py    # 9 adversarial soundness & isolation tests
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0017)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0019)
+    ├── use-cases.md           # 10 end-to-end CLI & MCP workflows
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

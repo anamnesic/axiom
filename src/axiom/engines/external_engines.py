@@ -75,7 +75,23 @@ class JuliaEngine(Engine):
     capabilities = ("evaluate",)
 
     def __init__(self) -> None:
-        self.binary = shutil.which("julia")
+        self.binary = self._find_julia_binary()
+
+    @staticmethod
+    def _find_julia_binary() -> str | None:
+        found = shutil.which("julia")
+        if found:
+            return found
+        import os
+        from pathlib import Path
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            programs = Path(local_app_data) / "Programs"
+            if programs.exists():
+                for p in sorted(programs.glob("Julia*/bin/julia.exe"), reverse=True):
+                    if p.exists():
+                        return str(p)
+        return None
 
     @property
     def available(self) -> bool:

@@ -14,3 +14,5 @@ venv/
 .DS_Store
 Thumbs.db
 *.log
+.lake/
+.axiom_scratch/

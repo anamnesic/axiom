@@ -43,6 +43,143 @@ PROBLEMS = [
 ]
 
 
+def _format_rate(rate: float | None) -> str:
+    if rate is None:
+        return "N/A"
+    return f"{rate * 100:.1f}%"
+
+
+def evaluate_validation_report(
+    data: dict, proc_stdout: str = "ok", returncode: int = 0
+) -> dict:
+    failed_criteria: list[str] = []
+
+    test_cases = data.get("test_cases")
+    if isinstance(test_cases, list) and len(test_cases) > 0:
+        raw_eval_count = len(test_cases)
+        raw_passed_count = sum(1 for t in test_cases if t.get("passed"))
+        failed_criteria.extend([t.get("id", "unknown") for t in test_cases if not t.get("passed")])
+
+        raw_pos = [t for t in test_cases if t.get("kind") == "positive_claim"]
+        raw_pos_count = len(raw_pos)
+        raw_tp_count = sum(1 for t in raw_pos if t.get("passed"))
+
+        raw_neg = [t for t in test_cases if t.get("kind") in ("negative_control", "open_boundary_probe")]
+        raw_neg_count = len(raw_neg)
+        raw_fc_count = sum(1 for t in raw_neg if t.get("is_fail_closed") or (t.get("passed") and not t.get("is_false_positive")))
+        raw_fp_count = sum(1 for t in raw_neg if t.get("is_false_positive") or (not t.get("passed") and not t.get("is_fail_closed")))
+
+        # Check for contradictory summary metrics in report
+        if "positive_claims_count" in data and data["positive_claims_count"] != raw_pos_count:
+            failed_criteria.append(f"inconsistent_positive_claims_count (reported {data['positive_claims_count']} != raw {raw_pos_count})")
+        if "true_positives_count" in data and data["true_positives_count"] != raw_tp_count:
+            failed_criteria.append(f"inconsistent_true_positives_count (reported {data['true_positives_count']} != raw {raw_tp_count})")
+        if "negative_controls_count" in data and data["negative_controls_count"] != raw_neg_count:
+            failed_criteria.append(f"inconsistent_negative_controls_count (reported {data['negative_controls_count']} != raw {raw_neg_count})")
+        if "fail_closed_count" in data and data["fail_closed_count"] != raw_fc_count:
+            failed_criteria.append(f"inconsistent_fail_closed_count (reported {data['fail_closed_count']} != raw {raw_fc_count})")
+        if "false_positives_count" in data and data["false_positives_count"] != raw_fp_count:
+            failed_criteria.append(f"inconsistent_false_positives_count (reported {data['false_positives_count']} != raw {raw_fp_count})")
+        if "total_evaluations" in data and data["total_evaluations"] != raw_eval_count:
+            failed_criteria.append(f"inconsistent_total_evaluations (reported {data['total_evaluations']} != raw {raw_eval_count})")
+        if "passed_evaluations" in data and data["passed_evaluations"] != raw_passed_count:
+            failed_criteria.append(f"inconsistent_passed_evaluations (reported {data['passed_evaluations']} != raw {raw_passed_count})")
+
+        eval_count = raw_eval_count
+        passed_count = raw_passed_count
+        pos_count = raw_pos_count
+        tp_count = raw_tp_count
+        neg_count = raw_neg_count
+        fc_count = raw_fc_count
+        fp_count = raw_fp_count
+    else:
+        checks_dict = data.get("evaluations") or data.get("checks") or {}
+        if isinstance(checks_dict, dict) and checks_dict:
+            eval_count = len(checks_dict)
+            passed_count = sum(1 for v in checks_dict.values() if v is True)
+            failed_criteria.extend([k for k, v in checks_dict.items() if not v])
+        else:
+            eval_count = data.get("total_evaluations", 0)
+            passed_count = data.get("passed_evaluations", 0)
+
+        pos_count = data.get("positive_claims_count", 0)
+        tp_count = data.get("true_positives_count", 0)
+        neg_count = data.get("negative_controls_count", 0)
+        fc_count = data.get("fail_closed_count", 0)
+        fp_count = data.get("false_positives_count", 0)
+
+    # Strictly guard against zero-division (never default to 1.0 or 100%)
+    fail_closed_rate = (fc_count / neg_count) if neg_count > 0 else None
+    false_pos_rate = (fp_count / neg_count) if neg_count > 0 else None
+    true_pos_rate = (tp_count / pos_count) if pos_count > 0 else None
+
+    # Verify rates claimed in report
+    if "fail_closed_rate" in data:
+        rep_fc = data["fail_closed_rate"]
+        if neg_count == 0 and rep_fc is not None:
+            failed_criteria.append("inconsistent_fail_closed_rate (claimed rate with 0 negative controls)")
+        elif neg_count > 0 and rep_fc is not None and fail_closed_rate is not None and abs(rep_fc - fail_closed_rate) > 1e-4:
+            failed_criteria.append(f"inconsistent_fail_closed_rate (reported {rep_fc} != calculated {fail_closed_rate})")
+    if "false_positive_rate" in data:
+        rep_fp = data["false_positive_rate"]
+        if neg_count == 0 and rep_fp is not None:
+            failed_criteria.append("inconsistent_false_positive_rate (claimed rate with 0 negative controls)")
+        elif neg_count > 0 and rep_fp is not None and false_pos_rate is not None and abs(rep_fp - false_pos_rate) > 1e-4:
+            failed_criteria.append(f"inconsistent_false_positive_rate (reported {rep_fp} != calculated {false_pos_rate})")
+    if "true_positive_rate" in data:
+        rep_tp = data["true_positive_rate"]
+        if pos_count == 0 and rep_tp is not None:
+            failed_criteria.append("inconsistent_true_positive_rate (claimed rate with 0 positive claims)")
+        elif pos_count > 0 and rep_tp is not None and true_pos_rate is not None and abs(rep_tp - true_pos_rate) > 1e-4:
+            failed_criteria.append(f"inconsistent_true_positive_rate (reported {rep_tp} != calculated {true_pos_rate})")
+
+    # Benchmarks reject missing outputs and empty suites
+    if not proc_stdout or not proc_stdout.strip():
+        failed_criteria.append("missing_stdout_output")
+    if eval_count == 0:
+        failed_criteria.append("empty_evaluation_suite")
+
+    # Count range checks
+    if any(c < 0 for c in (pos_count, tp_count, neg_count, fc_count, fp_count, eval_count, passed_count)):
+        failed_criteria.append("negative_count_metric")
+    if tp_count > pos_count:
+        failed_criteria.append(f"inconsistent_true_positives ({tp_count} > {pos_count})")
+    if fc_count > neg_count:
+        failed_criteria.append(f"inconsistent_fail_closed ({fc_count} > {neg_count})")
+    if fp_count > neg_count:
+        failed_criteria.append(f"inconsistent_false_positives ({fp_count} > {neg_count})")
+    if passed_count > eval_count:
+        failed_criteria.append(f"inconsistent_passed_evaluations ({passed_count} > {eval_count})")
+    if pos_count + neg_count > eval_count:
+        failed_criteria.append(f"inconsistent_claims_exceed_total ({pos_count} + {neg_count} > {eval_count})")
+    if neg_count > 0 and (fc_count + fp_count != neg_count):
+        failed_criteria.append(f"inconsistent_negative_controls_sum ({fc_count} + {fp_count} != {neg_count})")
+
+    suite_ok = (
+        (returncode == 0)
+        and (eval_count > 0)
+        and (passed_count == eval_count)
+        and (fp_count == 0)
+        and (len(failed_criteria) == 0)
+    )
+
+    return {
+        "ok": suite_ok,
+        "returncode": returncode,
+        "evaluations": eval_count,
+        "passed": passed_count,
+        "positive_claims_count": pos_count,
+        "true_positives_count": tp_count,
+        "negative_controls_count": neg_count,
+        "fail_closed_count": fc_count,
+        "false_positives_count": fp_count,
+        "fail_closed_rate": fail_closed_rate,
+        "false_positive_rate": false_pos_rate,
+        "true_positive_rate": true_pos_rate,
+        "failed_criteria": failed_criteria,
+    }
+
+
 def run_problem_suite(name: str, folder: str) -> dict:
     validate_script = REPORTS / folder / "validate.py"
     if not validate_script.exists():
@@ -58,9 +195,10 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "negative_controls_count": 0,
             "fail_closed_count": 0,
             "false_positives_count": 0,
-            "fail_closed_rate": 0.0,
-            "false_positive_rate": 0.0,
-            "true_positive_rate": 0.0,
+            "fail_closed_rate": None,
+            "false_positive_rate": None,
+            "true_positive_rate": None,
+            "failed_criteria": ["missing_validate_script"],
         }
 
     repo_validation_json = REPORTS / folder / "validation.json"
@@ -76,18 +214,6 @@ def run_problem_suite(name: str, folder: str) -> dict:
 
     target_json = isolated_validation_json
 
-    eval_count = 0
-    passed_count = 0
-    pos_count = 0
-    tp_count = 0
-    neg_count = 0
-    fc_count = 0
-    fp_count = 0
-    fail_closed_rate = 1.0
-    false_pos_rate = 0.0
-    true_pos_rate = 1.0
-
-    failed_criteria: list[str] = []
     if not target_json.exists():
         shutil.rmtree(temp_dir, ignore_errors=True)
         return {
@@ -103,9 +229,9 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "negative_controls_count": 0,
             "fail_closed_count": 0,
             "false_positives_count": 0,
-            "fail_closed_rate": 0.0,
-            "false_positive_rate": 0.0,
-            "true_positive_rate": 0.0,
+            "fail_closed_rate": None,
+            "false_positive_rate": None,
+            "true_positive_rate": None,
             "failed_criteria": ["missing_fresh_validation_json"],
             "stdout": proc.stdout,
             "stderr": proc.stderr,
@@ -128,9 +254,9 @@ def run_problem_suite(name: str, folder: str) -> dict:
                 "negative_controls_count": 0,
                 "fail_closed_count": 0,
                 "false_positives_count": 0,
-                "fail_closed_rate": 0.0,
-                "false_positive_rate": 0.0,
-                "true_positive_rate": 0.0,
+                "fail_closed_rate": None,
+                "false_positive_rate": None,
+                "true_positive_rate": None,
                 "failed_criteria": ["stale_mtime_validation_json"],
                 "stdout": proc.stdout,
                 "stderr": proc.stderr,
@@ -146,26 +272,15 @@ def run_problem_suite(name: str, folder: str) -> dict:
                 repo_validation_json.write_text(raw_text, encoding="utf-8")
             except Exception:
                 pass
-        checks_dict = data.get("evaluations") or data.get("checks") or {}
-        if isinstance(checks_dict, dict) and checks_dict:
-            eval_count = len(checks_dict)
-            passed_count = sum(1 for v in checks_dict.values() if v is True)
-            failed_criteria = [k for k, v in checks_dict.items() if not v]
-        else:
-            eval_count = data.get("total_evaluations", 0)
-            passed_count = data.get("passed_evaluations", 0)
-            if isinstance(data.get("test_cases"), list):
-                failed_criteria = [t.get("id", "unknown") for t in data["test_cases"] if not t.get("passed")]
-
-        pos_count = data.get("positive_claims_count", 0)
-        tp_count = data.get("true_positives_count", 0)
-        neg_count = data.get("negative_controls_count", 0)
-        fc_count = data.get("fail_closed_count", 0)
-        fp_count = data.get("false_positives_count", 0)
-
-        fail_closed_rate = data.get("fail_closed_rate", (fc_count / neg_count) if neg_count > 0 else 1.0)
-        false_pos_rate = data.get("false_positive_rate", (fp_count / neg_count) if neg_count > 0 else 0.0)
-        true_pos_rate = data.get("true_positive_rate", (tp_count / pos_count) if pos_count > 0 else 1.0)
+        eval_res = evaluate_validation_report(
+            data, proc_stdout=proc.stdout, returncode=proc.returncode
+        )
+        eval_res["name"] = name
+        eval_res["folder"] = folder
+        eval_res["stdout"] = proc.stdout
+        eval_res["stderr"] = proc.stderr
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return eval_res
     except Exception as exc:
         shutil.rmtree(temp_dir, ignore_errors=True)
         return {
@@ -173,94 +288,20 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "folder": folder,
             "ok": False,
             "error": f"Failed to parse validation.json: {exc}",
-            "evaluations": eval_count,
-            "passed": passed_count,
-            "positive_claims_count": pos_count,
-            "true_positives_count": tp_count,
-            "negative_controls_count": neg_count,
-            "fail_closed_count": fc_count,
-            "false_positives_count": fp_count,
-            "fail_closed_rate": fail_closed_rate,
-            "false_positive_rate": false_pos_rate,
-            "true_positive_rate": true_pos_rate,
-            "failed_criteria": failed_criteria,
+            "evaluations": 0,
+            "passed": 0,
+            "positive_claims_count": 0,
+            "true_positives_count": 0,
+            "negative_controls_count": 0,
+            "fail_closed_count": 0,
+            "false_positives_count": 0,
+            "fail_closed_rate": None,
+            "false_positive_rate": None,
+            "true_positive_rate": None,
+            "failed_criteria": [f"parse_error: {exc}"],
             "stdout": proc.stdout,
             "stderr": proc.stderr,
         }
-
-    shutil.rmtree(temp_dir, ignore_errors=True)
-
-    # Item 8: Benchmarks reject inconsistent metrics and missing outputs
-    if not proc.stdout or not proc.stdout.strip():
-        failed_criteria.append("missing_stdout_output")
-
-    if eval_count == 0:
-        failed_criteria.append("empty_evaluation_suite")
-
-    # Count range checks
-    if any(c < 0 for c in (pos_count, tp_count, neg_count, fc_count, fp_count, eval_count, passed_count)):
-        failed_criteria.append("negative_count_metric")
-
-    if tp_count > pos_count:
-        failed_criteria.append(f"inconsistent_true_positives ({tp_count} > {pos_count})")
-
-    if fc_count > neg_count:
-        failed_criteria.append(f"inconsistent_fail_closed ({fc_count} > {neg_count})")
-
-    if fp_count > neg_count:
-        failed_criteria.append(f"inconsistent_false_positives ({fp_count} > {neg_count})")
-
-    if passed_count > eval_count:
-        failed_criteria.append(f"inconsistent_passed_evaluations ({passed_count} > {eval_count})")
-
-    if pos_count + neg_count > eval_count:
-        failed_criteria.append(f"inconsistent_claims_exceed_total ({pos_count} + {neg_count} > {eval_count})")
-
-    if neg_count > 0 and (fc_count + fp_count != neg_count):
-        failed_criteria.append(f"inconsistent_negative_controls_sum ({fc_count} + {fp_count} != {neg_count})")
-
-    # Rate consistency checks
-    if neg_count > 0:
-        expected_fc = fc_count / neg_count
-        expected_fp = fp_count / neg_count
-        if abs(fail_closed_rate - expected_fc) > 1e-4:
-            failed_criteria.append("inconsistent_fail_closed_rate")
-        if abs(false_pos_rate - expected_fp) > 1e-4:
-            failed_criteria.append("inconsistent_false_positive_rate")
-
-    if pos_count > 0:
-        expected_tp = tp_count / pos_count
-        if abs(true_pos_rate - expected_tp) > 1e-4:
-            failed_criteria.append("inconsistent_true_positive_rate")
-
-    suite_ok = (
-        (proc.returncode == 0)
-        and (eval_count > 0)
-        and (passed_count == eval_count)
-        and (fp_count == 0)
-        and (len(failed_criteria) == 0)
-    )
-
-
-    return {
-        "name": name,
-        "folder": folder,
-        "ok": suite_ok,
-        "returncode": proc.returncode,
-        "evaluations": eval_count,
-        "passed": passed_count,
-        "positive_claims_count": pos_count,
-        "true_positives_count": tp_count,
-        "negative_controls_count": neg_count,
-        "fail_closed_count": fc_count,
-        "false_positives_count": fp_count,
-        "fail_closed_rate": fail_closed_rate,
-        "false_positive_rate": false_pos_rate,
-        "true_positive_rate": true_pos_rate,
-        "failed_criteria": failed_criteria,
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
-    }
 
 
 def main() -> int:
@@ -289,7 +330,11 @@ def main() -> int:
         res = run_problem_suite(name, folder)
         results.append(res)
         status_sym = "[PASS]" if res["ok"] else "[FAIL]"
-        print(f"    {status_sym} ({res['passed']}/{res['evaluations']} criteria passed, {res['fail_closed_rate']*100:.1f}% fail-closed, {res['false_positive_rate']*100:.1f}% FP)")
+        print(
+            f"    {status_sym} ({res['passed']}/{res['evaluations']} criteria passed, "
+            f"{_format_rate(res['fail_closed_rate'])} fail-closed, "
+            f"{_format_rate(res['false_positive_rate'])} FP)"
+        )
         if not res["ok"]:
             if res.get("failed_criteria"):
                 print(f"    [!] Failed criteria: {', '.join(res['failed_criteria'])}")
@@ -307,9 +352,9 @@ def main() -> int:
         global_fail_closed += res["fail_closed_count"]
         global_false_positives += res["false_positives_count"]
 
-    global_fail_closed_rate = (global_fail_closed / global_neg_controls) if global_neg_controls > 0 else 1.0
-    global_false_positive_rate = (global_false_positives / global_neg_controls) if global_neg_controls > 0 else 0.0
-    global_true_positive_rate = (global_true_positives / global_pos_claims) if global_pos_claims > 0 else 1.0
+    global_fail_closed_rate = (global_fail_closed / global_neg_controls) if global_neg_controls > 0 else None
+    global_false_positive_rate = (global_false_positives / global_neg_controls) if global_neg_controls > 0 else None
+    global_true_positive_rate = (global_true_positives / global_pos_claims) if global_pos_claims > 0 else None
 
     print("\n" + "=" * 80)
     print("CONSOLIDATED MILLENNIUM SCORECARD")
@@ -320,15 +365,15 @@ def main() -> int:
     all_ok = True
     for r in results:
         status_text = "PASS" if r["ok"] else f"FAIL (exit {r.get('returncode', '?')})"
-        print(f"{r['name']:<30} | {r['folder']:<26} | {r['passed']}/{r['evaluations']:<6} | {r['fail_closed_rate']*100:>5.1f}% | {status_text}")
+        print(f"{r['name']:<30} | {r['folder']:<26} | {r['passed']}/{r['evaluations']:<6} | {_format_rate(r['fail_closed_rate']):>8} | {status_text}")
         if not r["ok"]:
             all_ok = False
 
     print("-" * 80)
     print(f"Total Evaluated Criteria: {total_passed}/{total_evals}")
-    print(f"Global Positive Claims: {global_true_positives}/{global_pos_claims} ({global_true_positive_rate*100:.1f}% true positive rate)")
-    print(f"Global Negative Controls: {global_fail_closed}/{global_neg_controls} ({global_fail_closed_rate*100:.1f}% fail-closed rate)")
-    print(f"Global False Positive Rate: {global_false_positive_rate*100:.1f}% ({global_false_positives}/{global_neg_controls})")
+    print(f"Global Positive Claims: {global_true_positives}/{global_pos_claims} ({_format_rate(global_true_positive_rate)} true positive rate)")
+    print(f"Global Negative Controls: {global_fail_closed}/{global_neg_controls} ({_format_rate(global_fail_closed_rate)} fail-closed rate)")
+    print(f"Global False Positive Rate: {_format_rate(global_false_positive_rate)} ({global_false_positives}/{global_neg_controls})")
     print("=" * 80)
 
     summary_file = Path(__file__).with_name("scorecard.json")

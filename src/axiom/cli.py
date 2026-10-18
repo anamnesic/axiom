@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Sequence
 
-from axiom.contract import MathResult
+from axiom.contract import Guarantee, MathResult
 from axiom.core import Axiom
 from axiom.mcp_server import run_stdio_server
 from axiom.setup_agent import configure_clients, run_doctor
@@ -37,11 +37,38 @@ def render_box(result: MathResult) -> str:
         if result.verification:
             ver_status = "PASSED" if result.verification.passed else "FAILED"
             rows.append(
-                ("Verification", f"{result.verification.kind} ({ver_status})")
+                ("Verification", f"{result.verification.kind}: {ver_status}")
             )
             if result.verification.detail:
                 rows.append(("Detail", result.verification.detail))
-        rows.append(("Guarantee", result.guarantee.value.upper()))
+        g_val = result.guarantee.value.upper()
+        g_prefix = ""
+        if result.guarantee in (
+            Guarantee.FORMAL_PROOF,
+            Guarantee.EXACT_SYMBOLIC,
+            Guarantee.VERIFIED_SUBSTITUTION,
+        ):
+            g_prefix = "[VERIFIED] "
+        elif result.guarantee == Guarantee.NUMERICAL_APPROXIMATION:
+            g_prefix = "[APPROXIMATE] "
+        elif result.value_str == "refuted" or (
+            isinstance(result.value, dict)
+            and result.value.get("status") == "disproven"
+        ):
+            g_prefix = "[REFUTED] "
+        elif result.guarantee == Guarantee.SAMPLED_VISUALIZATION:
+            g_prefix = "[SAMPLED] "
+        elif result.guarantee == Guarantee.UNVERIFIED:
+            g_prefix = "[UNVERIFIED] "
+        rows.append(("Guarantee", f"{g_prefix}{g_val}"))
+
+        if result.kind == "compare" and isinstance(result.value, dict):
+            equiv = result.value.get("equivalent", False)
+            approx = result.value.get("approximately_equal", False)
+            rows.append(("Invariant", f"equivalent={equiv}, approximately_equal={approx}"))
+        elif result.kind == "plot":
+            rows.append(("Security", "Path authorized within project root"))
+
         for warn in result.warnings:
             rows.append(("Warning", warn))
         if result.evidence:
@@ -56,9 +83,11 @@ def render_box(result: MathResult) -> str:
         for extra in sublines[1:]:
             formatted_lines.append(f"{'':<{key_width}}  {extra}")
 
-    inner_width = max(max(len(line) for line in formatted_lines), 45)
-    top = "┌─" + "─" * inner_width + "─┐"
-    bot = "└─" + "─" * inner_width + "─┘"
+    inner_width = max(max(len(line) for line in formatted_lines), 60)
+    hdr = f" AXIOM · {result.kind} "
+    fill_len = max(0, inner_width - len(hdr))
+    top = "┌─" + hdr + "─" * fill_len + "─┐"
+    bot = "└─" + "─" * (len(hdr) + fill_len) + "─┘"
     body = [f"│ {line:<{inner_width}} │" for line in formatted_lines]
     return "\n".join([top, *body, bot])
 
@@ -182,6 +211,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_cmp.add_argument("right")
     p_cmp.add_argument(
         "-A", "--assumptions", help="Domain assumptions (e.g. 'x:positive', 'x:real;y:positive', or JSON)."
+    )
+    p_cmp.add_argument(
+        "-t", "--tolerance", type=float, help="Numerical tolerance threshold for approximate equivalence."
     )
     p_cmp.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
@@ -326,9 +358,13 @@ def build_parser() -> argparse.ArgumentParser:
         "action",
         nargs="?",
         default="show",
-        choices=["show", "record", "hypothesis", "export", "clear"],
+        choices=["show", "record", "hypothesis", "export", "clear", "new", "status"],
     )
     p_sess.add_argument("--name", default="default", help="Session name (default: default).")
+    p_sess.add_argument("--title", help="Title for new session.")
+    p_sess.add_argument("--step", type=int, help="Step index for recorded step.")
+    p_sess.add_argument("--command", dest="session_command", help="Command to run and record.")
+    p_sess.add_argument("--depends-on", help="Antecedent step index or comma-separated indices.")
     p_sess.add_argument("-e", "--expression", help="Expression to record when action=record.")
     p_sess.add_argument("-o", "--operation", default="solve", help="Operation for action=record (default: solve).")
     p_sess.add_argument("--hypothesis", help="Conjecture statement for action=hypothesis.")
@@ -407,6 +443,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("  Packages:")
             for k, v in report["packages"].items():
                 print(f"    - {k:<12} {v or 'not installed'}")
+            if "external_toolchains" in report:
+                print("  Toolchains:")
+                for k, v in report["external_toolchains"].items():
+                    print(f"    - {k:<12} {v or 'not installed'}")
             print("  Self-tests:")
             for k, passed in report["self_tests"].items():
                 print(f"    - {k:<26} {'PASSED' if passed else 'FAILED'}")
@@ -479,7 +519,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             engine=args.engine,
         )
     elif cmd == "compare":
-        res = ax.compare(args.left, args.right, assumptions=assump)
+        res = ax.compare(
+            args.left,
+            args.right,
+            assumptions=assump,
+            tolerance=getattr(args, "tolerance", None),
+        )
     elif cmd == "verify":
         res = ax.verify(
             args.target,
@@ -566,9 +611,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif cmd in ("search-mathlib", "mathlib"):
         res = ax.search_mathlib(args.query, max_results=args.max_results, online=args.online)
     elif cmd == "session":
+        deps = None
+        if getattr(args, "depends_on", None):
+            deps = [int(x.strip()) for x in str(args.depends_on).split(",") if x.strip()]
         res = ax.session(
             args.action,
             name=args.name,
+            title=getattr(args, "title", None),
+            step=getattr(args, "step", None),
+            command=getattr(args, "session_command", None),
+            depends_on=deps,
             expression=args.expression,
             operation=args.operation,
             hypothesis=args.hypothesis,
@@ -580,6 +632,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if getattr(args, "json", False):
         _safe_print(res.to_json(indent=2))
+    elif cmd == "session" and getattr(args, "action", "") == "status":
+        _safe_print(res.value_str)
     elif getattr(args, "plain", False):
         _safe_print(res.render())
     else:

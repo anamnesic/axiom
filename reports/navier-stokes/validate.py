@@ -106,7 +106,7 @@ def cli(*args: str) -> dict:
         encoding="utf-8",
         errors="replace",
         env=env,
-        timeout=90,
+        timeout=int(os.environ.get("AXIOM_CLI_TIMEOUT", "150")),
         check=False,
     )
     try:

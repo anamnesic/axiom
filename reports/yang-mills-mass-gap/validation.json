@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T02:18:11.006842+00:00",
+  "timestamp_utc": "2026-10-18T06:54:19.321918+00:00",
   "axiom_version": "0.2.3",
   "problem": "Yang-Mills and the Mass Gap (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/yang-mills-mass-gap/validate.py": "75a5c8291492daf0c9432beedbe318e2b1d738772a534b0cdfee9eea496ff15d",
     "reports/yang-mills-mass-gap/README.md": "cca057185dd88f43aff5b56006ddb31ef3cd59873745e68119b62f81cd959be3",
     "reports/yang-mills-mass-gap/REPORT.md": "7b76844b6150cae8d9749837ded14449e7c4a3476ddba0849386667912e97fbb",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a"
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
   },
   "runs": {
     "doctor": {
@@ -192,10 +192,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -232,7 +232,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"

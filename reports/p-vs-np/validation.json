@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-10-18T02:17:19.959185+00:00",
-  "axiom_version": "0.2.3",
-  "scope": "Clay finite combinatorial example and AXIOM environment only",
+  "generated_at_utc": "2026-10-18T06:51:16.539423+00:00",
+  "axiom_version": "0.2.6",
+  "scope": "Clay finite combinatorial example, structural complexity barriers, and AXIOM environment validation",
   "p_vs_np_proven": false,
   "sources": [
     "https://www.claymath.org/millennium/p-vs-np/",
@@ -10,13 +10,13 @@
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/engines/lean_engine.py": "ed27154066a4775c39e986c7fc0eb443341ca3904859604ddcea017169ab0c79",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a",
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/engines/lean_engine.py": "763694089684689108a0aef41e0cf68702585d61e01000a09e98d6b3ddf0984c",
     "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
-    "src/axiom/mcp_server.py": "5fe4f0f1bc2a6353391bb14e4d662bb22fe57df8d94d6239e4e41b417e6fa708",
-    "src/axiom/cli.py": "144e0a8a177dfbc5069b08ab90ace8466566bce2a8352b3443389e5330a7e2d0",
-    "src/axiom/setup_agent.py": "9f6edf99f820ac11a595f463c28dc5452d27d7f70f047cfdb194889675936d0a",
+    "src/axiom/mcp_server.py": "56578a7a430dd049d4e30f71076fb7bf2143a2a96dd594f936e3bad320aedcf1",
+    "src/axiom/cli.py": "4ce26593586b7c06d25542892f530cfe12138ad4a18ca8860b5ffc3921a04807",
+    "src/axiom/setup_agent.py": "56448014cc53dd117dfc61932b8e0dd218ebb00e3e04c6717836aeb945cd8e5c",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
   },
   "cli_runs": {
@@ -43,10 +43,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -83,7 +83,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"
@@ -325,26 +325,37 @@
         "input": "examples/theorems.lean",
         "ok": true,
         "value": {
-          "checked": false,
-          "complete": true,
+          "checked": true,
+          "verified": true,
+          "returncode": 0,
           "theorems": [
             "add_zero_right",
             "eq_refl_nat"
           ],
-          "audited_theorems": [],
+          "audited_theorems": [
+            "add_zero_right",
+            "eq_refl_nat"
+          ],
           "trivial_theorems": [
             "eq_refl_nat"
           ],
+          "axioms_used": [],
           "untrusted_axioms": [],
-          "source": "-- Example formal theorems for `axiom prove examples/theorems.lean --engine lean`\n\ntheorem add_zero_right (n : Nat) : n + 0 = n := by\n  rfl\n\ntheorem eq_refl_nat (a : Nat) : a = a := by\n  rfl\n",
+          "diagnostics": [
+            "'add_zero_right' does not depend on any axioms",
+            "'eq_refl_nat' does not depend on any axioms"
+          ],
           "formal_manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -352,9 +363,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -384,12 +395,15 @@
           },
           "manifest": {
             "kernel_validity": {
-              "verified": false,
+              "verified": true,
               "theorems": [
                 "add_zero_right",
                 "eq_refl_nat"
               ],
-              "audited_theorems": [],
+              "audited_theorems": [
+                "add_zero_right",
+                "eq_refl_nat"
+              ],
               "trivial_theorems": [
                 "eq_refl_nat"
               ],
@@ -397,9 +411,9 @@
               "axioms_used": [],
               "untrusted_axioms": [],
               "has_sorry": false,
-              "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-              "status": "kernel_failed"
+              "audit_complete": true,
+              "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+              "status": "kernel_verified"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
@@ -428,51 +442,53 @@
             }
           }
         },
-        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
-        "guarantee": "unverified",
+        "value_str": "verified by Lean 4 kernel (#print axioms clean)",
+        "guarantee": "formal-proof",
         "evidence": {
           "engine": "lean",
-          "engine_version": "4",
-          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "engine_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "method": "Lean 4 typechecker kernel + #print axioms (lean)",
           "steps": [
-            "loaded Lean source from examples\\theorems.lean",
-            "audited declarations: ['add_zero_right', 'eq_refl_nat']",
-            "kernel validity: False (0 theorem(s) audited)",
+            "source: examples\\theorems.lean",
+            "runner: lean (exit code: 0)",
+            "audited theorems: ['add_zero_right', 'eq_refl_nat']",
+            "axioms used: ['none (constructive)']",
+            "kernel validity: True (2 theorem(s) audited)",
             "assumptions audit: warning_undeclared_hypotheses",
             "spec alignment: unreviewed"
-          ],
-          "limitations": [
-            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
           ],
           "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean"
         },
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
-          "passed": false,
-          "detail": "Formal proof contains undeclared hypotheses: n : Nat, a : Nat",
-          "checks": 1,
+          "passed": true,
+          "detail": "Typechecked by Lean 4 kernel and audited 2 declaration(s) [add_zero_right, eq_refl_nat] via #print axioms (axioms: none (constructive))",
+          "checks": 3,
           "data": {
             "theorems": [
               "add_zero_right",
               "eq_refl_nat"
             ],
-            "audited_theorems": [],
-            "trivial_theorems": [
+            "audited_theorems": [
+              "add_zero_right",
               "eq_refl_nat"
             ],
-            "diagnostics": [
-              "lean binary not found in PATH or ~/.elan/bin"
+            "trivial_theorems": [
+              "eq_refl_nat"
             ],
             "axioms_used": [],
             "untrusted_axioms": [],
             "formal_manifest": {
               "kernel_validity": {
-                "verified": false,
+                "verified": true,
                 "theorems": [
                   "add_zero_right",
                   "eq_refl_nat"
                 ],
-                "audited_theorems": [],
+                "audited_theorems": [
+                  "add_zero_right",
+                  "eq_refl_nat"
+                ],
                 "trivial_theorems": [
                   "eq_refl_nat"
                 ],
@@ -480,9 +496,9 @@
                 "axioms_used": [],
                 "untrusted_axioms": [],
                 "has_sorry": false,
-                "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
-                "status": "kernel_failed"
+                "audit_complete": true,
+                "runner": "Lean 4 typechecker kernel + #print axioms (lean)",
+                "status": "kernel_verified"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],
@@ -515,6 +531,401 @@
         "warnings": [
           "syntactic reflexive tautology (X = X) detected in: eq_refl_nat"
         ]
+      }
+    },
+    "limit_n3_div_2n": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "limit",
+        "n^3 / 2^n",
+        "--to",
+        "oo",
+        "-v",
+        "n",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "limit",
+        "input": "n^3 / 2^n",
+        "ok": true,
+        "value": "0",
+        "value_str": "0",
+        "latex": "0",
+        "variables": [
+          "n"
+        ],
+        "guarantee": "numerical-approximation",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic limit with explicit left/right audit (sympy.limit)",
+          "steps": [
+            "limit n -> oo (dir=+-) of n**3/2**n",
+            "asymptotic limit -> 0"
+          ],
+          "reproducible_with": "axiom limit \"n^3 / 2^n\" --variable n --to oo"
+        },
+        "verification": {
+          "kind": "numerical-limit-probe",
+          "passed": true,
+          "detail": "Sequence converges to 0 (error at 1e-8 step: 0.00e+00; numerical evidence only)",
+          "checks": 3,
+          "max_error": 0.0
+        }
+      }
+    },
+    "sat_solve": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "(1 - x)*(1 - y) = 0; x*(1 - y) = 0",
+        "-v",
+        "x,y",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve_system",
+        "input": "(1 - x)*(1 - y) = 0; x*(1 - y) = 0",
+        "ok": true,
+        "value": [
+          {
+            "x": "x",
+            "y": "1"
+          }
+        ],
+        "value_str": "[{'x': 'x', 'y': '1'}]",
+        "latex": "\\left\\{\\left( x, \\  1\\right)\\right\\}",
+        "variables": [
+          "x",
+          "y"
+        ],
+        "guarantee": "verified-substitution",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "nonlinear system solver (sympy.nonlinsolve)",
+          "steps": [
+            "system with 2 equations",
+            "solutions: 1"
+          ],
+          "reproducible_with": "axiom solve \"(1 - x)*(1 - y) = 0; x*(1 - y) = 0\""
+        },
+        "verification": {
+          "kind": "exact-substitution",
+          "passed": true,
+          "detail": "All 2 equations satisfied by exact substitution",
+          "checks": 2,
+          "max_error": 0.0
+        }
+      }
+    },
+    "unsat_solve": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "solve",
+        "x = 1; x = 0",
+        "-v",
+        "x",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "solve_system",
+        "input": "x = 1; x = 0",
+        "ok": true,
+        "value": [],
+        "value_str": "[]",
+        "latex": "\\emptyset",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "heuristic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "linear system solver (sympy.linsolve)",
+          "steps": [
+            "system with 2 equations",
+            "solutions: 0"
+          ],
+          "reproducible_with": "axiom solve \"x = 1; x = 0\""
+        },
+        "verification": {
+          "kind": "system-substitution",
+          "passed": false,
+          "detail": "no solutions to verify",
+          "checks": 0
+        }
+      }
+    },
+    "demorgan_compare": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "compare",
+        "1 - (1 - (1 - x))*(1 - (1 - y))",
+        "1 - x*y",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "compare",
+        "input": "1 - (1 - (1 - x))*(1 - (1 - y)) == 1 - x*y",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "-x*y + 1",
+          "right": "-x*y + 1",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "- x y + 1 = - x y + 1",
+        "variables": [
+          "x",
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = -x*y + 1",
+            "rhs = -x*y + 1",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"1 - (1 - (1 - x))*(1 - (1 - y))\" \"1 - x*y\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": true,
+          "detail": "Symbolic difference reduces to 0 and 10 numerical sample(s) agree",
+          "checks": 10,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true
+          }
+        }
+      }
+    },
+    "huang_matrix_eigen": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "matrix",
+        "[[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, -1], [0, 1, -1, 0]]",
+        "--op",
+        "eigen",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "matrix",
+        "input": "[[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, -1], [0, 1, -1, 0]]",
+        "ok": true,
+        "value": [
+          {
+            "eigenvalue": "-sqrt(2)",
+            "multiplicity": 2,
+            "eigenvectors": [
+              [
+                [
+                  "-sqrt(2)"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "0"
+                ]
+              ],
+              [
+                [
+                  "1"
+                ],
+                [
+                  "-sqrt(2)"
+                ],
+                [
+                  "0"
+                ],
+                [
+                  "1"
+                ]
+              ]
+            ]
+          },
+          {
+            "eigenvalue": "sqrt(2)",
+            "multiplicity": 2,
+            "eigenvectors": [
+              [
+                [
+                  "sqrt(2)"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "1"
+                ],
+                [
+                  "0"
+                ]
+              ],
+              [
+                [
+                  "1"
+                ],
+                [
+                  "sqrt(2)"
+                ],
+                [
+                  "0"
+                ],
+                [
+                  "1"
+                ]
+              ]
+            ]
+          }
+        ],
+        "value_str": "?=-sqrt(2) (m=2), ?=sqrt(2) (m=2)",
+        "latex": "- \\sqrt{2}, \\sqrt{2}",
+        "guarantee": "verified-substitution",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "characteristic polynomial & eigenspace basis (sympy.Matrix.eigenvects)",
+          "steps": [
+            "characteristic polynomial roots: ['-sqrt(2)', 'sqrt(2)']",
+            "eigenpairs found: 2"
+          ],
+          "reproducible_with": "axiom matrix \"[[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, -1], [0, 1, -1, 0]]\" --op eigen"
+        },
+        "verification": {
+          "kind": "eigenpair-substitution",
+          "passed": true,
+          "detail": "Verified det(A - ?I) = 0 and A*v = ?*v across 6 checks",
+          "checks": 6,
+          "max_error": 0.0
+        }
+      }
+    },
+    "anti_drift_probe": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "prove",
+        "2 + 2 = 4",
+        "-e",
+        "sympy",
+        "--canonical",
+        "P vs NP",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "prove",
+        "input": "2 + 2 == 4",
+        "ok": true,
+        "value": {
+          "status": "proven",
+          "equivalent": true,
+          "consistent_with_samples": true,
+          "left": "4",
+          "right": "4",
+          "simplified_difference": "0"
+        },
+        "value_str": "equivalent",
+        "latex": "4 = 4",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic difference reduction + domain & multi-point sampling",
+          "steps": [
+            "lhs = 4",
+            "rhs = 4",
+            "status = proven",
+            "simplify(lhs - rhs) -> 0"
+          ],
+          "reproducible_with": "axiom compare \"2 + 2\" \"4\""
+        },
+        "verification": {
+          "kind": "symbolic-identity",
+          "passed": false,
+          "detail": "Formal statement does not align with canonical statement 'P vs NP': unaligned (Formal proposition is elementary arithmetic; does not model mathematical concepts of P vs NP.)",
+          "checks": 1,
+          "max_error": 0.0,
+          "data": {
+            "status": "proven",
+            "proven": true,
+            "formal_manifest": {
+              "kernel_validity": {
+                "verified": false,
+                "theorems": [
+                  "2 + 2 = 4"
+                ],
+                "audited_theorems": [
+                  "2 + 2 = 4"
+                ],
+                "trivial_theorems": [],
+                "axioms": [],
+                "axioms_used": [],
+                "untrusted_axioms": [],
+                "has_sorry": false,
+                "audit_complete": false,
+                "runner": "sympy",
+                "status": "not_applicable",
+                "detail": "SymPy algebraic verification; formal proof assistant kernel (e.g. Lean 4) was not executed"
+              },
+              "assumptions_audit": {
+                "declared_hypotheses": [],
+                "detected_hypotheses": [],
+                "implicit_hypotheses_flagged": false,
+                "implicit_hypotheses": [],
+                "status": "clean"
+              },
+              "spec_alignment": {
+                "canonical_statement": "P vs NP",
+                "formal_statement": "2 + 2 = 4",
+                "declared_alignment": "unspecified",
+                "verified_alignment": "unaligned",
+                "status": "unaligned",
+                "alignment_status": "unaligned",
+                "is_aligned": false,
+                "congruent": false,
+                "audit_method": "domain_ontology_mismatch",
+                "scope_notes": "Formal proposition is elementary arithmetic; does not model mathematical concepts of P vs NP."
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -1025,7 +1436,7 @@
             },
             {
               "name": "math_compare",
-              "description": "Compare two mathematical expressions for equivalence via symbolic reduction and multi-point counterexample search.",
+              "description": "Compare two mathematical expressions for equivalence via symbolic reduction, numerical tolerance check, and multi-point counterexample search.",
               "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1036,6 +1447,18 @@
                   "right": {
                     "type": "string",
                     "description": "Right-hand expression."
+                  },
+                  "a": {
+                    "type": "string",
+                    "description": "Alias for left-hand expression."
+                  },
+                  "b": {
+                    "type": "string",
+                    "description": "Alias for right-hand expression."
+                  },
+                  "tolerance": {
+                    "type": "number",
+                    "description": "Optional numerical tolerance threshold for approximate equivalence."
                   },
                   "variables": {
                     "type": "array",
@@ -1057,11 +1480,7 @@
                     ],
                     "description": "Mathematical domain assumptions for variables (e.g. positive, real, integer, nonzero)."
                   }
-                },
-                "required": [
-                  "left",
-                  "right"
-                ]
+                }
               }
             },
             {
@@ -1276,7 +1695,9 @@
                       "record",
                       "hypothesis",
                       "export",
-                      "clear"
+                      "clear",
+                      "new",
+                      "status"
                     ],
                     "default": "show"
                   },
@@ -1284,6 +1705,35 @@
                     "type": "string",
                     "default": "default",
                     "description": "Session name."
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Title for new session."
+                  },
+                  "step": {
+                    "type": "integer",
+                    "description": "Step index for record."
+                  },
+                  "command": {
+                    "type": "string",
+                    "description": "Command to run and record."
+                  },
+                  "depends_on": {
+                    "oneOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "Antecedent step index or list of indices."
                   },
                   "expression": {
                     "type": "string",
@@ -1303,10 +1753,7 @@
                     "default": "",
                     "description": "Optional research note for recorded step."
                   }
-                },
-                "required": [
-                  "action"
-                ]
+                }
               }
             },
             {
@@ -1318,6 +1765,10 @@
                   "metric": {
                     "type": "string",
                     "description": "Metric matrix literal (e.g. '[[1, 0], [0, r^2]]') or preset name ('polar', 'sphere', 'spherical_2d', 'cylindrical', 'minkowski', 'schwarzschild')."
+                  },
+                  "metric_type": {
+                    "type": "string",
+                    "description": "Alias for metric preset name (e.g. 'sphere')."
                   },
                   "coordinates": {
                     "oneOf": [
@@ -1346,10 +1797,7 @@
                     ],
                     "default": "all"
                   }
-                },
-                "required": [
-                  "metric"
-                ]
+                }
               }
             },
             {
@@ -1435,6 +1883,12 @@
     "mcp_tool_catalog": true,
     "mcp_binomial_verified": true,
     "mcp_exit_success": true,
+    "asymptotic_limit_n3_div_2n_verified": true,
+    "sat_algebraic_system_verified": true,
+    "demorgan_algebraic_verified": true,
+    "huang_matrix_A2_eigen_verified": true,
+    "unsat_contradiction_fail_closed": true,
+    "anti_drift_p_vs_np_rejected": true,
     "false_equality_2plus2_refuted": true,
     "lean_control_expected_status": true
   },
@@ -1449,19 +1903,25 @@
     "mcp_tool_catalog": true,
     "mcp_binomial_verified": true,
     "mcp_exit_success": true,
+    "asymptotic_limit_n3_div_2n_verified": true,
+    "sat_algebraic_system_verified": true,
+    "demorgan_algebraic_verified": true,
+    "huang_matrix_A2_eigen_verified": true,
+    "unsat_contradiction_fail_closed": true,
+    "anti_drift_p_vs_np_rejected": true,
     "false_equality_2plus2_refuted": true,
     "lean_control_expected_status": true
   },
-  "total_evaluations": 12,
-  "passed_evaluations": 12,
-  "positive_claims_count": 5,
-  "true_positives_count": 5,
+  "total_evaluations": 18,
+  "passed_evaluations": 18,
+  "positive_claims_count": 9,
+  "true_positives_count": 9,
   "true_positive_rate": 1.0,
-  "negative_controls_count": 2,
-  "fail_closed_count": 2,
+  "negative_controls_count": 4,
+  "fail_closed_count": 4,
   "fail_closed_rate": 1.0,
   "false_positives_count": 0,
   "false_positive_rate": 0.0,
   "validation_passed": true,
-  "formal_verification_available": false
+  "formal_verification_available": true
 }

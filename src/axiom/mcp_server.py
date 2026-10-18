@@ -306,13 +306,19 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "name": "math_compare",
         "description": (
             "Compare two mathematical expressions for equivalence via symbolic "
-            "reduction and multi-point counterexample search."
+            "reduction, numerical tolerance check, and multi-point counterexample search."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "left": {"type": "string", "description": "Left-hand expression."},
                 "right": {"type": "string", "description": "Right-hand expression."},
+                "a": {"type": "string", "description": "Alias for left-hand expression."},
+                "b": {"type": "string", "description": "Alias for right-hand expression."},
+                "tolerance": {
+                    "type": "number",
+                    "description": "Optional numerical tolerance threshold for approximate equivalence.",
+                },
                 "variables": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -320,7 +326,6 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 },
                 "assumptions": _ASSUMPTIONS_PROPERTY,
             },
-            "required": ["left", "right"],
         },
     },
     {
@@ -468,16 +473,26 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["show", "record", "hypothesis", "export", "clear"],
+                    "enum": ["show", "record", "hypothesis", "export", "clear", "new", "status"],
                     "default": "show",
                 },
                 "name": {"type": "string", "default": "default", "description": "Session name."},
+                "title": {"type": "string", "description": "Title for new session."},
+                "step": {"type": "integer", "description": "Step index for record."},
+                "command": {"type": "string", "description": "Command to run and record."},
+                "depends_on": {
+                    "oneOf": [
+                        {"type": "integer"},
+                        {"type": "array", "items": {"type": "integer"}},
+                        {"type": "string"},
+                    ],
+                    "description": "Antecedent step index or list of indices.",
+                },
                 "expression": {"type": "string", "description": "Expression to evaluate and record when action='record'."},
                 "operation": {"type": "string", "default": "solve", "description": "Operation for action='record'."},
                 "hypothesis": {"type": "string", "description": "Conjecture/equality statement for action='hypothesis'."},
                 "note": {"type": "string", "default": "", "description": "Optional research note for recorded step."},
             },
-            "required": ["action"],
         },
     },
     {
@@ -497,6 +512,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                         "('polar', 'sphere', 'spherical_2d', 'cylindrical', 'minkowski', 'schwarzschild')."
                     ),
                 },
+                "metric_type": {
+                    "type": "string",
+                    "description": "Alias for metric preset name (e.g. 'sphere').",
+                },
                 "coordinates": {
                     "oneOf": [
                         {"type": "string"},
@@ -510,7 +529,6 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "default": "all",
                 },
             },
-            "required": ["metric"],
         },
     },
     {
@@ -739,11 +757,16 @@ def dispatch_tool(
         )
 
     if name == "math_compare":
+        left = args.get("left") if "left" in args else args.get("a")
+        right = args.get("right") if "right" in args else args.get("b")
+        if left is None or right is None:
+            return error_result("math_compare", str(args), "math_compare requires 'left'/'right' or 'a'/'b'")
         return ax.compare(
-            args["left"],
-            args["right"],
+            str(left),
+            str(right),
             variables=args.get("variables"),
             assumptions=args.get("assumptions"),
+            tolerance=args.get("tolerance"),
         )
 
     if name == "math_explore":
@@ -794,6 +817,10 @@ def dispatch_tool(
         return ax.session(
             args.get("action", "show"),
             name=args.get("name", "default"),
+            title=args.get("title"),
+            step=args.get("step"),
+            command=args.get("command"),
+            depends_on=args.get("depends_on"),
             expression=args.get("expression"),
             operation=args.get("operation", "solve"),
             hypothesis=args.get("hypothesis"),
@@ -801,8 +828,11 @@ def dispatch_tool(
         )
 
     if name == "math_tensor":
+        metric = args.get("metric") or args.get("metric_type")
+        if not metric:
+            return error_result("math_tensor", str(args), "math_tensor requires 'metric' or 'metric_type'")
         return ax.tensor(
-            args["metric"],
+            str(metric),
             coordinates=args.get("coordinates"),
             operation=args.get("operation", "all"),
         )

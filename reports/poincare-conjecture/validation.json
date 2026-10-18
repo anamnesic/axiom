@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T02:18:20.871006+00:00",
+  "timestamp_utc": "2026-10-18T06:54:54.395287+00:00",
   "axiom_version": "0.2.3",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/poincare-conjecture/validate.py": "6a3ce8219ce747aca3e821ce3bd76632626ad9baae957e50f80e1ca609d279b9",
     "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
     "reports/poincare-conjecture/REPORT.md": "43b44e347f43e4e2f7f16dc6b8ed1e53a6533d032effde30bd0cc35e0810dd4d",
-    "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "bef4051d58bd7977c6e775a6a6a02ea6ad56951d1e2ffa0a1b538d35b13ce69a"
+    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
+    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
   },
   "runs": {
     "doctor": {
@@ -192,10 +192,10 @@
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": null,
-          "lake": null,
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
           "sage": null,
-          "julia": null
+          "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
         "engines": [
           {
@@ -232,7 +232,7 @@
           },
           {
             "name": "lean",
-            "version": "4",
+            "version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
             "capabilities": [
               "prove",
               "search_mathlib"
