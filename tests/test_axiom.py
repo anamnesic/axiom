@@ -1514,7 +1514,7 @@ class TestAxiom(unittest.TestCase):
         )
         self.assertFalse(res_forced.verified)
         forced_manifest = res_forced.verification.data["formal_manifest"]
-        self.assertEqual(forced_manifest["spec_alignment"]["verified_alignment"], "scoped_forced_variant")
+        self.assertIn(forced_manifest["spec_alignment"]["verified_alignment"], ("scoped", "scoped_forced_variant"))
         self.assertTrue(forced_manifest["spec_alignment"]["is_aligned"])
         self.assertFalse(forced_manifest["spec_alignment"]["congruent"])
         self.assertFalse(forced_manifest["kernel_validity"]["verified"])
@@ -1548,6 +1548,96 @@ class TestAxiom(unittest.TestCase):
         self.assertEqual(audit["status"], "warning_undeclared_hypotheses")
         self.assertTrue(len(audit["detected_hypotheses"]) > 0)
         self.assertEqual(audit["declared_hypotheses"], [])
+
+    def test_prove_adversarial_keyword_spoofing_rejected(self) -> None:
+        ax = Axiom()
+
+        # Reviewer adversarial probe: elementary Nat arithmetic with 'zeta' in identifier
+        # claiming the Riemann Hypothesis
+        adv_src = (
+            "theorem zeta_add_zero (n : Nat) : n + 0 = n := by\n"
+            "  rfl\n"
+        )
+        res = ax.prove(
+            adv_src,
+            engine="lean",
+            canonical_statement="Riemann Hypothesis",
+            spec_alignment="congruent",
+        )
+        self.assertFalse(res.verified)
+        self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+        manifest = res.verification.data["formal_manifest"]
+        self.assertFalse(manifest["spec_alignment"]["congruent"])
+        self.assertIn(manifest["spec_alignment"]["verified_alignment"], ("unaligned", "candidate"))
+
+        # Pure comment keyword spoofing must be stripped and rejected as unaligned
+        adv_comment_src = (
+            "-- Riemann hypothesis complex zeros zeta critical line\n"
+            "theorem arithmetic_identity (n : Nat) : n + 1 = 1 + n := by\n"
+            "  omega\n"
+        )
+        res_comment = ax.prove(
+            adv_comment_src,
+            engine="lean",
+            canonical_statement="Riemann Hypothesis",
+            spec_alignment="congruent",
+        )
+        self.assertFalse(res_comment.verified)
+        comment_manifest = res_comment.verification.data["formal_manifest"]
+        self.assertFalse(comment_manifest["spec_alignment"]["congruent"])
+        self.assertFalse(comment_manifest["spec_alignment"]["is_aligned"])
+        self.assertEqual(comment_manifest["spec_alignment"]["verified_alignment"], "unaligned")
+
+    def test_kernel_validity_independent_of_spec_alignment(self) -> None:
+        from unittest.mock import MagicMock, patch
+        ax = Axiom()
+        lean_eng = ax.registry.get("lean")
+
+        # When Lean 4 kernel verifies a theorem, kernel_validity.verified is True,
+        # but if the theorem is unaligned with canonical_statement, res.verified is False
+        with patch.object(lean_eng, "lean_bin", "/usr/bin/lean"), patch(
+            "axiom.engines.lean_engine.subprocess.run"
+        ) as mock_run:
+            mock_run.return_value = MagicMock(
+                returncode=0,
+                stdout="'t' does not depend on any axioms\n",
+                stderr="",
+            )
+            res = ax.prove(
+                "theorem t (n : Nat) : n = n := rfl",
+                canonical_statement="Riemann Hypothesis",
+                declared_hypotheses=["n : Nat"],
+            )
+            manifest = res.verification.data["formal_manifest"]
+            self.assertTrue(manifest["kernel_validity"]["verified"])
+            self.assertFalse(manifest["spec_alignment"]["congruent"])
+            self.assertFalse(manifest["spec_alignment"]["is_aligned"])
+            self.assertFalse(res.verified)
+            self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+
+    def test_undeclared_hypotheses_block_canonical_proof(self) -> None:
+        from unittest.mock import MagicMock, patch
+        ax = Axiom()
+        lean_eng = ax.registry.get("lean")
+
+        with patch.object(lean_eng, "lean_bin", "/usr/bin/lean"), patch(
+            "axiom.engines.lean_engine.subprocess.run"
+        ) as mock_run:
+            mock_run.return_value = MagicMock(
+                returncode=0,
+                stdout="'add_zero' does not depend on any axioms\n",
+                stderr="",
+            )
+            res = ax.prove(
+                "theorem add_zero (n : Nat) : n + 0 = n := rfl",
+                canonical_statement="AddZero identity for natural numbers",
+            )
+            manifest = res.verification.data["formal_manifest"]
+            self.assertTrue(manifest["assumptions_audit"]["implicit_hypotheses_flagged"])
+            self.assertEqual(manifest["assumptions_audit"]["status"], "warning_undeclared_hypotheses")
+            self.assertFalse(res.verified)
+            self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+            self.assertIn("undeclared hypotheses", res.verification.detail)
 
 
 if __name__ == "__main__":

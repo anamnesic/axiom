@@ -165,42 +165,115 @@ _CANONICAL_DOMAINS: dict[str, dict[str, Any]] = {
 }
 
 
+def _strip_lean_comments(text: str) -> str:
+    """Strip Lean 4 single-line and nested block comments."""
+    result = []
+    i = 0
+    n = len(text)
+    depth = 0
+    while i < n:
+        if i + 1 < n and text[i : i + 2] == "/-":
+            depth += 1
+            i += 2
+        elif i + 1 < n and text[i : i + 2] == "-/":
+            if depth > 0:
+                depth -= 1
+            i += 2
+        elif depth > 0:
+            i += 1
+        else:
+            result.append(text[i])
+            i += 1
+    no_block = "".join(result)
+    lines = []
+    for line in no_block.splitlines():
+        clean_line = re.sub(r"--.*$", "", line)
+        lines.append(clean_line)
+    return "\n".join(lines)
+
+
+def _extract_lean_declarations(clean_source: str) -> list[dict[str, str]]:
+    """Extract formal declaration names, parameter binders, and return propositions from Lean source."""
+    decls = []
+    pattern = re.compile(
+        r"\b(theorem|lemma|example|def)\s+([A-Za-z0-9_']+)?\s*([^{:=]*?)\s*:\s*([^:=]+?)(?::=|where|\bby\b|$)",
+        re.MULTILINE,
+    )
+    for m in pattern.finditer(clean_source):
+        kind = m.group(1).strip()
+        name = (m.group(2) or "").strip()
+        binders = (m.group(3) or "").strip()
+        prop = (m.group(4) or "").strip()
+        decls.append({
+            "kind": kind,
+            "name": name,
+            "binders": binders,
+            "prop": prop,
+        })
+    return decls
+
+
 def _audit_specification_alignment(
     statement: str,
     canonical_statement: str | None,
     declared_alignment: str,
     source_content: str = "",
 ) -> tuple[str, bool, bool, str, str]:
-    """Audit formal statement against canonical statement, separating declared from verified alignment.
+    """Audit formal statement against canonical statement, returning four-state formal alignment.
+
+    Four canonical alignment states (v0.2.5 Formal Statement Integrity):
+    1. 'verified': Formal mathematical equivalence proved and certified (congruent = True, is_aligned = True)
+    2. 'scoped': Formalization models a recognized variant, restriction, or special case (congruent = False, is_aligned = True)
+    3. 'candidate': Formalization shares thematic domain concepts, but equivalence is uncertified (congruent = False, is_aligned = True)
+    4. 'unaligned': Mismatch between formal proposition and canonical statement (congruent = False, is_aligned = False)
+    (and 'tautology_control' for reflexive trivial identities).
 
     Returns:
         (verified_alignment, is_aligned, congruent, audit_method, scope_notes)
     """
-    combined = (statement + " " + source_content).lower()
+    clean_source = _strip_lean_comments(source_content or statement)
+    clean_statement = _strip_lean_comments(statement)
+    decls = _extract_lean_declarations(clean_source)
+    combined_clean = (clean_statement + " " + clean_source).lower()
     declared = (declared_alignment or "unspecified").lower().strip()
 
-    # 1. Tautology Control Detection
-    if (
-        declared == "tautology_control"
-        or "fake" in combined
-        or ("by rfl" in combined and any(w in combined for w in ["fake", "2 + 2 = 2 + 2", "2 + 2 = 4", "a = a"]))
-    ):
+    # 1. No canonical statement provided (unreviewed, unless explicitly declared as tautology control)
+    if not canonical_statement and declared != "tautology_control":
+        return (
+            "unreviewed",
+            True,
+            True,
+            "no_canonical_reference",
+            "No canonical statement specified for alignment verification; status is unreviewed.",
+        )
+
+    # 2. Tautology Control Detection
+    if declared == "tautology_control":
         return (
             "tautology_control",
             False,
             False,
             "tautology_detector",
-            "Identified as tautology control theorem; cannot serve as proof of canonical mathematical statements.",
+            "Declared as tautology control theorem; cannot serve as proof of canonical mathematical statements.",
         )
 
-    # 2. No canonical statement provided
-    if not canonical_statement:
+    has_taut = False
+    for d in decls:
+        p = d["prop"].strip()
+        parts = [s.strip() for s in p.split("=")]
+        if len(parts) == 2 and parts[0] == parts[1]:
+            has_taut = True
+            break
+        if p in ("2 + 2 = 4", "1 = 1", "2 + 2 = 2 + 2"):
+            has_taut = True
+            break
+    if (has_taut and ("by rfl" in combined_clean or "rfl" in combined_clean)) or "fake" in combined_clean:
         return (
-            "unreviewed",
+            "tautology_control",
             False,
             False,
-            "no_canonical_reference",
-            "No canonical statement specified for alignment verification; status is unreviewed.",
+            "tautology_detector",
+            "Syntactic reflexive tautology detected in formal proposition; rejected as proof of canonical statement.",
         )
 
     c_lower = canonical_statement.lower()
@@ -208,7 +281,31 @@ def _audit_specification_alignment(
     # 3. Known Canonical Millennium Domains
     for dom_key, dom_info in _CANONICAL_DOMAINS.items():
         if any(kw in c_lower for kw in dom_info["canon_keywords"]):
-            has_domain_formal = any(fkw in combined for fkw in dom_info["formal_keywords"])
+            # Check for elementary arithmetic on Nat/Int mismatch (e.g. zeta_add_zero)
+            is_elementary_nat = False
+            if decls:
+                is_elementary_nat = all(
+                    any(t in d["binders"].lower() for t in ["nat", "int"]) or not d["binders"]
+                    for d in decls
+                ) and all(
+                    any(op in d["prop"] for op in ["+", "*", "-", "="])
+                    and not any(ck in d["prop"].lower() for ck in dom_info["formal_keywords"])
+                    for d in decls
+                )
+            elif any(pat in statement for pat in ["x + 0 = x", "n + 0 = n", "2 + 2 = 4", "a = a"]):
+                is_elementary_nat = True
+
+            if is_elementary_nat:
+                return (
+                    "unaligned",
+                    False,
+                    False,
+                    "domain_ontology_mismatch",
+                    f"Formal proposition is elementary arithmetic; does not model mathematical concepts of {dom_info['name']}.",
+                )
+
+            # Check if domain concepts are present in the comment-stripped source
+            has_domain_formal = any(fkw in combined_clean for fkw in dom_info["formal_keywords"])
             if not has_domain_formal:
                 return (
                     "unaligned",
@@ -218,11 +315,13 @@ def _audit_specification_alignment(
                     f"Semantic mismatch: Formal statement/source does not model domain concepts of {dom_info['name']}.",
                 )
 
+            # Navier-Stokes externally forced variant check
             if dom_key == "navier_stokes":
-                has_forcing = any(fkw in combined for fkw in dom_info["forcing_keywords"])
+                has_forcing = any(fkw in combined_clean for fkw in dom_info.get("forcing_keywords", []))
                 if has_forcing:
+                    scoped_status = "scoped_forced_variant" if "forced" in declared else "scoped"
                     return (
-                        "scoped_forced_variant",
+                        scoped_status,
                         True,
                         False,
                         "domain_forcing_variant_audit",
@@ -230,19 +329,19 @@ def _audit_specification_alignment(
                     )
                 else:
                     return (
-                        "congruent",
+                        "candidate",
                         True,
-                        True,
-                        "domain_congruence_match",
-                        "Formal statement matches unforced homogeneous Navier-Stokes formulation.",
+                        False,
+                        "domain_thematic_candidate",
+                        "Formal statement is a thematic candidate for Navier-Stokes; full semantic equivalence with unforced 3D open problem is uncertified.",
                     )
             else:
                 return (
-                    "congruent",
+                    "candidate",
                     True,
-                    True,
-                    "domain_congruence_match",
-                    f"Formal statement is congruent with {dom_info['name']}.",
+                    False,
+                    "domain_thematic_candidate",
+                    f"Formal statement is a thematic candidate in {dom_info['name']}; full semantic equivalence with open canonical problem is uncertified.",
                 )
 
     # 4. Generic / Non-Millennium canonical statements
@@ -250,20 +349,19 @@ def _audit_specification_alignment(
         w for w in re.findall(r"[a-z0-9]+", c_lower)
         if len(w) >= 3 and w not in {"for", "the", "and", "with", "that", "this", "real", "numbers"}
     }
-    f_words = {w for w in re.findall(r"[a-z0-9]+", combined) if len(w) >= 3}
+    f_words = {w for w in re.findall(r"[a-z0-9]+", combined_clean) if len(w) >= 3}
     overlap = c_words.intersection(f_words)
 
-    # Semantic overlap on common algebraic identities (e.g. AddZero, identity, zero)
-    if ("addzero" in c_lower or "identity" in c_lower) and ("0" in statement or "zero" in combined or "+" in statement):
+    if ("addzero" in c_lower or "identity" in c_lower) and ("0" in statement or "zero" in combined_clean or "+" in statement):
         overlap.add("identity")
 
     if overlap:
         return (
-            "congruent",
+            "verified",
             True,
             True,
             "lexical_semantic_overlap",
-            "Formal statement is congruent with the declared canonical identity.",
+            "Formal statement is verified congruent with the declared canonical identity.",
         )
     else:
         return (
@@ -1405,7 +1503,7 @@ class Axiom:
             "formal_statement": statement.strip()[:120],
             "declared_alignment": declared_align_str,
             "verified_alignment": verified_alignment,
-            "status": verified_alignment,
+            "status": "congruent" if verified_alignment == "verified" else verified_alignment,
             "alignment_status": verified_alignment,
             "is_aligned": is_aligned,
             "congruent": is_congruent,
@@ -1413,9 +1511,10 @@ class Axiom:
             "scope_notes": scope_notes,
         }
 
-        # Detect hypotheses across statement and source lines
+        # Detect hypotheses across statement and source lines (ignoring comments)
         detected_hypotheses: list[str] = []
-        for line in source_text.splitlines():
+        clean_for_hyps = _strip_lean_comments(source_text)
+        for line in clean_for_hyps.splitlines():
             clean = line.strip()
             for m in re.finditer(r"([({[])([A-Za-z0-9_'\s]+)\s*:\s*([^)}\]]+)([)}\]])", clean):
                 hyp_name = m.group(2).strip()
@@ -1484,9 +1583,13 @@ class Axiom:
                     res.verification.passed = False
                     res.verification.detail = "Tautology control theorem rejected as proof of canonical statement"
                     res.guarantee = Guarantee.UNVERIFIED
-                elif canonical_statement and not is_aligned:
+                elif canonical_statement and not is_congruent:
                     res.verification.passed = False
-                    res.verification.detail = f"Formal statement does not align with canonical statement '{canonical_statement}' ({verified_alignment})"
+                    res.verification.detail = f"Formal statement does not align with canonical statement '{canonical_statement}': {verified_alignment} ({scope_notes})"
+                    res.guarantee = Guarantee.UNVERIFIED
+                elif canonical_statement and assumptions_audit["implicit_hypotheses_flagged"]:
+                    res.verification.passed = False
+                    res.verification.detail = f"Formal proof contains undeclared hypotheses: {', '.join(assumptions_audit['implicit_hypotheses'])}"
                     res.guarantee = Guarantee.UNVERIFIED
             return res
 
@@ -1505,7 +1608,7 @@ class Axiom:
         trivial_theorems = list(ans.raw.get("trivial_theorems") or [])
         audit_complete = bool(ans.raw.get("audit_complete"))
 
-        # Layer 1: Kernel Validity
+        # Layer 1: Kernel Validity (measured purely by Lean 4 kernel typechecking & axiom coverage)
         kernel_validity = {
             "verified": bool(
                 kernel_ok
@@ -1514,8 +1617,6 @@ class Axiom:
                 and len(theorems) > 0
                 and len(audited_theorems) >= len(theorems)
                 and audit_complete
-                and verified_alignment != "tautology_control"
-                and (not canonical_statement or is_aligned)
             ),
             "theorems": theorems,
             "audited_theorems": audited_theorems,
@@ -1535,15 +1636,21 @@ class Axiom:
             "spec_alignment": spec_alignment_record,
         }
 
+        # Formal Proof Certification requires:
+        # 1. Kernel validity passes (proof is formally verified without holes/untrusted axioms)
+        # 2. Spec alignment is congruent (the theorem proves the canonical statement)
+        # 3. Assumptions audit is clean (no undeclared implicit hypotheses)
+        # 4. Not a syntactic tautology control
+        kernel_passed = kernel_validity["verified"]
+        hypotheses_clean_for_canon = not (canonical_statement and assumptions_audit["implicit_hypotheses_flagged"])
+        spec_congruent = (not canonical_statement or is_congruent)
+        not_tautology_for_canon = not (canonical_statement and verified_alignment == "tautology_control")
+
         if (
-            kernel_ok
-            and not has_hole
-            and not untrusted
-            and len(theorems) > 0
-            and len(audited_theorems) >= len(theorems)
-            and audit_complete
-            and verified_alignment != "tautology_control"
-            and (not canonical_statement or is_congruent)
+            kernel_passed
+            and spec_congruent
+            and hypotheses_clean_for_canon
+            and not_tautology_for_canon
         ):
             guar = Guarantee.FORMAL_PROOF
             ax_desc = ", ".join(axioms_used) if axioms_used else "none (constructive)"
@@ -1571,8 +1678,15 @@ class Axiom:
                 detail = "Tautology control theorem rejected as proof of canonical statement"
             elif canonical_statement and not is_aligned:
                 detail = f"Formal statement does not align with canonical statement '{canonical_statement}': {verified_alignment} ({scope_notes})"
-            elif verified_alignment == "scoped_forced_variant":
-                detail = "Theorem formalizes an externally forced variant; does not prove unforced canonical problem"
+            elif canonical_statement and not is_congruent:
+                if verified_alignment in ("scoped", "scoped_forced_variant"):
+                    detail = f"Theorem formalizes a scoped variant; does not prove unconstrained canonical problem ({scope_notes})"
+                elif verified_alignment == "candidate":
+                    detail = f"Formal statement is a thematic candidate but semantic congruence with '{canonical_statement}' is not established ({scope_notes})"
+                else:
+                    detail = f"Formal statement is not congruent with canonical statement '{canonical_statement}' ({verified_alignment})"
+            elif assumptions_audit["implicit_hypotheses_flagged"]:
+                detail = f"Formal proof contains undeclared hypotheses: {', '.join(assumptions_audit['implicit_hypotheses'])}"
             elif has_hole:
                 detail = "Incomplete proof (contains 'sorry', 'admit', or 'sorryAx')"
             elif untrusted:

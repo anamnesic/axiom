@@ -179,6 +179,7 @@ AXIOM operates as a rigorous neuro-symbolic research harness designed for mathem
 - [x] **v0.2.2 — Verification Soundness & Adversarial Hardening**: Ternary equivalence semantics (`proven`, `disproven`, `inconclusive`), adversarial polynomial refutation ($P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) == 0$ refuted via non-zero polynomial inspection and active counterexample search), relational assumption grammar (`x!=1`, `x>0`, `x<=0`), assumptions propagated to system solvers (`solve_system`) with nonlinear fallback, revised EXP-0001 benchmark (21 cases, 0% FPR vs 46.2% naive CAS), and hardened test suite (`45` tests).
 - [x] **v0.2.3 — Scientific Benchmark Integrity & Millenium Research Bench**: Dynamic computation of fail-closed and false-positive rates from test records, Taylor-Green analytical kinetic energy $E(t) = \pi^2 e^{-4\nu t}$, strict contemporary evidence isolation in benchmark runners, and 100% fail-closed open problem boundary probes across all 7 Clay Millennium problems (`49` tests).
 - [x] **v0.2.4 — Formal Specification Soundness & Alignment Governance**: Semantic specification alignment auditor (`_audit_specification_alignment`) decoupling declared from verified alignment, SymPy kernel validity strictly gated to `False` (`status: not_applicable`), transparent fail-closed assumptions audit (`warning_undeclared_hypotheses`), zero-fallback evidence isolation, Navier-Stokes viscous dissipation $D(t) = 4\nu\pi^2 e^{-4\nu t}$ completely derived by spatial integration from velocity fields, and formal Lean 4 forced variant model with anti-drift control (`51` tests).
+- [x] **v0.2.5 — Formal Statement Integrity & Four-State Semantic Alignment**: Comment stripping and Lean 4 proposition signature parsing preventing keyword spoofing, canonical 4-state alignment (`verified`, `scoped`, `candidate`, `unaligned`), strict decoupling of Lean 4 kernel validity from spec alignment, fail-closed blocking of canonical certification on undeclared hypotheses, and Navier-Stokes Taylor-Green kinetic energy $E(t) = \pi^2 e^{-4\nu t}$ fully derived by double spatial integration of velocity fields (`54` tests).
 - [ ] **v0.3.0 — Research Reliability**: Reproducible cross-engine benchmarks comparing AXIOM results against SageMath, SymPy, SciPy, and Julia.
 
 ## Repository Layout
@@ -230,10 +231,10 @@ axiom/
 ├── examples/
 │   └── theorems.lean
 ├── tests/
-│   ├── test_axiom.py          # 45 automated test_* methods
+│   ├── test_axiom.py          # 54 automated test_* methods
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0012)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0016)
     ├── mcp-contracts.md
     ├── analise-concorrencia-mcp-2026.md
     └── readme/                # 17 localized README translations

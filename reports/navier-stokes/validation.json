@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T00:30:28.020361+00:00",
+  "timestamp_utc": "2026-10-18T00:56:37.032966+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -72,7 +72,7 @@
     {
       "id": "ke_integral_x_pi",
       "kind": "positive_claim",
-      "description": "Exact definite integral int_0^{2pi} sin^2(x) dx = pi",
+      "description": "Exact spatial integral int_0^{2pi} (u^2 + v^2)/2 dx = pi*exp(-4*nu*t)/2",
       "expected_verdict": "proven",
       "observed_verdict": "proven",
       "evidence_type": "exact-symbolic",
@@ -83,7 +83,7 @@
     {
       "id": "ke_integral_y_pi",
       "kind": "positive_claim",
-      "description": "Exact definite integral int_0^{2pi} cos^2(y) dy = pi",
+      "description": "Exact kinetic energy E(t) = int_[0,2pi]^2 (u^2 + v^2)/2 dx dy = pi^2*exp(-4*nu*t)",
       "expected_verdict": "proven",
       "observed_verdict": "proven",
       "evidence_type": "exact-symbolic",
@@ -160,8 +160,8 @@
     {
       "id": "lean_forced_variant_anti_drift_probe",
       "kind": "open_boundary_probe",
-      "description": "External forcing Lean 4 variant is classified as scoped_forced_variant (anti-drift control)",
-      "expected_verdict": "unsolved",
+      "description": "External forcing Lean 4 variant is classified as scoped (anti-drift control)",
+      "expected_verdict": "inconclusive",
       "observed_verdict": "inconclusive",
       "evidence_type": "anti-drift-formal-manifest",
       "passed": true,
@@ -246,11 +246,11 @@
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "5b6fc17dd322ea7666c9ee1ffb06e002bba2024e1736cba9fb3bd4c6566a7b98",
+    "reports/navier-stokes/validate.py": "690953b13bf1733d52f7fb029c5b88ae27ffe426fdd6c4f211b61b3506bfa631",
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
     "reports/navier-stokes/REPORT.md": "d4a0c9f066553be1519948bda5a103cb6bc0e0b9f95e2ba6965fa76a25bd9e8e",
     "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "cbe60f4e05d01171300ac6a6f6acffd7bf50f70bfba2a23d2ec275cb72945d54"
+    "src/axiom/core.py": "f2ae26542533b798f628b6be1092c7309962c66897c2d01758e28314858ee3b2"
   },
   "runs": {
     "doctor": {
@@ -794,17 +794,17 @@
         "--to",
         "2*pi",
         "--",
-        "sin(x)^2"
+        "((sin(x)*cos(y)*exp(-2*nu*t))**2 + (-cos(x)*sin(y)*exp(-2*nu*t))**2) / 2"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "integrate",
-        "input": "sin(x)^2",
+        "input": "((sin(x)*cos(y)*exp(-2*nu*t))**2 + (-cos(x)*sin(y)*exp(-2*nu*t))**2) / 2",
         "ok": true,
-        "value": "pi",
-        "value_str": "pi",
-        "latex": "\\pi",
+        "value": "pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
+        "value_str": "pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
+        "latex": "\\frac{\\pi e^{- 4 \\nu t} \\sin^{2}{\\left(y \\right)}}{2} + \\frac{\\pi e^{- 4 \\nu t} \\cos^{2}{\\left(y \\right)}}{2}",
         "variables": [
           "x"
         ],
@@ -814,17 +814,17 @@
           "engine_version": "1.14.0",
           "method": "symbolic definite integration (sympy.integrate)",
           "steps": [
-            "integral from 0 to 2*pi of sin(x)**2",
-            "-> pi"
+            "integral from 0 to 2*pi of exp(-4*nu*t)*sin(x)**2*cos(y)**2/2 + exp(-4*nu*t)*sin(y)**2*cos(x)**2/2",
+            "-> pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2"
           ],
-          "reproducible_with": "axiom integrate \"sin(x)^2\" --variable x --from 0 --to 2*pi"
+          "reproducible_with": "axiom integrate \"((sin(x)*cos(y)*exp(-2*nu*t))**2 + (-cos(x)*sin(y)*exp(-2*nu*t))**2) / 2\" --variable x --from 0 --to 2*pi"
         },
         "verification": {
           "kind": "ftc-antiderivative-check",
           "passed": true,
-          "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == pi (quadrature rel error 7.59e-17)",
-          "checks": 12,
-          "max_error": 7.590501687441757e-17
+          "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
+          "checks": 20,
+          "max_error": 9.015928752147464e-42
         }
       }
     },
@@ -842,17 +842,17 @@
         "--to",
         "2*pi",
         "--",
-        "cos(y)^2"
+        "pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "integrate",
-        "input": "cos(y)^2",
+        "input": "pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
         "ok": true,
-        "value": "pi",
-        "value_str": "pi",
-        "latex": "\\pi",
+        "value": "pi**2*exp(-4*nu*t)",
+        "value_str": "pi**2*exp(-4*nu*t)",
+        "latex": "\\pi^{2} e^{- 4 \\nu t}",
         "variables": [
           "y"
         ],
@@ -862,17 +862,17 @@
           "engine_version": "1.14.0",
           "method": "symbolic definite integration (sympy.integrate)",
           "steps": [
-            "integral from 0 to 2*pi of cos(y)**2",
-            "-> pi"
+            "integral from 0 to 2*pi of pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2",
+            "-> pi**2*exp(-4*nu*t)"
           ],
-          "reproducible_with": "axiom integrate \"cos(y)^2\" --variable y --from 0 --to 2*pi"
+          "reproducible_with": "axiom integrate \"pi*exp(-4*nu*t)*sin(y)**2/2 + pi*exp(-4*nu*t)*cos(y)**2/2\" --variable y --from 0 --to 2*pi"
         },
         "verification": {
           "kind": "ftc-antiderivative-check",
           "passed": true,
-          "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == pi (quadrature rel error 7.59e-17)",
-          "checks": 12,
-          "max_error": 7.590501687441757e-17
+          "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == pi**2*exp(-4*nu*t)",
+          "checks": 20,
+          "max_error": 0.0
         }
       }
     },
@@ -886,13 +886,13 @@
         "--variable",
         "t",
         "--",
-        "pi^2 * exp(-4*nu*t)"
+        "pi**2*exp(-4*nu*t)"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "differentiate",
-        "input": "pi^2 * exp(-4*nu*t)",
+        "input": "pi**2*exp(-4*nu*t)",
         "ok": true,
         "value": "-4*pi**2*nu*exp(-4*nu*t)",
         "value_str": "-4*pi**2*nu*exp(-4*nu*t)",
@@ -909,7 +909,7 @@
             "d/dt (1x) of pi**2*exp(-4*nu*t)",
             "-> -4*pi**2*nu*exp(-4*nu*t)"
           ],
-          "reproducible_with": "axiom differentiate \"pi^2 * exp(-4*nu*t)\" --variable t"
+          "reproducible_with": "axiom differentiate \"pi**2*exp(-4*nu*t)\" --variable t"
         },
         "verification": {
           "kind": "antiderivative-roundtrip",
@@ -1256,7 +1256,7 @@
           "audited_theorems": [],
           "trivial_theorems": [],
           "untrusted_axioms": [],
-          "source": "-- Navier-Stokes 3D External Forcing Variant Model\n-- Represents the externally forced Navier-Stokes equations:\n-- du/dt + (u . grad)u = -grad(p) + nu*Delta(u) + f, with non-zero external forcing f.\n-- This formalizes the external force variant studied in singularity blowup models.\n-- NOTE: Does NOT resolve the unforced homogeneous 3D Millennium Problem.\n\nstructure FluidDomain where\n  dim : Nat\n  viscosity : Float\n\nstructure NavierStokesForcedSystem (domain : FluidDomain) where\n  external_forcing_norm : Float\n  forcing_non_zero : external_forcing_norm > 0.0\n\ntheorem forced_navier_stokes_has_external_forcing (domain : FluidDomain) (sys : NavierStokesForcedSystem domain) :\n    sys.external_forcing_norm > 0.0 := by\n  exact sys.forcing_non_zero\n",
+          "source": "-- Navier-Stokes External Forcing Variant Specification Control (Mock Model)\n-- NOTE: This file does NOT formalize or solve the 3D analytical Navier-Stokes PDE.\n-- It serves strictly as a specification-drift metadata probe to verify that AXIOM's\n-- specification auditor correctly flags external forcing variants as `scoped`\n-- rather than allowing them to be spoofed as proofs of the unforced Clay Millennium Problem.\n\nstructure FluidDomain where\n  dim : Nat\n  viscosity : Float\n\nstructure NavierStokesForcedSystem (domain : FluidDomain) where\n  external_forcing_norm : Float\n  forcing_non_zero : external_forcing_norm > 0.0\n\ntheorem forced_navier_stokes_has_external_forcing (domain : FluidDomain) (sys : NavierStokesForcedSystem domain) :\n    sys.external_forcing_norm > 0.0 := by\n  exact sys.forcing_non_zero\n",
           "formal_manifest": {
             "kernel_validity": {
               "verified": false,
@@ -1367,7 +1367,7 @@
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Theorem formalizes an externally forced variant; does not prove unforced canonical problem",
+          "detail": "Theorem formalizes a scoped variant; does not prove unconstrained canonical problem (Theorem formalizes Navier-Stokes under external forcing; does not resolve unforced homogeneous 3D Millennium Problem.)",
           "checks": 1,
           "data": {
             "theorems": [

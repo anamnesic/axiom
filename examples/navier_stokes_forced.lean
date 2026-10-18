@@ -1,8 +1,8 @@
--- Navier-Stokes 3D External Forcing Variant Model
--- Represents the externally forced Navier-Stokes equations:
--- du/dt + (u . grad)u = -grad(p) + nu*Delta(u) + f, with non-zero external forcing f.
--- This formalizes the external force variant studied in singularity blowup models.
--- NOTE: Does NOT resolve the unforced homogeneous 3D Millennium Problem.
+-- Navier-Stokes External Forcing Variant Specification Control (Mock Model)
+-- NOTE: This file does NOT formalize or solve the 3D analytical Navier-Stokes PDE.
+-- It serves strictly as a specification-drift metadata probe to verify that AXIOM's
+-- specification auditor correctly flags external forcing variants as `scoped`
+-- rather than allowing them to be spoofed as proofs of the unforced Clay Millennium Problem.
 
 structure FluidDomain where
   dim : Nat

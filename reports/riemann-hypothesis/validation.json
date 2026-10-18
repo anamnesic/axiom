@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-18T00:30:02.297874+00:00",
+  "generated_at_utc": "2026-10-18T00:56:10.370284+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -10,7 +10,7 @@
   "source_sha256": {
     "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "cbe60f4e05d01171300ac6a6f6acffd7bf50f70bfba2a23d2ec275cb72945d54",
+    "src/axiom/core.py": "f2ae26542533b798f628b6be1092c7309962c66897c2d01758e28314858ee3b2",
     "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
     "src/axiom/engines/lean_engine.py": "b5ffc481396d7d0ebd7b8c10edc981467d011c6efbf560a95c536433ef87758b",
     "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
@@ -1446,8 +1446,8 @@
               "verified_alignment": "unreviewed",
               "status": "unreviewed",
               "alignment_status": "unreviewed",
-              "is_aligned": false,
-              "congruent": false,
+              "is_aligned": true,
+              "congruent": true,
               "audit_method": "no_canonical_reference",
               "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
             }
@@ -1491,8 +1491,8 @@
               "verified_alignment": "unreviewed",
               "status": "unreviewed",
               "alignment_status": "unreviewed",
-              "is_aligned": false,
-              "congruent": false,
+              "is_aligned": true,
+              "congruent": true,
               "audit_method": "no_canonical_reference",
               "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
             }
@@ -1519,7 +1519,7 @@
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "detail": "Formal proof contains undeclared hypotheses: n : Nat, a : Nat",
           "checks": 1,
           "data": {
             "theorems": [
@@ -1574,8 +1574,8 @@
                 "verified_alignment": "unreviewed",
                 "status": "unreviewed",
                 "alignment_status": "unreviewed",
-                "is_aligned": false,
-                "congruent": false,
+                "is_aligned": true,
+                "congruent": true,
                 "audit_method": "no_canonical_reference",
                 "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
               }
@@ -1645,13 +1645,13 @@
               "canonical_statement": null,
               "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
               "declared_alignment": "unspecified",
-              "verified_alignment": "tautology_control",
-              "status": "tautology_control",
-              "alignment_status": "tautology_control",
-              "is_aligned": false,
-              "congruent": false,
-              "audit_method": "tautology_detector",
-              "scope_notes": "Identified as tautology control theorem; cannot serve as proof of canonical mathematical statements."
+              "verified_alignment": "unreviewed",
+              "status": "unreviewed",
+              "alignment_status": "unreviewed",
+              "is_aligned": true,
+              "congruent": true,
+              "audit_method": "no_canonical_reference",
+              "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
             }
           },
           "manifest": {
@@ -1683,13 +1683,13 @@
               "canonical_statement": null,
               "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
               "declared_alignment": "unspecified",
-              "verified_alignment": "tautology_control",
-              "status": "tautology_control",
-              "alignment_status": "tautology_control",
-              "is_aligned": false,
-              "congruent": false,
-              "audit_method": "tautology_detector",
-              "scope_notes": "Identified as tautology control theorem; cannot serve as proof of canonical mathematical statements."
+              "verified_alignment": "unreviewed",
+              "status": "unreviewed",
+              "alignment_status": "unreviewed",
+              "is_aligned": true,
+              "congruent": true,
+              "audit_method": "no_canonical_reference",
+              "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
             }
           }
         },
@@ -1704,7 +1704,7 @@
             "audited declarations: ['fake_rh']",
             "kernel validity: False (0 theorem(s) audited)",
             "assumptions audit: clean",
-            "spec alignment: tautology_control"
+            "spec alignment: unreviewed"
           ],
           "limitations": [
             "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
@@ -1714,7 +1714,7 @@
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Tautology control theorem rejected as proof of canonical statement",
+          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
           "checks": 1,
           "data": {
             "theorems": [
@@ -1758,13 +1758,13 @@
                 "canonical_statement": null,
                 "formal_statement": "theorem fake_rh : 2 + 2 = 2 + 2 := by rfl",
                 "declared_alignment": "unspecified",
-                "verified_alignment": "tautology_control",
-                "status": "tautology_control",
-                "alignment_status": "tautology_control",
-                "is_aligned": false,
-                "congruent": false,
-                "audit_method": "tautology_detector",
-                "scope_notes": "Identified as tautology control theorem; cannot serve as proof of canonical mathematical statements."
+                "verified_alignment": "unreviewed",
+                "status": "unreviewed",
+                "alignment_status": "unreviewed",
+                "is_aligned": true,
+                "congruent": true,
+                "audit_method": "no_canonical_reference",
+                "scope_notes": "No canonical statement specified for alignment verification; status is unreviewed."
               }
             }
           }
