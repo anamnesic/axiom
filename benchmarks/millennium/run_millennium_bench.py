@@ -74,7 +74,7 @@ def run_problem_suite(name: str, folder: str) -> dict:
     cmd = [sys.executable, str(validate_script)]
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False, env=env)
 
-    target_json = isolated_validation_json if isolated_validation_json.exists() else repo_validation_json
+    target_json = isolated_validation_json
 
     eval_count = 0
     passed_count = 0
@@ -95,7 +95,7 @@ def run_problem_suite(name: str, folder: str) -> dict:
             "folder": folder,
             "ok": False,
             "returncode": proc.returncode,
-            "error": "validation.json was not generated in current execution",
+            "error": "validation.json was not generated in isolated directory",
             "evaluations": 0,
             "passed": 0,
             "positive_claims_count": 0,

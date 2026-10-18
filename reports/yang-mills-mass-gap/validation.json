@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-17T23:49:15.305286+00:00",
+  "timestamp_utc": "2026-10-18T00:30:55.820263+00:00",
   "axiom_version": "0.2.3",
   "problem": "Yang-Mills and the Mass Gap (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -166,7 +166,7 @@
     "reports/yang-mills-mass-gap/README.md": "cca057185dd88f43aff5b56006ddb31ef3cd59873745e68119b62f81cd959be3",
     "reports/yang-mills-mass-gap/REPORT.md": "7b76844b6150cae8d9749837ded14449e7c4a3476ddba0849386667912e97fbb",
     "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
+    "src/axiom/core.py": "cbe60f4e05d01171300ac6a6f6acffd7bf50f70bfba2a23d2ec275cb72945d54"
   },
   "runs": {
     "doctor": {

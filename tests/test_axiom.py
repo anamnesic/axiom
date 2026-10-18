@@ -1449,8 +1449,11 @@ class TestAxiom(unittest.TestCase):
         self.assertIn("assumptions_audit", manifest)
         self.assertIn("spec_alignment", manifest)
 
-        # Layer 1: Kernel validity
-        self.assertTrue(manifest["kernel_validity"]["verified"])
+        # Layer 1: Kernel validity (SymPy algebraic engine does not execute an interactive formal kernel)
+        self.assertFalse(manifest["kernel_validity"]["verified"])
+        self.assertEqual(manifest["kernel_validity"]["runner"], "sympy")
+        self.assertEqual(manifest["kernel_validity"]["status"], "not_applicable")
+        self.assertIn("SymPy algebraic verification", manifest["kernel_validity"]["detail"])
         self.assertIsInstance(manifest["kernel_validity"]["axioms"], list)
 
         # Layer 2: Assumptions audit
@@ -1474,6 +1477,77 @@ class TestAxiom(unittest.TestCase):
         taut_manifest = res_tautology.verification.data.get("formal_manifest")
         self.assertFalse(taut_manifest["spec_alignment"]["is_aligned"])
         self.assertEqual(taut_manifest["spec_alignment"]["status"], "tautology_control")
+
+    def test_prove_adversarial_misalignment_and_sympy_kernel_gating(self) -> None:
+        ax = Axiom()
+
+        # Reviewer adversarial test: SymPy engine claiming canonical Millennium problem
+        res = ax.prove("x + 0 = x", engine="sympy", canonical_statement="Riemann Hypothesis")
+        self.assertFalse(res.verified)
+        self.assertEqual(res.guarantee, Guarantee.UNVERIFIED)
+        manifest = res.verification.data["formal_manifest"]
+        self.assertFalse(manifest["spec_alignment"]["is_aligned"])
+        self.assertFalse(manifest["kernel_validity"]["verified"])
+        self.assertEqual(manifest["spec_alignment"]["verified_alignment"], "unaligned")
+        self.assertEqual(manifest["kernel_validity"]["status"], "not_applicable")
+
+        # Adversarial declared alignment override: caller declares congruent, but semantically unaligned
+        res_adv = ax.prove(
+            "x + 0 = x",
+            engine="sympy",
+            canonical_statement="Riemann Hypothesis",
+            spec_alignment="congruent",
+        )
+        self.assertFalse(res_adv.verified)
+        adv_manifest = res_adv.verification.data["formal_manifest"]
+        self.assertEqual(adv_manifest["spec_alignment"]["declared_alignment"], "congruent")
+        self.assertEqual(adv_manifest["spec_alignment"]["verified_alignment"], "unaligned")
+        self.assertFalse(adv_manifest["spec_alignment"]["is_aligned"])
+        self.assertFalse(adv_manifest["spec_alignment"]["congruent"])
+
+        # Lean 4 external forcing variant vs Navier-Stokes canonical statement
+        res_forced = ax.prove(
+            "examples/navier_stokes_forced.lean",
+            engine="lean",
+            canonical_statement="Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+            spec_alignment="scoped_forced_variant",
+        )
+        self.assertFalse(res_forced.verified)
+        forced_manifest = res_forced.verification.data["formal_manifest"]
+        self.assertEqual(forced_manifest["spec_alignment"]["verified_alignment"], "scoped_forced_variant")
+        self.assertTrue(forced_manifest["spec_alignment"]["is_aligned"])
+        self.assertFalse(forced_manifest["spec_alignment"]["congruent"])
+        self.assertFalse(forced_manifest["kernel_validity"]["verified"])
+
+        # Adversarial elementary theorem against Navier-Stokes canonical
+        res_ns_mismatch = ax.prove(
+            "examples/theorems.lean",
+            engine="lean",
+            canonical_statement="Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+            spec_alignment="congruent",
+        )
+        self.assertFalse(res_ns_mismatch.verified)
+        ns_manifest = res_ns_mismatch.verification.data["formal_manifest"]
+        self.assertEqual(ns_manifest["spec_alignment"]["declared_alignment"], "congruent")
+        self.assertEqual(ns_manifest["spec_alignment"]["verified_alignment"], "unaligned")
+        self.assertFalse(ns_manifest["spec_alignment"]["is_aligned"])
+
+    def test_assumptions_audit_undeclared_hypotheses(self) -> None:
+        ax = Axiom()
+
+        # When theorem source has hypotheses but caller declared None/empty,
+        # assumptions audit must flag undeclared hypotheses and fail-closed to warning_undeclared_hypotheses
+        res = ax.prove(
+            "examples/theorems.lean",
+            engine="lean",
+            canonical_statement="AddZero identity for natural numbers",
+        )
+        manifest = res.verification.data["formal_manifest"]
+        audit = manifest["assumptions_audit"]
+        self.assertTrue(audit["implicit_hypotheses_flagged"])
+        self.assertEqual(audit["status"], "warning_undeclared_hypotheses")
+        self.assertTrue(len(audit["detected_hypotheses"]) > 0)
+        self.assertEqual(audit["declared_hypotheses"], [])
 
 
 if __name__ == "__main__":

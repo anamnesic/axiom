@@ -1,15 +1,15 @@
 {
-  "timestamp_utc": "2026-10-17T23:48:48.190609+00:00",
+  "timestamp_utc": "2026-10-18T00:30:28.020361+00:00",
   "axiom_version": "0.2.3",
   "problem": "Navier-Stokes Equation (Clay Millennium Problem)",
   "all_criteria_passed": true,
-  "total_evaluations": 17,
-  "passed_evaluations": 17,
-  "positive_claims_count": 9,
-  "true_positives_count": 9,
+  "total_evaluations": 19,
+  "passed_evaluations": 19,
+  "positive_claims_count": 10,
+  "true_positives_count": 10,
   "true_positive_rate": 1.0,
-  "negative_controls_count": 7,
-  "fail_closed_count": 7,
+  "negative_controls_count": 8,
+  "fail_closed_count": 8,
   "fail_closed_rate": 1.0,
   "false_positives_count": 0,
   "false_positive_rate": 0.0,
@@ -114,6 +114,17 @@
       "is_fail_closed": false
     },
     {
+      "id": "dissipation_spatial_integral_exact",
+      "kind": "positive_claim",
+      "description": "Spatial integration int_0^{2pi} int_0^{2pi} |grad u|^2 dx dy = 4*pi^2*exp(-4*nu*t)",
+      "expected_verdict": "proven",
+      "observed_verdict": "proven",
+      "evidence_type": "exact-symbolic",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": false
+    },
+    {
       "id": "energy_conservation_refuted",
       "kind": "negative_control",
       "description": "Energy conservation dE/dt = 0 under nu > 0 is disproven with counterexample",
@@ -153,6 +164,17 @@
       "expected_verdict": "unsolved",
       "observed_verdict": "inconclusive",
       "evidence_type": "anti-drift-formal-manifest",
+      "passed": true,
+      "is_false_positive": false,
+      "is_fail_closed": true
+    },
+    {
+      "id": "lean_unaligned_mismatch_refuted",
+      "kind": "negative_control",
+      "description": "Elementary arithmetic theorem declared congruent to Navier-Stokes is rejected as unaligned",
+      "expected_verdict": "unaligned",
+      "observed_verdict": "unaligned",
+      "evidence_type": "specification-alignment-audit",
       "passed": true,
       "is_false_positive": false,
       "is_fail_closed": true
@@ -212,21 +234,23 @@
     "ke_integral_y_pi": true,
     "ke_time_derivative_exact": true,
     "energy_dissipation_exact": true,
+    "dissipation_spatial_integral_exact": true,
     "energy_conservation_refuted": true,
     "pressure_poisson_exact": true,
     "unsolvable_navier_stokes_fail_closed": true,
     "lean_forced_variant_anti_drift_probe": true,
+    "lean_unaligned_mismatch_refuted": true,
     "poiseuille_exact": true,
     "poiseuille_false_bc_refuted": true,
     "mcp_exact_div_ok": true,
     "mcp_negative_control_refuted": true
   },
   "file_hashes": {
-    "reports/navier-stokes/validate.py": "1aba940f133afea16b104531b629e21b180dc3fb2e2bd4abc49fed4e1863ed34",
+    "reports/navier-stokes/validate.py": "5b6fc17dd322ea7666c9ee1ffb06e002bba2024e1736cba9fb3bd4c6566a7b98",
     "reports/navier-stokes/README.md": "230f532202fc73de8f8bc7aea06727e4b7408275128f6eaddf48767b9016d96f",
     "reports/navier-stokes/REPORT.md": "d4a0c9f066553be1519948bda5a103cb6bc0e0b9f95e2ba6965fa76a25bd9e8e",
     "src/axiom/verification.py": "76c6e30f7958441bad024121238d53456f16569f6356287528a8bef78cf1e0d3",
-    "src/axiom/core.py": "76b6bf9b1de3032ffdfaac09625a2cad3376c9d3e291b384008f448ddfdf195d"
+    "src/axiom/core.py": "cbe60f4e05d01171300ac6a6f6acffd7bf50f70bfba2a23d2ec275cb72945d54"
   },
   "runs": {
     "doctor": {
@@ -896,6 +920,102 @@
         }
       }
     },
+    "dissipation_integral_x": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "--json",
+        "--variable",
+        "x",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+        "--",
+        "(exp(-2*nu*t)*cos(x)*cos(y))**2 + (-exp(-2*nu*t)*sin(x)*sin(y))**2 + (exp(-2*nu*t)*sin(x)*sin(y))**2 + (-exp(-2*nu*t)*cos(x)*cos(y))**2"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "(exp(-2*nu*t)*cos(x)*cos(y))**2 + (-exp(-2*nu*t)*sin(x)*sin(y))**2 + (exp(-2*nu*t)*sin(x)*sin(y))**2 + (-exp(-2*nu*t)*cos(x)*cos(y))**2",
+        "ok": true,
+        "value": "2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
+        "value_str": "2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
+        "latex": "2 \\pi e^{- 4 \\nu t} \\sin^{2}{\\left(y \\right)} + 2 \\pi e^{- 4 \\nu t} \\cos^{2}{\\left(y \\right)}",
+        "variables": [
+          "x"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from 0 to 2*pi of 2*exp(-4*nu*t)*sin(x)**2*sin(y)**2 + 2*exp(-4*nu*t)*cos(x)**2*cos(y)**2",
+            "-> 2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2"
+          ],
+          "reproducible_with": "axiom integrate \"(exp(-2*nu*t)*cos(x)*cos(y))**2 + (-exp(-2*nu*t)*sin(x)*sin(y))**2 + (exp(-2*nu*t)*sin(x)*sin(y))**2 + (-exp(-2*nu*t)*cos(x)*cos(y))**2\" --variable x --from 0 --to 2*pi"
+        },
+        "verification": {
+          "kind": "ftc-antiderivative-check",
+          "passed": true,
+          "detail": "Verified F'(x) = f(x) and F(2*pi) - F(0) == 2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
+          "checks": 20,
+          "max_error": 3.606371500858986e-41
+        }
+      }
+    },
+    "dissipation_integral_y": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "integrate",
+        "--json",
+        "--variable",
+        "y",
+        "--from",
+        "0",
+        "--to",
+        "2*pi",
+        "--",
+        "2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "integrate",
+        "input": "2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
+        "ok": true,
+        "value": "4*pi**2*exp(-4*nu*t)",
+        "value_str": "4*pi**2*exp(-4*nu*t)",
+        "latex": "4 \\pi^{2} e^{- 4 \\nu t}",
+        "variables": [
+          "y"
+        ],
+        "guarantee": "exact-symbolic",
+        "evidence": {
+          "engine": "sympy",
+          "engine_version": "1.14.0",
+          "method": "symbolic definite integration (sympy.integrate)",
+          "steps": [
+            "integral from 0 to 2*pi of 2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2",
+            "-> 4*pi**2*exp(-4*nu*t)"
+          ],
+          "reproducible_with": "axiom integrate \"2*pi*exp(-4*nu*t)*sin(y)**2 + 2*pi*exp(-4*nu*t)*cos(y)**2\" --variable y --from 0 --to 2*pi"
+        },
+        "verification": {
+          "kind": "ftc-antiderivative-check",
+          "passed": true,
+          "detail": "Verified F'(y) = f(y) and F(2*pi) - F(0) == 4*pi**2*exp(-4*nu*t)",
+          "checks": 20,
+          "max_error": 0.0
+        }
+      }
+    },
     "kinetic_energy_dissipation_balance": {
       "command": [
         "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
@@ -904,14 +1024,14 @@
         "compare",
         "--json",
         "--",
-        "(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t)",
+        "(-4*pi**2*nu*exp(-4*nu*t)) + (nu * (4*pi**2*exp(-4*nu*t)))",
         "0"
       ],
       "returncode": 0,
       "stderr": "",
       "result": {
         "kind": "compare",
-        "input": "(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t) == 0",
+        "input": "(-4*pi**2*nu*exp(-4*nu*t)) + (nu * (4*pi**2*exp(-4*nu*t))) == 0",
         "ok": true,
         "value": {
           "status": "proven",
@@ -938,7 +1058,7 @@
             "status = proven",
             "simplify(lhs - rhs) -> 0"
           ],
-          "reproducible_with": "axiom compare \"(-4*pi**2*nu*exp(-4*nu*t)) + 4*nu*pi^2*exp(-4*nu*t)\" \"0\""
+          "reproducible_with": "axiom compare \"(-4*pi**2*nu*exp(-4*nu*t)) + (nu * (4*pi**2*exp(-4*nu*t)))\" \"0\""
         },
         "verification": {
           "kind": "symbolic-identity",
@@ -1119,6 +1239,209 @@
         "--alignment",
         "scoped_forced_variant",
         "--",
+        "examples/navier_stokes_forced.lean"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "result": {
+        "kind": "prove",
+        "input": "examples/navier_stokes_forced.lean",
+        "ok": true,
+        "value": {
+          "checked": false,
+          "complete": true,
+          "theorems": [
+            "forced_navier_stokes_has_external_forcing"
+          ],
+          "audited_theorems": [],
+          "trivial_theorems": [],
+          "untrusted_axioms": [],
+          "source": "-- Navier-Stokes 3D External Forcing Variant Model\n-- Represents the externally forced Navier-Stokes equations:\n-- du/dt + (u . grad)u = -grad(p) + nu*Delta(u) + f, with non-zero external forcing f.\n-- This formalizes the external force variant studied in singularity blowup models.\n-- NOTE: Does NOT resolve the unforced homogeneous 3D Millennium Problem.\n\nstructure FluidDomain where\n  dim : Nat\n  viscosity : Float\n\nstructure NavierStokesForcedSystem (domain : FluidDomain) where\n  external_forcing_norm : Float\n  forcing_non_zero : external_forcing_norm > 0.0\n\ntheorem forced_navier_stokes_has_external_forcing (domain : FluidDomain) (sys : NavierStokesForcedSystem domain) :\n    sys.external_forcing_norm > 0.0 := by\n  exact sys.forcing_non_zero\n",
+          "formal_manifest": {
+            "kernel_validity": {
+              "verified": false,
+              "theorems": [
+                "forced_navier_stokes_has_external_forcing"
+              ],
+              "audited_theorems": [],
+              "trivial_theorems": [],
+              "axioms": [],
+              "axioms_used": [],
+              "untrusted_axioms": [],
+              "has_sorry": false,
+              "audit_complete": false,
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+              "status": "kernel_failed"
+            },
+            "assumptions_audit": {
+              "declared_hypotheses": [],
+              "detected_hypotheses": [
+                "domain : FluidDomain",
+                "domain : FluidDomain",
+                "sys : NavierStokesForcedSystem domain"
+              ],
+              "implicit_hypotheses_flagged": true,
+              "implicit_hypotheses": [
+                "domain : FluidDomain",
+                "domain : FluidDomain",
+                "sys : NavierStokesForcedSystem domain"
+              ],
+              "status": "warning_undeclared_hypotheses"
+            },
+            "spec_alignment": {
+              "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+              "formal_statement": "examples/navier_stokes_forced.lean",
+              "declared_alignment": "scoped_forced_variant",
+              "verified_alignment": "scoped_forced_variant",
+              "status": "scoped_forced_variant",
+              "alignment_status": "scoped_forced_variant",
+              "is_aligned": true,
+              "congruent": false,
+              "audit_method": "domain_forcing_variant_audit",
+              "scope_notes": "Theorem formalizes Navier-Stokes under external forcing; does not resolve unforced homogeneous 3D Millennium Problem."
+            }
+          },
+          "manifest": {
+            "kernel_validity": {
+              "verified": false,
+              "theorems": [
+                "forced_navier_stokes_has_external_forcing"
+              ],
+              "audited_theorems": [],
+              "trivial_theorems": [],
+              "axioms": [],
+              "axioms_used": [],
+              "untrusted_axioms": [],
+              "has_sorry": false,
+              "audit_complete": false,
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+              "status": "kernel_failed"
+            },
+            "assumptions_audit": {
+              "declared_hypotheses": [],
+              "detected_hypotheses": [
+                "domain : FluidDomain",
+                "domain : FluidDomain",
+                "sys : NavierStokesForcedSystem domain"
+              ],
+              "implicit_hypotheses_flagged": true,
+              "implicit_hypotheses": [
+                "domain : FluidDomain",
+                "domain : FluidDomain",
+                "sys : NavierStokesForcedSystem domain"
+              ],
+              "status": "warning_undeclared_hypotheses"
+            },
+            "spec_alignment": {
+              "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+              "formal_statement": "examples/navier_stokes_forced.lean",
+              "declared_alignment": "scoped_forced_variant",
+              "verified_alignment": "scoped_forced_variant",
+              "status": "scoped_forced_variant",
+              "alignment_status": "scoped_forced_variant",
+              "is_aligned": true,
+              "congruent": false,
+              "audit_method": "domain_forcing_variant_audit",
+              "scope_notes": "Theorem formalizes Navier-Stokes under external forcing; does not resolve unforced homogeneous 3D Millennium Problem."
+            }
+          }
+        },
+        "value_str": "Lean 4 binary not found on host; syntax and axiom declarations audited only",
+        "guarantee": "unverified",
+        "evidence": {
+          "engine": "lean",
+          "engine_version": "4",
+          "method": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+          "steps": [
+            "loaded Lean source from examples\\navier_stokes_forced.lean",
+            "audited declarations: ['forced_navier_stokes_has_external_forcing']",
+            "kernel validity: False (0 theorem(s) audited)",
+            "assumptions audit: warning_undeclared_hypotheses",
+            "spec alignment: scoped_forced_variant"
+          ],
+          "limitations": [
+            "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
+          ],
+          "reproducible_with": "axiom prove \"examples/navier_stokes_forced.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"scoped_forced_variant\""
+        },
+        "verification": {
+          "kind": "lean4-kernel-axiom-audit",
+          "passed": false,
+          "detail": "Theorem formalizes an externally forced variant; does not prove unforced canonical problem",
+          "checks": 1,
+          "data": {
+            "theorems": [
+              "forced_navier_stokes_has_external_forcing"
+            ],
+            "audited_theorems": [],
+            "trivial_theorems": [],
+            "diagnostics": [
+              "lean binary not found in PATH or ~/.elan/bin"
+            ],
+            "axioms_used": [],
+            "untrusted_axioms": [],
+            "formal_manifest": {
+              "kernel_validity": {
+                "verified": false,
+                "theorems": [
+                  "forced_navier_stokes_has_external_forcing"
+                ],
+                "audited_theorems": [],
+                "trivial_theorems": [],
+                "axioms": [],
+                "axioms_used": [],
+                "untrusted_axioms": [],
+                "has_sorry": false,
+                "audit_complete": false,
+                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+                "status": "kernel_failed"
+              },
+              "assumptions_audit": {
+                "declared_hypotheses": [],
+                "detected_hypotheses": [
+                  "domain : FluidDomain",
+                  "domain : FluidDomain",
+                  "sys : NavierStokesForcedSystem domain"
+                ],
+                "implicit_hypotheses_flagged": true,
+                "implicit_hypotheses": [
+                  "domain : FluidDomain",
+                  "domain : FluidDomain",
+                  "sys : NavierStokesForcedSystem domain"
+                ],
+                "status": "warning_undeclared_hypotheses"
+              },
+              "spec_alignment": {
+                "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+                "formal_statement": "examples/navier_stokes_forced.lean",
+                "declared_alignment": "scoped_forced_variant",
+                "verified_alignment": "scoped_forced_variant",
+                "status": "scoped_forced_variant",
+                "alignment_status": "scoped_forced_variant",
+                "is_aligned": true,
+                "congruent": false,
+                "audit_method": "domain_forcing_variant_audit",
+                "scope_notes": "Theorem formalizes Navier-Stokes under external forcing; does not resolve unforced homogeneous 3D Millennium Problem."
+              }
+            }
+          }
+        }
+      }
+    },
+    "lean_unaligned_mismatch_control": {
+      "command": [
+        "C:\\Users\\luann\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "axiom.cli",
+        "prove",
+        "--json",
+        "--engine",
+        "lean",
+        "--canonical",
+        "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
+        "--alignment",
+        "congruent",
+        "--",
         "examples/theorems.lean"
       ],
       "returncode": 0,
@@ -1156,23 +1479,33 @@
               "untrusted_axioms": [],
               "has_sorry": false,
               "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+              "status": "kernel_failed"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
-              "detected_hypotheses": [],
-              "implicit_hypotheses_flagged": false,
-              "implicit_hypotheses": [],
-              "status": "clean"
+              "detected_hypotheses": [
+                "n : Nat",
+                "a : Nat"
+              ],
+              "implicit_hypotheses_flagged": true,
+              "implicit_hypotheses": [
+                "n : Nat",
+                "a : Nat"
+              ],
+              "status": "warning_undeclared_hypotheses"
             },
             "spec_alignment": {
               "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
               "formal_statement": "examples/theorems.lean",
-              "status": "scoped_forced_variant",
-              "alignment_status": "scoped_forced_variant",
-              "is_aligned": true,
+              "declared_alignment": "congruent",
+              "verified_alignment": "unaligned",
+              "status": "unaligned",
+              "alignment_status": "unaligned",
+              "is_aligned": false,
               "congruent": false,
-              "scope_notes": ""
+              "audit_method": "domain_ontology_mismatch",
+              "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
             }
           },
           "manifest": {
@@ -1191,23 +1524,33 @@
               "untrusted_axioms": [],
               "has_sorry": false,
               "audit_complete": false,
-              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+              "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+              "status": "kernel_failed"
             },
             "assumptions_audit": {
               "declared_hypotheses": [],
-              "detected_hypotheses": [],
-              "implicit_hypotheses_flagged": false,
-              "implicit_hypotheses": [],
-              "status": "clean"
+              "detected_hypotheses": [
+                "n : Nat",
+                "a : Nat"
+              ],
+              "implicit_hypotheses_flagged": true,
+              "implicit_hypotheses": [
+                "n : Nat",
+                "a : Nat"
+              ],
+              "status": "warning_undeclared_hypotheses"
             },
             "spec_alignment": {
               "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
               "formal_statement": "examples/theorems.lean",
-              "status": "scoped_forced_variant",
-              "alignment_status": "scoped_forced_variant",
-              "is_aligned": true,
+              "declared_alignment": "congruent",
+              "verified_alignment": "unaligned",
+              "status": "unaligned",
+              "alignment_status": "unaligned",
+              "is_aligned": false,
               "congruent": false,
-              "scope_notes": ""
+              "audit_method": "domain_ontology_mismatch",
+              "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
             }
           }
         },
@@ -1221,18 +1564,18 @@
             "loaded Lean source from examples\\theorems.lean",
             "audited declarations: ['add_zero_right', 'eq_refl_nat']",
             "kernel validity: False (0 theorem(s) audited)",
-            "assumptions audit: clean",
-            "spec alignment: scoped_forced_variant"
+            "assumptions audit: warning_undeclared_hypotheses",
+            "spec alignment: unaligned"
           ],
           "limitations": [
             "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed."
           ],
-          "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"scoped_forced_variant\""
+          "reproducible_with": "axiom prove \"examples/theorems.lean\" --engine lean --canonical \"Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)\" --alignment \"congruent\""
         },
         "verification": {
           "kind": "lean4-kernel-axiom-audit",
           "passed": false,
-          "detail": "Lean 4 toolchain (lean/elan) is not installed on this machine; formal kernel verification could not be executed.",
+          "detail": "Formal statement does not align with canonical statement 'Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)': unaligned (Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness.)",
           "checks": 1,
           "data": {
             "theorems": [
@@ -1264,23 +1607,33 @@
                 "untrusted_axioms": [],
                 "has_sorry": false,
                 "audit_complete": false,
-                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)"
+                "runner": "lean4 kernel + #print axioms audit (toolchain unavailable)",
+                "status": "kernel_failed"
               },
               "assumptions_audit": {
                 "declared_hypotheses": [],
-                "detected_hypotheses": [],
-                "implicit_hypotheses_flagged": false,
-                "implicit_hypotheses": [],
-                "status": "clean"
+                "detected_hypotheses": [
+                  "n : Nat",
+                  "a : Nat"
+                ],
+                "implicit_hypotheses_flagged": true,
+                "implicit_hypotheses": [
+                  "n : Nat",
+                  "a : Nat"
+                ],
+                "status": "warning_undeclared_hypotheses"
               },
               "spec_alignment": {
                 "canonical_statement": "Clay Millennium Navier-Stokes Existence and Smoothness (unforced homogeneous 3D)",
                 "formal_statement": "examples/theorems.lean",
-                "status": "scoped_forced_variant",
-                "alignment_status": "scoped_forced_variant",
-                "is_aligned": true,
+                "declared_alignment": "congruent",
+                "verified_alignment": "unaligned",
+                "status": "unaligned",
+                "alignment_status": "unaligned",
+                "is_aligned": false,
                 "congruent": false,
-                "scope_notes": ""
+                "audit_method": "domain_ontology_mismatch",
+                "scope_notes": "Semantic mismatch: Formal statement/source does not model domain concepts of Navier-Stokes Existence and Smoothness."
               }
             }
           }
