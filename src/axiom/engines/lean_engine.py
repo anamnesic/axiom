@@ -482,9 +482,9 @@ class LeanEngine(Engine):
     @staticmethod
     def _build_sandboxed_env(sandbox_dir: Path, lean_bin: str | None = None, lake_bin: str | None = None) -> dict[str, str]:
         """Construct a scrubbed, isolated environment dictionary for untrusted Lean processes."""
-        isolated_home = sandbox_dir / ".isolated_home"
+        isolated_home = (sandbox_dir / ".isolated_home").resolve()
         isolated_home.mkdir(parents=True, exist_ok=True)
-        isolated_tmp = sandbox_dir / ".isolated_tmp"
+        isolated_tmp = (sandbox_dir / ".isolated_tmp").resolve()
         isolated_tmp.mkdir(parents=True, exist_ok=True)
 
         minimal_path_dirs: list[str] = []

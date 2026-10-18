@@ -269,7 +269,7 @@ class TestUseCases(unittest.TestCase):
             # 1. CLI
             buf = io.StringIO()
             with redirect_stdout(buf):
-                rc = cli_main(["plot", "sin(x)/x", "--range", "-10:10", "--output", str(out_file), "--json"])
+                rc = cli_main(["plot", "sin(x)/x", "--range=-10:10", "--output", str(out_file), "--json"])
             self.assertEqual(rc, 0)
             data = json.loads(buf.getvalue())
             self.assertEqual(data["guarantee"], "sampled-visualization")

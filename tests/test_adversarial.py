@@ -330,10 +330,19 @@ class TestAdversarialSoundness(unittest.TestCase):
                 sandboxed = _build_sandboxed_env(Path(scratch_td), None, None)
                 for secret_key in fake_secrets:
                     self.assertNotIn(secret_key, sandboxed)
-                self.assertEqual(sandboxed["HOME"], str((Path(scratch_td) / ".isolated_home").resolve()))
-                self.assertEqual(sandboxed["TMP"], str((Path(scratch_td) / ".isolated_tmp").resolve()))
+                self.assertEqual(
+                    Path(sandboxed["HOME"]).resolve(),
+                    (Path(scratch_td) / ".isolated_home").resolve(),
+                )
+                self.assertEqual(
+                    Path(sandboxed["TMP"]).resolve(),
+                    (Path(scratch_td) / ".isolated_tmp").resolve(),
+                )
                 if os.name == "nt":
-                    self.assertEqual(sandboxed["USERPROFILE"], str((Path(scratch_td) / ".isolated_home").resolve()))
+                    self.assertEqual(
+                        Path(sandboxed["USERPROFILE"]).resolve(),
+                        (Path(scratch_td) / ".isolated_home").resolve(),
+                    )
         finally:
             for k in fake_secrets:
                 os.environ.pop(k, None)
