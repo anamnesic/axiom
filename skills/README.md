@@ -35,6 +35,7 @@ This repository contains specialized, standardized Agent Skills (following the A
 - [`verification/spec-to-code-compliance`](verification/spec-to-code-compliance/SKILL.md) (`axiom-spec-to-code-compliance`) — Validating that algorithmic implementations strictly satisfy declared formal contracts.
 
 ### 6. Scientific Documentation & Reproducibility (`scientific/`)
+- [`scientific/markitdown`](scientific/markitdown/SKILL.md) (`axiom-markitdown-document-converter`) — Converting preprints, PDFs, Office documents, and multimedia to structured Markdown using Microsoft MarkItDown for proof analysis.
 - [`scientific/literature-review`](scientific/literature-review/SKILL.md) (`axiom-literature-review`) — Systematic literature reviews, prior art taxonomies, and theorem dependency mapping.
 - [`scientific/citation-verification`](scientific/citation-verification/SKILL.md) (`axiom-citation-verification`) — Auditing bibliography files, validating DOIs/arXiv identifiers, and eliminating hallucinatory citations.
 - [`scientific/reproducibility-statement`](scientific/reproducibility-statement/SKILL.md) (`axiom-reproducibility-statement`) — Generating cryptographic SHA-256 evidence dossiers and self-contained reproduction commands.

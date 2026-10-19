@@ -22,7 +22,7 @@ class TestSkillsLibrary(unittest.TestCase):
 
     def test_all_skills_have_valid_frontmatter(self) -> None:
         skill_files = list(SKILLS_DIR.glob("**/SKILL.md"))
-        self.assertGreaterEqual(len(skill_files), 15)
+        self.assertGreaterEqual(len(skill_files), 16)
 
         for skill_path in skill_files:
             rel_path = skill_path.relative_to(ROOT)
@@ -62,7 +62,7 @@ class TestSkillsLibrary(unittest.TestCase):
     def test_doctor_reports_skills(self) -> None:
         report = run_doctor()
         self.assertIn("skills_count", report)
-        self.assertGreaterEqual(report["skills_count"], 15)
+        self.assertGreaterEqual(report["skills_count"], 16)
         names = [s["name"] for s in report.get("skills", [])]
         self.assertIn("mathematics", names)
         self.assertIn("toolchain-management", names)
@@ -71,6 +71,7 @@ class TestSkillsLibrary(unittest.TestCase):
         self.assertIn("axiom-fluidsim-pde", names)
         self.assertIn("axiom-property-based-testing", names)
         self.assertIn("axiom-reproducibility-statement", names)
+        self.assertIn("axiom-markitdown-document-converter", names)
 
 
 if __name__ == "__main__":

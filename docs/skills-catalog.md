@@ -46,6 +46,7 @@ skills/
 │   └── spec-to-code-compliance/       # Validação estrita entre contratos matemáticos e código
 │
 └── scientific/                        # Documentação acadêmica e ciência aberta
+    ├── markitdown/                    # Conversão de PDFs, Office e áudio para Markdown com MarkItDown
     ├── literature-review/             # Revisão bibliográfica sistemática e corpus de teoremas
     ├── citation-verification/         # Validação de referências, DOIs e prevenção de alucinações
     └── reproducibility-statement/     # Dossiês reprodutíveis e manifestos SHA-256
@@ -97,6 +98,7 @@ skills/
 
 | Skill / Repositório | Repositório de Origem | Aplicação no AXIOM | Ferramentas MCP Relacionadas |
 | :--- | :--- | :--- | :--- |
+| **markitdown** | [`microsoft/markitdown`](https://github.com/microsoft/markitdown) | Conversão de preprints PDF, apresentações e planilhas em Markdown estruturado para extração e auditoria. | `math_parse`, `math_session` |
 | **literature-review** | [`K-Dense-AI/scientific-agent-skills`](https://github.com/K-Dense-AI/scientific-agent-skills) | Estruturação de revisões da literatura com rastreabilidade de teses e teoremas. | `math_session`, `mathlib_search` |
 | **citation-verification** | [`KalarisLabs/research-agent-skills`](https://github.com/KalarisLabs/research-agent-skills) | Auditoria de bibliografias BibTeX, validação de DOI/arXiv e eliminação de citações fantasmas. | `math_session` |
 | **reproducibility-statement** | [`KalarisLabs/research-agent-skills`](https://github.com/KalarisLabs/research-agent-skills) | Geração de declarações de reprodutibilidade com hashes SHA-256 e comandos exatos de reexecução. | `math_session` (action="export") |
@@ -104,9 +106,9 @@ skills/
 
 ---
 
-## 4. O Checklist dos 12 Starter Skills do AXIOM
+## 4. O Checklist dos 14 Starter Skills do AXIOM
 
-Para implantação imediata, foram selecionadas e customizadas 12 skills fundamentais integradas à CLI e MCP do AXIOM:
+Para implantação imediata, foram selecionadas e customizadas 14 skills fundamentais integradas à CLI e MCP do AXIOM:
 
 1. [x] **`formal/lean4`**: Condução e auditoria de provas interativas em Lean 4 com verificação estrita de axiomas.
 2. [x] **`formal/writing-lean-proofs`**: Decomposição e estruturação modular de provas formais com táticas Mathlib.
@@ -118,9 +120,10 @@ Para implantação imediata, foram selecionadas e customizadas 12 skills fundame
 8. [x] **`verification/spec-to-code-compliance`**: Garantia de correspondência exata entre enunciados e contratos matemáticos.
 9. [x] **`computational/uncertainty-and-units`**: Verificação dimensional e propagação de limites de erro em modelos físicos.
 10. [x] **`computational/fluidsim`**: Experimentação computacional com dinâmica de fluidos e equações de Navier-Stokes.
-11. [x] **`scientific/literature-review`**: Mapeamento do estado da arte e taxonomia de abordagens prévias.
-12. [x] **`scientific/citation-verification`**: Checagem de autenticidade de referências e citações.
-13. [x] **`scientific/reproducibility-statement`**: Emissão de relatórios reprodutíveis com proveniência criptográfica.
+11. [x] **`scientific/markitdown`**: Conversão de documentos de pesquisa (PDFs, PPTX, XLSX) para Markdown para extração e prova.
+12. [x] **`scientific/literature-review`**: Mapeamento do estado da arte e taxonomia de abordagens prévias.
+13. [x] **`scientific/citation-verification`**: Checagem de autenticidade de referências e citações.
+14. [x] **`scientific/reproducibility-statement`**: Emissão de relatórios reprodutíveis com proveniência criptográfica.
 
 ---
 
