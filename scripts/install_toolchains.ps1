@@ -22,8 +22,9 @@ if (-not $JuliaOnly) {
     if (-not $elanPath -and -not (Test-Path "$elanHomeBin\elan.exe")) {
         Write-Host "[-] elan is not installed. Installing via official installer..." -ForegroundColor Green
         try {
+            # Ref pinnada a commit SHA (imutavel) em vez da branch mutavel master
             $elanInit = "$env:TEMP\elan-init.ps1"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1" -OutFile $elanInit
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/leanprover/elan/9605b24b08cf68b78dce0014b6fa01be1f8e2cee/elan-init.ps1" -OutFile $elanInit
             & powershell -ExecutionPolicy Bypass -File $elanInit -y
             Remove-Item -Force $elanInit -ErrorAction SilentlyContinue
             Write-Host "[+] elan successfully installed to $elanHomeBin!" -ForegroundColor Green
