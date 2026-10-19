@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -17,6 +20,8 @@ jobs:
         python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -45,6 +50,8 @@ jobs:
       AXIOM_REQUIRE_LEAN: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -56,7 +63,8 @@ jobs:
       - name: Install elan and Lean 4 toolchain
         run: |
           if [ ! -x "$HOME/.elan/bin/lean" ]; then
-            curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.14.0
+            # Ref pinnada a commit SHA (imutavel) em vez da branch mutavel master
+            curl https://raw.githubusercontent.com/leanprover/elan/9605b24b08cf68b78dce0014b6fa01be1f8e2cee/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.14.0
           fi
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
           $HOME/.elan/bin/elan default leanprover/lean4:v4.14.0
@@ -72,6 +80,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
