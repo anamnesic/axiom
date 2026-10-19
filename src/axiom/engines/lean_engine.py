@@ -262,6 +262,8 @@ class LeanEngine(Engine):
                 [lean_bin, "--version"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=5,
                 check=False,
             )
@@ -678,6 +680,8 @@ class LeanEngine(Engine):
                     cwd=cwd,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     env=sandboxed_env,
                     preexec_fn=preexec_fn,
                     timeout=timeout_sec,
@@ -746,9 +750,10 @@ class LeanEngine(Engine):
                     },
                 )
 
+            raw_output = f"{proc.stdout or ''}\n{proc.stderr or ''}"
             diagnostics = [
                 line
-                for line in (proc.stdout + "\n" + proc.stderr).splitlines()
+                for line in raw_output.splitlines()
                 if line.strip()
             ]
             axioms_used, untrusted_axioms, has_sorry_ax = self.parse_axiom_audit(

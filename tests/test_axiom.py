@@ -375,6 +375,17 @@ class TestAxiom(unittest.TestCase):
             self.assertIn("# AXIOM Research Session: `demo`", exp.value_str)
             self.assertIn("VERIFIED", exp.value_str)
 
+            # Direct result recording
+            res_direct = ax.solve("2*x - 4 = 0")
+            r4 = ax.session("record", name="demo", result=res_direct, note="Direct result recording", directory=td)
+            self.assertTrue(r4.ok)
+
+            # Direct file recording
+            sample_lean = Path(td) / "sample.lean"
+            sample_lean.write_text("theorem test_thm (n : Nat) : n + 0 = n := rfl\n", encoding="utf-8")
+            r5 = ax.session("record", name="demo", file=sample_lean, note="Direct file recording", directory=td)
+            self.assertTrue(r5.ok)
+
     # ------------------------------------------------- setup, doctor, CLI, MCP
 
     def test_doctor_and_setup_with_backup(self) -> None:

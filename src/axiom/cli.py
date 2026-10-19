@@ -364,6 +364,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_sess.add_argument("--title", help="Title for new session.")
     p_sess.add_argument("--step", type=int, help="Step index for recorded step.")
     p_sess.add_argument("--command", dest="session_command", help="Command to run and record.")
+    p_sess.add_argument("--file", help="File to verify or solve and record into session.")
     p_sess.add_argument("--depends-on", help="Antecedent step index or comma-separated indices.")
     p_sess.add_argument("-e", "--expression", help="Expression to record when action=record.")
     p_sess.add_argument("-o", "--operation", default="solve", help="Operation for action=record (default: solve).")
@@ -635,6 +636,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             title=getattr(args, "title", None),
             step=getattr(args, "step", None),
             command=getattr(args, "session_command", None),
+            file=getattr(args, "file", None),
             depends_on=deps,
             expression=args.expression,
             operation=args.operation,

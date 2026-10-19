@@ -42,6 +42,8 @@ class SageEngine(Engine):
             [self.binary, "-c", code],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=20,
             check=False,
         )
@@ -110,6 +112,8 @@ class JuliaEngine(Engine):
             [self.binary, "-e", f"println({julia_expr})"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=20,
             check=False,
         )

@@ -2495,6 +2495,8 @@ class Axiom:
         operation: str = "solve",
         step: int | None = None,
         command: str | None = None,
+        result: MathResult | None = None,
+        file: Path | str | None = None,
         depends_on: list[int] | None = None,
         hypothesis: str | None = None,
         note: str = "",
@@ -2553,7 +2555,15 @@ class Axiom:
                     deps_list = [int(x) for x in depends_on]
 
             step_res: MathResult | None = None
-            if command:
+            if result is not None:
+                step_res = result
+            elif file is not None:
+                fpath = Path(file)
+                if fpath.suffix == ".lean":
+                    step_res = self.prove(str(fpath))
+                else:
+                    step_res = self.solve(str(fpath))
+            elif command:
                 import shlex
                 tokens = shlex.split(command)
                 if tokens and tokens[0] in ("axiom", "math"):
@@ -2569,11 +2579,20 @@ class Axiom:
                         step_res = self.solve(tokens[1], variable=var)
                     elif cmd_sub == "prove" and len(tokens) > 1:
                         eng = "lean"
-                        if "-e" in tokens:
-                            eng = tokens[tokens.index("-e") + 1]
-                        elif "--engine" in tokens:
-                            eng = tokens[tokens.index("--engine") + 1]
-                        step_res = self.prove(tokens[1], engine=eng)
+                        target = None
+                        i = 1
+                        while i < len(tokens):
+                            tok = tokens[i]
+                            if tok in ("-e", "--engine") and i + 1 < len(tokens):
+                                eng = tokens[i + 1]
+                                i += 2
+                            elif tok.startswith("-"):
+                                i += 1
+                            else:
+                                target = tok
+                                i += 1
+                        if target:
+                            step_res = self.prove(target, engine=eng)
                     elif cmd_sub == "simplify" and len(tokens) > 1:
                         step_res = self.simplify(tokens[1])
                     elif cmd_sub == "compare" and len(tokens) > 2:
@@ -2605,7 +2624,7 @@ class Axiom:
                     return error_result(
                         "session",
                         f"{sess.name}:record",
-                        "either 'expression' or '--command' is required for action='record'",
+                        "either 'result', 'file', 'expression', or '--command' is required for action='record'",
                     )
                 op = operation.lower().strip()
                 dispatch = {
