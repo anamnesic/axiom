@@ -1526,6 +1526,51 @@ class Axiom:
                 except Exception:
                     pass
 
+        if kind == "differentiate" and inp and val is not None:
+            order = int(payload.get("order") or (payload.get("verification") or {}).get("data", {}).get("order", 1))
+            return self.differentiate(inp, variable=var, order=order, assumptions=assumptions)
+
+        if kind == "limit" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_to = re.search(r"--to\s+([^\s]+)", repro)
+            point = m_to.group(1) if m_to else (payload.get("point") or "0")
+            direction = payload.get("direction") or "+-"
+            return self.limit(inp, variable=var, point=point, direction=direction, assumptions=assumptions)
+
+        if kind == "ode" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_func = re.search(r"--function\s+([^\s]+)", repro)
+            func_name = m_func.group(1) if m_func else "y"
+            m_var = re.search(r"--variable\s+([^\s]+)", repro)
+            var_name = m_var.group(1) if m_var else "x"
+            return self.ode(inp, function=func_name, variable=var_name)
+
+        if kind == "matrix" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_op = re.search(r"--op\s+([^\s]+)", repro)
+            op_name = m_op.group(1) if m_op else "eigen"
+            m_rhs = re.search(r'--rhs\s+"([^"]+)"', repro)
+            rhs_val = m_rhs.group(1) if m_rhs else None
+            return self.matrix(inp, operation=op_name, rhs=rhs_val)
+
+        if kind == "statistics" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_raw = re.search(r'axiom stats\s+"([^"]+)"', repro)
+            data_val = m_raw.group(1) if m_raw else inp
+            return self.statistics(data_val)
+
+        if kind == "optimize" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_mode = re.search(r"--mode\s+([^\s]+)", repro)
+            mode = m_mode.group(1) if m_mode else "minimize"
+            return self.optimize(inp, variable=var, mode=mode)
+
+        if kind == "tensor" and inp and val is not None:
+            repro = (payload.get("evidence") or {}).get("reproducible_with", "")
+            m_op = re.search(r"--op\s+([^\s]+)", repro)
+            op_name = m_op.group(1) if m_op else "all"
+            return self.tensor(inp, operation=op_name)
+
         # Item 3: Imported/cached results never get formal-proof without revalidation
         if kind == "prove" or payload.get("guarantee") == Guarantee.FORMAL_PROOF.value:
             stmt = inp or str(payload.get("input", ""))
@@ -1761,6 +1806,7 @@ class Axiom:
         canonical_statement: str | None = None,
         declared_hypotheses: list[str] | dict[str, Any] | None = None,
         spec_alignment: str | dict[str, Any] | None = None,
+        timeout: int | None = None,
     ) -> MathResult:
         """Verify a formal theorem with Lean 4, auditing kernel validity, hypotheses, and spec alignment."""
         declared_list: list[str] = []
@@ -1909,7 +1955,15 @@ class Axiom:
 
         try:
             lean_eng = self.registry.get(engine)
-            ans = lean_eng.prove(statement, proof=proof)
+            if hasattr(lean_eng, "prove"):
+                import inspect
+                sig = inspect.signature(lean_eng.prove)
+                if "timeout" in sig.parameters:
+                    ans = lean_eng.prove(statement, proof=proof, timeout=timeout)
+                else:
+                    ans = lean_eng.prove(statement, proof=proof)
+            else:
+                ans = lean_eng.prove(statement, proof=proof)
         except EngineError as exc:
             return error_result("prove", statement, str(exc), engine=engine)
 
@@ -2273,6 +2327,8 @@ class Axiom:
         k: int | None = None,
         remainders: list[int] | None = None,
         moduli: list[int] | None = None,
+        factors1: list[int] | None = None,
+        factors2: list[int] | None = None,
         engine: str | None = None,
     ) -> MathResult:
         """Execute a number-theory or combinatorics operation with verification."""
@@ -2289,6 +2345,10 @@ class Axiom:
             args["remainders"] = [int(r) for r in remainders]
         if moduli is not None:
             args["moduli"] = [int(m) for m in moduli]
+        if factors1 is not None:
+            args["factors1"] = [int(x) for x in factors1]
+        if factors2 is not None:
+            args["factors2"] = [int(x) for x in factors2]
 
         label = f"{operation}({args})"
         try:
@@ -2311,6 +2371,10 @@ class Axiom:
             flags.append(f"--remainders {','.join(str(r) for r in remainders)}")
         if moduli is not None:
             flags.append(f"--moduli {','.join(str(m) for m in moduli)}")
+        if factors1 is not None:
+            flags.append(f"--factors1 {','.join(str(x) for x in factors1)}")
+        if factors2 is not None:
+            flags.append(f"--factors2 {','.join(str(x) for x in factors2)}")
         return _wrap_answer(
             kind="number_theory",
             expression=label,

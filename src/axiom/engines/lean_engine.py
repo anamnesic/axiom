@@ -640,7 +640,7 @@ class LeanEngine(Engine):
 
         return env
 
-    def prove(self, statement_or_path: str, proof: str = "") -> Answer:
+    def prove(self, statement_or_path: str, proof: str = "", timeout: int | None = None) -> Answer:
         """Check a Lean 4 theorem file or inline snippet with ``#print axioms`` auditing."""
         source, origin = self._load_source(statement_or_path, proof)
         audited_source, theorem_names, custom_axioms, has_hole = (
@@ -669,6 +669,22 @@ class LeanEngine(Engine):
             warnings.append(
                 f"syntactic reflexive tautology (X = X) detected in: {', '.join(trivial_theorems)}"
             )
+
+        # Performance Lint: Detect heavy compiler framework import in mathematical files
+        stripped_source = _strip_lean_comments(source)
+        if re.search(r"^\s*import\s+Lean\b", stripped_source, re.MULTILINE):
+            has_meta = bool(
+                re.search(
+                    r"\b(macro|syntax|elab|elab_rules|tactic|MetaM|TermElabM|CommandElabM)\b",
+                    stripped_source,
+                )
+            )
+            if not has_meta:
+                warnings.append(
+                    "PerformanceWarning: 'import Lean' triggers compiler metaprogramming elaboration (>25s) "
+                    "which is unnecessary for mathematical theorem proving; standard types (Nat, Int, List, etc.) "
+                    "are available in the core prelude."
+                )
 
         origin_path = (
             Path(origin)
@@ -727,7 +743,11 @@ class LeanEngine(Engine):
             tmp.write(audited_source)
             tmp_path = Path(tmp.name)
 
-        timeout_sec = int(os.environ.get("AXIOM_LEAN_TIMEOUT", "30"))
+        timeout_sec = (
+            timeout
+            if timeout is not None
+            else int(os.environ.get("AXIOM_LEAN_TIMEOUT", "30"))
+        )
 
         try:
             cmd, cwd = self.build_lean_command(tmp_path, origin_path=origin_path)

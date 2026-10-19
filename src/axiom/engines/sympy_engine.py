@@ -749,9 +749,50 @@ class SymPyEngine(Engine):
                 raw={"op": "primefactors", "n": n, "primefactors": pfs},
             )
 
+        if op == "factors_perm_check":
+            f1 = [int(x) for x in args["factors1"]]
+            f2 = [int(x) for x in args["factors2"]]
+            s1, s2 = sorted(f1), sorted(f2)
+            is_perm = s1 == s2
+            prod1 = 1
+            for x in f1:
+                prod1 *= x
+            prod2 = 1
+            for x in f2:
+                prod2 *= x
+            all_prime = all(bool(sp.isprime(x)) for x in f1 + f2)
+            return Answer(
+                value={
+                    "equivalent": is_perm,
+                    "sorted_factors": s1,
+                    "prod1": prod1,
+                    "prod2": prod2,
+                    "prods_equal": prod1 == prod2,
+                    "all_primes": all_prime,
+                },
+                value_str=f"factors_perm_check({f1}, {f2}) = {is_perm} (sorted: {s1})",
+                method="prime factors multiset permutation check",
+                steps=[
+                    f"factors1: {f1} (sorted: {s1}, prod: {prod1})",
+                    f"factors2: {f2} (sorted: {s2}, prod: {prod2})",
+                    f"equivalent: {is_perm}",
+                ],
+                raw={
+                    "op": "factors_perm_check",
+                    "factors1": f1,
+                    "factors2": f2,
+                    "sorted1": s1,
+                    "sorted2": s2,
+                    "prod1": prod1,
+                    "prod2": prod2,
+                    "equivalent": is_perm,
+                    "all_primes": all_prime,
+                },
+            )
+
         raise EngineError(
             f"unsupported number_theory operation '{operation}' "
-            "(choose from: factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors)"
+            "(choose from: factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, factors_perm_check)"
         )
 
     # --------------------------------------------------------- optimization

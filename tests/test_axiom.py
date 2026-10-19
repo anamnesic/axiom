@@ -393,6 +393,35 @@ class TestAxiom(unittest.TestCase):
             st = ax.session("status", name="demo", directory=td)
             self.assertTrue(st.value["step_validity"]["all_steps_valid"])
 
+            # Direct diff, limit, and stats revalidation
+            r_diff = ax.differentiate("x^3 + 2*x", variable="x")
+            ax.session("record", name="demo", result=r_diff, directory=td, depends_on=[])
+            r_lim = ax.limit("sin(x)/x", variable="x", point="0")
+            ax.session("record", name="demo", result=r_lim, directory=td, depends_on=[])
+            st_multi = ax.session("status", name="demo", directory=td)
+            self.assertTrue(st_multi.value["step_validity"]["all_steps_valid"])
+
+    def test_number_theory_factors_perm_check(self) -> None:
+        ax = Axiom()
+        r_eq = ax.number_theory("factors_perm_check", factors1=[2, 2, 3, 5], factors2=[3, 5, 2, 2])
+        self.assertTrue(r_eq.ok and r_eq.verified)
+        self.assertTrue(r_eq.value["equivalent"])
+        self.assertEqual(r_eq.value["prod1"], 60)
+        self.assertEqual(r_eq.guarantee, Guarantee.VERIFIED_SUBSTITUTION)
+
+        r_diff = ax.number_theory("factors_perm_check", factors1=[2, 3, 5], factors2=[2, 3, 7])
+        self.assertTrue(r_diff.ok)
+        self.assertFalse(r_diff.value["equivalent"])
+
+    def test_lean_import_linter(self) -> None:
+        from axiom.engines.lean_engine import LeanEngine
+        eng = LeanEngine()
+        src = "import Lean\ntheorem t_dummy : 1 = 1 := rfl\n"
+        ans = eng.prove(src, proof="")
+        has_perf_warn = any("PerformanceWarning" in w for w in ans.warnings)
+        self.assertTrue(has_perf_warn)
+
+
 
     # ------------------------------------------------- setup, doctor, CLI, MCP
 

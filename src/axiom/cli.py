@@ -263,6 +263,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_prove.add_argument("--canonical", dest="canonical_statement", help="Canonical mathematical problem statement for anti-drift audit.")
     p_prove.add_argument("--hypotheses", dest="declared_hypotheses", help="Declared hypotheses/assumptions (comma-separated or JSON).")
     p_prove.add_argument("--alignment", dest="spec_alignment", help="Specification alignment status (e.g. congruent, scoped_forced_variant).")
+    p_prove.add_argument("--timeout", type=int, help="Timeout in seconds for proof verification (default: 30).")
     p_prove.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # matrix
@@ -288,11 +289,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_nt = sub.add_parser(
         "number-theory",
         aliases=["nt"],
-        help="Verified number theory & combinatorics (factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors).",
+        help="Verified number theory & combinatorics (factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, factors_perm_check).",
     )
     p_nt.add_argument(
         "operation",
-        choices=["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "divisors", "primefactors"],
+        choices=["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "divisors", "primefactors", "factors_perm_check"],
     )
     p_nt.add_argument("-n", type=int, help="Integer parameter n.")
     p_nt.add_argument("-a", type=int, help="Integer parameter a (for extgcd).")
@@ -300,6 +301,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_nt.add_argument("-k", type=int, help="Integer parameter k (for binomial).")
     p_nt.add_argument("--remainders", help="Comma-separated remainders for crt.")
     p_nt.add_argument("--moduli", help="Comma-separated moduli for crt.")
+    p_nt.add_argument("--factors1", help="Comma-separated factors list for factors_perm_check.")
+    p_nt.add_argument("--factors2", help="Comma-separated factors list for factors_perm_check.")
     p_nt.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
     # optimize
@@ -587,6 +590,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             canonical_statement=getattr(args, "canonical_statement", None),
             declared_hypotheses=hyps,
             spec_alignment=getattr(args, "spec_alignment", None),
+            timeout=getattr(args, "timeout", None),
         )
     elif cmd == "matrix":
         res = ax.matrix(args.matrix, operation=args.op, rhs=args.rhs)
@@ -595,12 +599,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif cmd in ("number-theory", "nt"):
         rems = (
             [int(x.strip()) for x in args.remainders.split(",") if x.strip()]
-            if args.remainders
+            if getattr(args, "remainders", None)
             else None
         )
         mods = (
             [int(x.strip()) for x in args.moduli.split(",") if x.strip()]
-            if args.moduli
+            if getattr(args, "moduli", None)
+            else None
+        )
+        f1 = (
+            [int(x.strip()) for x in args.factors1.split(",") if x.strip()]
+            if getattr(args, "factors1", None)
+            else None
+        )
+        f2 = (
+            [int(x.strip()) for x in args.factors2.split(",") if x.strip()]
+            if getattr(args, "factors2", None)
             else None
         )
         res = ax.number_theory(
@@ -611,6 +625,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             k=args.k,
             remainders=rems,
             moduli=mods,
+            factors1=f1,
+            factors2=f2,
         )
     elif cmd == "optimize":
         res = ax.optimize(

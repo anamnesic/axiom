@@ -1763,6 +1763,32 @@ def verify_number_theory_op(raw: dict) -> tuple[Verification, Guarantee]:
             Guarantee.VERIFIED_SUBSTITUTION if ok else Guarantee.UNVERIFIED,
         )
 
+    if op == "factors_perm_check":
+        f1 = [int(x) for x in raw["factors1"]]
+        f2 = [int(x) for x in raw["factors2"]]
+        eq = bool(raw["equivalent"])
+        s1, s2 = sorted(f1), sorted(f2)
+        expected_eq = (s1 == s2)
+        prod1 = 1
+        for p in f1:
+            prod1 *= p
+        prod2 = 1
+        for p in f2:
+            prod2 *= p
+        all_prime = all(bool(sp.isprime(x)) for x in f1 + f2)
+        ok = (eq == expected_eq) and (not eq or (prod1 == prod2)) and all_prime
+        return (
+            Verification(
+                kind="factors-multiset-permutation-check",
+                passed=ok,
+                detail=f"Verified multiset permutation equality: {eq} (sorted: {s1}, prod: {prod1})",
+                checks=len(f1) + len(f2) + 3,
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.VERIFIED_SUBSTITUTION if ok else Guarantee.UNVERIFIED,
+        )
+
+
     return (
         Verification(
             kind="number-theory-check",
