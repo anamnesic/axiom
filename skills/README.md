@@ -20,6 +20,7 @@ This repository contains specialized, standardized Agent Skills (following the A
 - [`formal/lean4`](formal/lean4/SKILL.md) (`axiom-lean4-proofs`) — Interactive Lean 4 proof development, compilation, and `#print axioms` auditing (detecting `sorryAx` and untrusted axioms).
 - [`formal/writing-lean-proofs`](formal/writing-lean-proofs/SKILL.md) (`axiom-writing-lean-proofs`) — Modular theorem decomposition, tactic selection (`omega`, `ring`, `aesop`, `simp`), and Mathlib convention compliance.
 - [`formal/statement-alignment`](formal/statement-alignment/SKILL.md) (`axiom-statement-alignment`) — Anti-drift semantic audit: ensuring formal propositions accurately align with canonical problems and preventing lexical keyword spoofing.
+- [`formal/navier-stokes-euler`](formal/navier-stokes-euler/SKILL.md) (`axiom-navier-stokes-euler-blowup`) — Formalizing, analyzing, and auditing finite-time blowup singularities for 3D Navier-Stokes (Clay Alternatives C/D) and Euler equations in Lean 4 with multi-kernel verification (Comparator/Nanoda).
 
 ### 3. Open Mathematical Research (`research/`)
 - [`research/math-research`](research/math-research/SKILL.md) (`axiom-math-research`) — Structured exploration of open problems, tracking proven milestones vs. known theoretical barriers (e.g. Relativization, Natural Proofs, Algebrization) in `.axiom/sessions/`.

@@ -72,6 +72,7 @@ class TestSkillsLibrary(unittest.TestCase):
         self.assertIn("axiom-property-based-testing", names)
         self.assertIn("axiom-reproducibility-statement", names)
         self.assertIn("axiom-markitdown-document-converter", names)
+        self.assertIn("axiom-navier-stokes-euler-blowup", names)
 
 
 if __name__ == "__main__":
