@@ -386,6 +386,14 @@ class TestAxiom(unittest.TestCase):
             r5 = ax.session("record", name="demo", file=sample_lean, note="Direct file recording", directory=td)
             self.assertTrue(r5.ok)
 
+            # Direct number_theory recording and revalidation
+            r_nt = ax.number_theory("factorint", n=60)
+            r6 = ax.session("record", name="demo", result=r_nt, note="Number theory recording", directory=td)
+            self.assertTrue(r6.ok)
+            st = ax.session("status", name="demo", directory=td)
+            self.assertTrue(st.value["step_validity"]["all_steps_valid"])
+
+
     # ------------------------------------------------- setup, doctor, CLI, MCP
 
     def test_doctor_and_setup_with_backup(self) -> None:

@@ -7,6 +7,7 @@ returns a self-describing :class:`MathResult` under a single unified contract.
 
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 import re
@@ -1513,6 +1514,17 @@ class Axiom:
                 ),
                 verification=ver,
             )
+
+        if kind == "number_theory" and inp:
+            m = re.match(r"^(\w+)\((.*)\)$", inp)
+            if m:
+                op_name = m.group(1)
+                try:
+                    args_dict = ast.literal_eval(m.group(2))
+                    if isinstance(args_dict, dict):
+                        return self.number_theory(op_name, **args_dict)
+                except Exception:
+                    pass
 
         # Item 3: Imported/cached results never get formal-proof without revalidation
         if kind == "prove" or payload.get("guarantee") == Guarantee.FORMAL_PROOF.value:
