@@ -434,6 +434,22 @@ class TestAxiom(unittest.TestCase):
         self.assertIn("#print axioms add_zero_right", audited)
         self.assertIn("#print axioms _axiom_example_1", audited)
 
+        # 1b. Namespaces and nested sections correctly qualify theorem names
+        ns_src = (
+            "namespace Algebra\n"
+            "section Sub\n"
+            "theorem sub_thm (x : Nat) : x = x := by rfl\n"
+            "end Sub\n"
+            "end Algebra\n"
+        )
+        ns_audited, ns_thms, _, _ = LeanEngine.prepare_audited_source(ns_src)
+        self.assertEqual(ns_thms, ["Algebra.sub_thm"])
+        self.assertIn("#print axioms Algebra.sub_thm", ns_audited)
+        cov_ns, _ = LeanEngine.verify_theorem_audit_coverage(["sub_thm"], ["Algebra.sub_thm"])
+        self.assertTrue(cov_ns)
+        cov_ns2, _ = LeanEngine.verify_theorem_audit_coverage(["Algebra.sub_thm"], ["Algebra.sub_thm"])
+        self.assertTrue(cov_ns2)
+
         # 2. User-declared `axiom` or `unsafe` in source is caught and rejected
         bad_src = (
             "axiom bogus : 1 = 2\n"

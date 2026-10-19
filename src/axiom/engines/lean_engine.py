@@ -305,16 +305,49 @@ class LeanEngine(Engine):
 
         rewritten = _ANON_EXAMPLE_DECL.sub(_name_anon, source)
         rewritten_stripped = _strip_lean_comments(rewritten)
+
+        lean_structure_pat = re.compile(
+            r"(?:^|\n)\s*(?:"
+            r"(?P<scope>namespace|section)\s*(?P<ns>[A-Za-z_][A-Za-z0-9_'.]*)?|"
+            r"end(?:\s+(?P<end_ns>[A-Za-z_][A-Za-z0-9_'.]*))?(?:\s|$)|"
+            r"(?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\s+(?P<thm>[A-Za-z_][A-Za-z0-9_'.]*)"
+            r")"
+        )
+
+        stack: list[tuple[str, str]] = []
         theorem_names: list[str] = []
-        for match in _THEOREM_DECL.finditer(rewritten_stripped):
-            thm_name = match.group(1)
-            if thm_name not in theorem_names:
-                theorem_names.append(thm_name)
+
+        for m in lean_structure_pat.finditer(rewritten_stripped):
+            if m.group("scope"):
+                stype = m.group("scope")
+                sname = m.group("ns") or ""
+                stack.append((stype, sname))
+            elif m.group("thm"):
+                raw_thm = m.group("thm")
+                active_ns = [name for (st, name) in stack if st == "namespace" and name]
+                qual_thm = ".".join(active_ns) + "." + raw_thm if active_ns else raw_thm
+                if qual_thm not in theorem_names:
+                    theorem_names.append(qual_thm)
+            elif "end" in m.group(0):
+                end_name = m.group("end_ns")
+                if end_name:
+                    idx = -1
+                    for i in range(len(stack) - 1, -1, -1):
+                        if stack[i][1] == end_name:
+                            idx = i
+                            break
+                    if idx >= 0:
+                        stack = stack[:idx]
+                    elif stack:
+                        stack.pop()
+                elif stack:
+                    stack.pop()
 
         audit_lines = [
             f"#print axioms {name}"
             for name in theorem_names
             if f"#print axioms {name}" not in rewritten_stripped
+            and f"#print axioms {name.split('.')[-1]}" not in rewritten_stripped
         ]
         if audit_lines:
             audited_source = rewritten.rstrip() + "\n\n" + "\n".join(audit_lines) + "\n"
@@ -385,7 +418,9 @@ class LeanEngine(Engine):
         missing: list[str] = []
         for expected in expected_theorems:
             matched = any(
-                actual == expected or actual.endswith(f".{expected}")
+                actual == expected
+                or actual.endswith(f".{expected}")
+                or expected.endswith(f".{actual}")
                 for actual in audited_theorems
             )
             if not matched:
