@@ -1,0 +1,4 @@
+# Chronokairo AXIOM — Minimal Dependencies
+# Lightweight core: symbolic algebra, calculus, and multi-precision arithmetic
+sympy>=1.12
+mpmath>=1.3
