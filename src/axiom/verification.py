@@ -1701,6 +1701,68 @@ def verify_number_theory_op(raw: dict) -> tuple[Verification, Guarantee]:
             Guarantee.EXACT_SYMBOLIC if ok else Guarantee.UNVERIFIED,
         )
 
+    if op == "divisors":
+        import math
+
+        n = int(raw["n"])
+        divs = [int(d) for d in raw["divisors"]]
+        if not divs or any(d <= 0 or n % d != 0 for d in divs):
+            return (
+                Verification(
+                    kind="divisors-divisibility-check",
+                    passed=False,
+                    detail=f"invalid divisor list for {n}",
+                    checks=len(divs),
+                ),
+                Guarantee.UNVERIFIED,
+            )
+        ok = divs == sorted(set(divs)) and (1 in divs) and (n in divs)
+        ok = ok and all((n // d) in divs for d in divs)
+        if ok and n <= 10000:
+            small_divs = [k for k in range(1, int(math.isqrt(n)) + 1) if n % k == 0]
+            paired = {k for k in small_divs} | {n // k for k in small_divs}
+            ok = ok and (divs == sorted(paired))
+        return (
+            Verification(
+                kind="divisors-pair-and-completeness-check",
+                passed=ok,
+                detail=f"Verified all {len(divs)} divisor(s) divide {n} with complementary pairing",
+                checks=len(divs) + 2,
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.VERIFIED_SUBSTITUTION if ok else Guarantee.UNVERIFIED,
+        )
+
+    if op == "primefactors":
+        n = int(raw["n"])
+        pfs = [int(p) for p in raw["primefactors"]]
+        if not pfs or any(not sp.isprime(p) or n % p != 0 for p in pfs):
+            return (
+                Verification(
+                    kind="prime-factors-independent-check",
+                    passed=False,
+                    detail=f"invalid prime factor list for {n}",
+                    checks=len(pfs),
+                ),
+                Guarantee.UNVERIFIED,
+            )
+        ok = pfs == sorted(set(pfs))
+        rem = n
+        for p in pfs:
+            while rem % p == 0:
+                rem //= p
+        ok = ok and (rem == 1)
+        return (
+            Verification(
+                kind="prime-factors-independent-check",
+                passed=ok,
+                detail=f"Verified all {len(pfs)} factor(s) are prime, divide {n}, and exhaust n",
+                checks=len(pfs) + 1,
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.VERIFIED_SUBSTITUTION if ok else Guarantee.UNVERIFIED,
+        )
+
     return (
         Verification(
             kind="number-theory-check",

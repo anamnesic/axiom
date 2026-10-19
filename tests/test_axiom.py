@@ -461,6 +461,15 @@ class TestAxiom(unittest.TestCase):
         cov_ns2, _ = LeanEngine.verify_theorem_audit_coverage(["Algebra.sub_thm"], ["Algebra.sub_thm"])
         self.assertTrue(cov_ns2)
 
+        def_src = (
+            "namespace Hefez\n"
+            "def IsPrime (p : Nat) : Prop := p >= 2\n"
+            "def xgcd (a b : Nat) : Int := 0\n"
+            "theorem simple_thm : 1 + 1 = 2 := rfl\n"
+            "end Hefez\n"
+        )
+        self.assertEqual(LeanEngine.extract_definitions(def_src), ["Hefez.IsPrime", "Hefez.xgcd"])
+
         # 2. User-declared `axiom` or `unsafe` in source is caught and rejected
         bad_src = (
             "axiom bogus : 1 = 2\n"
@@ -1354,6 +1363,20 @@ class TestAxiom(unittest.TestCase):
         self.assertEqual(isp.value, True)
         assert isp.evidence is not None
         self.assertEqual(isp.evidence.reproducible_with, "axiom number-theory isprime --n 17")
+
+        divs = ax.number_theory("divisors", n=12)
+        self.assertTrue(divs.ok and divs.verified)
+        self.assertEqual(divs.value, [1, 2, 3, 4, 6, 12])
+        self.assertEqual(divs.guarantee, Guarantee.VERIFIED_SUBSTITUTION)
+        assert divs.evidence is not None
+        self.assertEqual(divs.evidence.reproducible_with, "axiom number-theory divisors --n 12")
+
+        pfs = ax.number_theory("primefactors", n=360)
+        self.assertTrue(pfs.ok and pfs.verified)
+        self.assertEqual(pfs.value, [2, 3, 5])
+        self.assertEqual(pfs.guarantee, Guarantee.VERIFIED_SUBSTITUTION)
+        assert pfs.evidence is not None
+        self.assertEqual(pfs.evidence.reproducible_with, "axiom number-theory primefactors --n 360")
 
     def test_adversarial_polynomial_counterexample_and_ternary_soundness(self) -> None:
         ax = Axiom()

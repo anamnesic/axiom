@@ -358,6 +358,48 @@ class LeanEngine(Engine):
 
         return audited_source, theorem_names, custom_axioms, has_hole
 
+    @classmethod
+    def extract_definitions(cls, source: str) -> list[str]:
+        """Extract fully-qualified Lean 4 ``def`` declaration names adhering to namespace scope."""
+        stripped = _strip_lean_comments(source)
+        lean_structure_pat = re.compile(
+            r"(?:^|\n)\s*(?:"
+            r"(?P<scope>namespace|section)\s*(?P<ns>[A-Za-z_][A-Za-z0-9_'.]*)?|"
+            r"end(?:\s+(?P<end_ns>[A-Za-z_][A-Za-z0-9_'.]*))?(?:\s|$)|"
+            r"(?:private\s+|protected\s+|noncomputable\s+)*def\s+(?P<df>[A-Za-z_][A-Za-z0-9_'.]*)"
+            r")"
+        )
+        stack: list[tuple[str, str]] = []
+        definitions: list[str] = []
+
+        for m in lean_structure_pat.finditer(stripped):
+            if m.group("scope"):
+                stype = m.group("scope")
+                sname = m.group("ns") or ""
+                stack.append((stype, sname))
+            elif m.group("df"):
+                raw_df = m.group("df")
+                active_ns = [name for (st, name) in stack if st == "namespace" and name]
+                qual_df = ".".join(active_ns) + "." + raw_df if active_ns else raw_df
+                if qual_df not in definitions:
+                    definitions.append(qual_df)
+            elif "end" in m.group(0):
+                end_name = m.group("end_ns")
+                if end_name:
+                    idx = -1
+                    for i in range(len(stack) - 1, -1, -1):
+                        if stack[i][1] == end_name:
+                            idx = i
+                            break
+                    if idx >= 0:
+                        stack = stack[:idx]
+                    elif stack:
+                        stack.pop()
+                elif stack:
+                    stack.pop()
+
+        return definitions
+
     @staticmethod
     def parse_axiom_audit(
         diagnostics: list[str],
@@ -517,7 +559,12 @@ class LeanEngine(Engine):
         return trivial
 
     @staticmethod
-    def _build_sandboxed_env(sandbox_dir: Path, lean_bin: str | None = None, lake_bin: str | None = None) -> dict[str, str]:
+    def _build_sandboxed_env(
+        sandbox_dir: Path,
+        lean_bin: str | None = None,
+        lake_bin: str | None = None,
+        origin_path: Path | None = None,
+    ) -> dict[str, str]:
         """Construct a scrubbed, isolated environment dictionary for untrusted Lean processes."""
         isolated_home = (sandbox_dir / ".isolated_home").resolve()
         isolated_home.mkdir(parents=True, exist_ok=True)
@@ -554,6 +601,19 @@ class LeanEngine(Engine):
             "PYTHONIOENCODING": "utf-8",
         }
 
+        lean_paths: list[str] = []
+        if origin_path is not None:
+            try:
+                orig_dir = Path(origin_path).resolve().parent
+                if orig_dir.exists():
+                    lean_paths.append(str(orig_dir))
+            except Exception:
+                pass
+        if "LEAN_PATH" in os.environ:
+            lean_paths.append(os.environ["LEAN_PATH"])
+        if lean_paths:
+            env["LEAN_PATH"] = os.pathsep.join(lean_paths)
+
         if "ELAN_HOME" in os.environ:
             env["ELAN_HOME"] = os.environ["ELAN_HOME"]
         elif lean_bin and ".elan" in lean_bin:
@@ -586,11 +646,16 @@ class LeanEngine(Engine):
         audited_source, theorem_names, custom_axioms, has_hole = (
             self.prepare_audited_source(source)
         )
+        definitions = self.extract_definitions(source)
         trivial_theorems = self.detect_trivial_reflexive_theorems(audited_source)
         warnings: list[str] = []
-        if not theorem_names:
+        if not theorem_names and not definitions:
             warnings.append(
                 "no theorem, lemma, or example declaration found to audit via #print axioms"
+            )
+        elif not theorem_names and definitions:
+            warnings.append(
+                f"source contains definitions ({', '.join(definitions)}) but no theorems to audit via #print axioms"
             )
         if has_hole:
             warnings.append(
@@ -672,7 +737,7 @@ class LeanEngine(Engine):
 
             try:
                 sandboxed_env = self._build_sandboxed_env(
-                    sandbox_dir, lean_bin=self.lean_bin, lake_bin=self.lake_bin
+                    sandbox_dir, lean_bin=self.lean_bin, lake_bin=self.lake_bin, origin_path=origin_path
                 )
                 preexec_fn = _preexec_lean_resource_bounds if os.name != "nt" else None
                 proc = subprocess.run(
@@ -811,6 +876,7 @@ class LeanEngine(Engine):
                     "verified": kernel_ok,
                     "returncode": proc.returncode,
                     "theorems": theorem_names,
+                    "definitions": definitions,
                     "audited_theorems": audited_theorems,
                     "trivial_theorems": trivial_theorems,
                     "axioms_used": axioms_used,
@@ -831,6 +897,7 @@ class LeanEngine(Engine):
                     "kernel_verified": kernel_ok,
                     "has_hole": has_hole,
                     "theorems": theorem_names,
+                    "definitions": definitions,
                     "audited_theorems": audited_theorems,
                     "trivial_theorems": trivial_theorems,
                     "audit_complete": audit_complete,

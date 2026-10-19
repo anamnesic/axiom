@@ -723,9 +723,35 @@ class SymPyEngine(Engine):
                 raw={"op": "binomial", "n": n, "k": k, "value": val},
             )
 
+        if op == "divisors":
+            n = int(args["n"])
+            if n <= 0:
+                raise EngineError("divisors requires positive integer n >= 1")
+            divs = [int(d) for d in sp.divisors(n)]
+            return Answer(
+                value=divs,
+                value_str=f"divisors({n}) = {divs}",
+                method="integer divisors computation (sympy.divisors)",
+                steps=[f"divisors({n}) -> {divs}"],
+                raw={"op": "divisors", "n": n, "divisors": divs},
+            )
+
+        if op == "primefactors":
+            n = int(args["n"])
+            if n <= 1:
+                raise EngineError("primefactors requires integer n >= 2")
+            pfs = [int(p) for p in sp.primefactors(n)]
+            return Answer(
+                value=pfs,
+                value_str=f"primefactors({n}) = {pfs}",
+                method="prime factors list (sympy.primefactors)",
+                steps=[f"primefactors({n}) -> {pfs}"],
+                raw={"op": "primefactors", "n": n, "primefactors": pfs},
+            )
+
         raise EngineError(
             f"unsupported number_theory operation '{operation}' "
-            "(choose from: factorint, isprime, extgcd, crt, totient, binomial)"
+            "(choose from: factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors)"
         )
 
     # --------------------------------------------------------- optimization
