@@ -126,6 +126,57 @@ def _split_top_level_equality(text: str) -> tuple[str, str] | None:
                 return text[:i].strip(), text[i + 2 :].strip()
             return text[:i].strip(), text[i + 1 :].strip()
         i += 1
+
+
+def _values_semantically_equal(
+    recomputed_val: Any,
+    persisted_val: Any,
+    recomputed_str: str | None = None,
+    persisted_str: str | None = None,
+) -> bool:
+    """Compare a recomputed value with a persisted JSON payload value for tamper detection."""
+    if persisted_val is None:
+        return True
+    if recomputed_val == persisted_val:
+        return True
+    if str(recomputed_val) == str(persisted_val):
+        return True
+    try:
+        if isinstance(recomputed_val, (int, float)) and isinstance(persisted_val, (int, float, str)):
+            if float(recomputed_val) == float(persisted_val):
+                return True
+    except Exception:
+        pass
+    if isinstance(recomputed_val, dict) and isinstance(persisted_val, dict):
+        norm_recomp = {str(k): v for k, v in recomputed_val.items()}
+        norm_pers = {str(k): v for k, v in persisted_val.items()}
+        if norm_recomp == norm_pers:
+            return True
+        if len(norm_recomp) == len(norm_pers) and all(
+            k in norm_pers and (norm_recomp[k] == norm_pers[k] or str(norm_recomp[k]) == str(norm_pers[k]))
+            for k in norm_recomp
+        ):
+            return True
+    if isinstance(recomputed_val, list) and isinstance(persisted_val, list):
+        if len(recomputed_val) == len(persisted_val):
+            if [str(x) for x in recomputed_val] == [str(x) for x in persisted_val]:
+                return True
+            try:
+                if sorted(str(x) for x in recomputed_val) == sorted(str(x) for x in persisted_val):
+                    return True
+            except Exception:
+                pass
+    try:
+        parser = Parser()
+        expr_rec = parser.parse_expression(str(recomputed_val))
+        expr_pers = parser.parse_expression(str(persisted_val))
+        if sp.simplify(expr_rec - expr_pers) == 0:
+            return True
+    except Exception:
+        pass
+    return False
+
+
 _CANONICAL_DOMAINS: dict[str, dict[str, Any]] = {
     "riemann": {
         "canon_keywords": ["riemann", "zeta", "critical line", "zeros"],
@@ -1459,6 +1510,9 @@ class Axiom:
 
         if kind == "solve" and inp and val is not None:
             candidates = val if isinstance(val, list) else [str(val)]
+            recomp = self.solve(inp, variable=var, assumptions=assumptions)
+            if not _values_semantically_equal(recomp.value, val, recomp.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed solve solutions {recomp.value!r} do not match persisted solutions {val!r}")
             return self.verify(
                 inp, candidate=candidates, variable=var, assumptions=assumptions
             )
@@ -1522,20 +1576,29 @@ class Axiom:
                 try:
                     args_dict = ast.literal_eval(m.group(2))
                     if isinstance(args_dict, dict):
-                        return self.number_theory(op_name, **args_dict)
+                        res = self.number_theory(op_name, **args_dict)
+                        if val is not None and not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                            return error_result("verify", inp, f"tamper/integrity violation: recomputed number_theory result {res.value!r} does not match persisted value {val!r}")
+                        return res
                 except Exception:
                     pass
 
         if kind == "differentiate" and inp and val is not None:
             order = int(payload.get("order") or (payload.get("verification") or {}).get("data", {}).get("order", 1))
-            return self.differentiate(inp, variable=var, order=order, assumptions=assumptions)
+            res = self.differentiate(inp, variable=var, order=order, assumptions=assumptions)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed derivative {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "limit" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
             m_to = re.search(r"--to\s+([^\s]+)", repro)
             point = m_to.group(1) if m_to else (payload.get("point") or "0")
             direction = payload.get("direction") or "+-"
-            return self.limit(inp, variable=var, point=point, direction=direction, assumptions=assumptions)
+            res = self.limit(inp, variable=var, point=point, direction=direction, assumptions=assumptions)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed limit {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "ode" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
@@ -1543,7 +1606,10 @@ class Axiom:
             func_name = m_func.group(1) if m_func else "y"
             m_var = re.search(r"--variable\s+([^\s]+)", repro)
             var_name = m_var.group(1) if m_var else "x"
-            return self.ode(inp, function=func_name, variable=var_name)
+            res = self.ode(inp, function=func_name, variable=var_name)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed ode solution {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "matrix" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
@@ -1551,25 +1617,37 @@ class Axiom:
             op_name = m_op.group(1) if m_op else "eigen"
             m_rhs = re.search(r'--rhs\s+"([^"]+)"', repro)
             rhs_val = m_rhs.group(1) if m_rhs else None
-            return self.matrix(inp, operation=op_name, rhs=rhs_val)
+            res = self.matrix(inp, operation=op_name, rhs=rhs_val)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed matrix result {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "statistics" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
             m_raw = re.search(r'axiom stats\s+"([^"]+)"', repro)
             data_val = m_raw.group(1) if m_raw else inp
-            return self.statistics(data_val)
+            res = self.statistics(data_val)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed statistics {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "optimize" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
             m_mode = re.search(r"--mode\s+([^\s]+)", repro)
             mode = m_mode.group(1) if m_mode else "minimize"
-            return self.optimize(inp, variable=var, mode=mode)
+            res = self.optimize(inp, variable=var, mode=mode)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed optimization {res.value!r} does not match persisted value {val!r}")
+            return res
 
         if kind == "tensor" and inp and val is not None:
             repro = (payload.get("evidence") or {}).get("reproducible_with", "")
             m_op = re.search(r"--op\s+([^\s]+)", repro)
             op_name = m_op.group(1) if m_op else "all"
-            return self.tensor(inp, operation=op_name)
+            res = self.tensor(inp, operation=op_name)
+            if not _values_semantically_equal(res.value, val, res.value_str, payload.get("value_str")):
+                return error_result("verify", inp, f"tamper/integrity violation: recomputed tensor result {res.value!r} does not match persisted value {val!r}")
+            return res
 
         # Item 3: Imported/cached results never get formal-proof without revalidation
         if kind == "prove" or payload.get("guarantee") == Guarantee.FORMAL_PROOF.value:

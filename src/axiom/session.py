@@ -279,12 +279,26 @@ class ResearchSession:
         return step_valid
 
     def revalidate_all(self, axiom: Any = None) -> bool:
-        """Revalidate all entries in the session on the current host."""
+        """Revalidate all entries and hypotheses in the session on the current host."""
         if axiom is None:
             from axiom.core import Axiom
             axiom = Axiom()
         for idx in range(1, len(self.entries) + 1):
             self.revalidate_step(idx, axiom=axiom)
+        for h in self.hypotheses:
+            ver_res = axiom.verify(h.statement)
+            if ver_res.ok and ver_res.verified:
+                h.status = "verified"
+                h.guarantee = ver_res.guarantee.value
+                h.detail = ver_res.verification.detail if ver_res.verification else "verified"
+            elif ver_res.ok and not ver_res.verified:
+                h.status = "refuted"
+                h.guarantee = Guarantee.UNVERIFIED.value
+                h.detail = ver_res.verification.detail if ver_res.verification else "refuted"
+            else:
+                h.status = "open"
+                h.guarantee = Guarantee.UNVERIFIED.value
+                h.detail = ver_res.error or "unverified conjecture"
         return self.all_steps_valid
 
     def format_status(self) -> str:
@@ -419,13 +433,19 @@ class ResearchSession:
             e["chain_valid"] = False
             e["dag_structural_integrity"] = False
             e["logical_implication_proven"] = False
+        loaded_hyps: list[Hypothesis] = []
+        for h in data.get("hypotheses", []):
+            h_data = dict(h)
+            # Never trust JSON status or guarantee for imported hypotheses; downgrade until local revalidation
+            h_data["guarantee"] = Guarantee.UNVERIFIED.value
+            h_data["status"] = "imported_unverified"
+            loaded_hyps.append(Hypothesis(**h_data))
+
         session = cls(
             name=data.get("name", name),
             created_at=data.get("created_at", ""),
             entries=entries,
-            hypotheses=[
-                Hypothesis(**h) for h in data.get("hypotheses", [])
-            ],
+            hypotheses=loaded_hyps,
         )
         session._recompute_chain_states()
         return session

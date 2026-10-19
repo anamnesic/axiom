@@ -74,6 +74,15 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: Run Lean 4 + Lake formal proof integration suite
         run: python -m pytest -v -k "lean"
+      - name: Verify versioned arithmetic Lean corpus (Hefez / TFA)
+        run: |
+          for f in research/arithmetic/*.lean; do
+            echo "Verifying $f with Lean 4..."
+            lean "$f"
+          done
+      - name: Audit versioned arithmetic Lean proofs via Axiom
+        run: |
+          python -c "from axiom import Axiom; import glob; ax = Axiom(); files = sorted(glob.glob('research/arithmetic/*.lean')); assert len(files) >= 5, f'Expected at least 5 files, got {len(files)}'; res = [ax.verify_lean_file(f) for f in files]; assert all(r.verified for r in res), f'Some proofs failed verification: {res}'; print('All versioned Lean proofs verified successfully!')"
 
   build-dist:
     needs: [test, formal-lean]

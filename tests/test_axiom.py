@@ -390,8 +390,17 @@ class TestAxiom(unittest.TestCase):
             r_nt = ax.number_theory("factorint", n=60)
             r6 = ax.session("record", name="demo", result=r_nt, note="Number theory recording", directory=td)
             self.assertTrue(r6.ok)
+            
+            lean_avail = ax.registry.get("lean").available
             st = ax.session("status", name="demo", directory=td)
-            self.assertTrue(st.value["step_validity"]["all_steps_valid"])
+            if lean_avail:
+                self.assertTrue(st.value["step_validity"]["all_steps_valid"])
+            else:
+                # Fail-closed integrity: without Lean toolchain on runner, Lean step 5 is unverified,
+                # while all other steps (algebraic, symbolic, number-theory) are fully valid.
+                self.assertFalse(st.value["step_validity"]["all_steps_valid"])
+                self.assertIn(5, st.value["step_validity"]["invalid_steps"])
+                self.assertEqual(st.value["step_validity"]["valid_count"], len(st.value["entries"]) - 1)
 
             # Direct diff, limit, and stats revalidation
             r_diff = ax.differentiate("x^3 + 2*x", variable="x")
@@ -399,7 +408,12 @@ class TestAxiom(unittest.TestCase):
             r_lim = ax.limit("sin(x)/x", variable="x", point="0")
             ax.session("record", name="demo", result=r_lim, directory=td, depends_on=[])
             st_multi = ax.session("status", name="demo", directory=td)
-            self.assertTrue(st_multi.value["step_validity"]["all_steps_valid"])
+            if lean_avail:
+                self.assertTrue(st_multi.value["step_validity"]["all_steps_valid"])
+            else:
+                self.assertFalse(st_multi.value["step_validity"]["all_steps_valid"])
+                self.assertIn(5, st_multi.value["step_validity"]["invalid_steps"])
+                self.assertEqual(st_multi.value["step_validity"]["valid_count"], len(st_multi.value["entries"]) - 1)
 
     def test_number_theory_factors_perm_check(self) -> None:
         ax = Axiom()
