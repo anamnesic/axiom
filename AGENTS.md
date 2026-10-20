@@ -47,7 +47,7 @@ axiom mcp
 | `math_explore` | Analyze zeros, derivatives, critical points, parity, Taylor series, and samples |
 | `math_matrix` | Matrix algebra (det, inv, rank, eigen, rref, solve linear systems $Ax = b$) |
 | `math_ode` | Solve Ordinary Differential Equations symbolically with verification |
-| `math_number_theory` | Exact number theory (factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors) |
+| `math_number_theory` | Exact number theory (factorint, isprime, nextprime, extgcd, crt, totient, binomial, divisors, primefactors) |
 | `math_optimize` | Find and verify symbolic/numerical minima or maxima of an expression |
 | `math_statistics` | Exact summary statistics (mean, variance, skewness, kurtosis, quartiles) |
 | `math_session` | Manage reproducible research sessions and derivation chains with weakest-link tracking |
