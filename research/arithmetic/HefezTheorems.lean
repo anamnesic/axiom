@@ -2,7 +2,7 @@
   Chronokairo AXIOM — Mathematical Investigation Dossier
   Formal Machine-Checked Verification of:
   "Iniciação à Aritmética" (Abramo Hefez, SBM/OBMEP)
-  Kernel: Lean 4 (version 4.35.0)
+  Kernel: Lean 4 (compatível com v4.14.0 do CI e v4.35.0 local)
   Guarantee: formal-proof (Zero sorry, zero untrusted axioms)
 -/
 
@@ -49,24 +49,49 @@ theorem hefez_common_divisor_sub (d a b : Int) :
       exact Int.dvd_add hsub h1
 
 /-!
+### Lema Auxiliar: Divisores de Naturais Consecutivos
+"Se d divide a + 1 e d divide a, então d divide 1."
+(Argumento dos witnesses de Euclides; prova independente da versão do kernel.)
+-/
+theorem dvd_consecutive (d a : Nat) (h1 : d ∣ a + 1) (h2 : d ∣ a) : d ∣ 1 := by
+  obtain ⟨x, hx⟩ := h1
+  obtain ⟨y, hy⟩ := h2
+  have e1 : d * x = a + 1 := hx.symm
+  have e2 : d * y = a := hy.symm
+  refine ⟨x - y, ?_⟩
+  cases Nat.lt_or_ge x y with
+  | inl hxy =>
+    exfalso
+    have hle : x * d ≤ y * d := Nat.mul_le_mul_right d (by omega)
+    rw [Nat.mul_comm d x] at e1
+    rw [Nat.mul_comm d y] at e2
+    omega
+  | inr hxy =>
+    obtain ⟨k, hk⟩ : ∃ k, x = y + k := ⟨x - y, by omega⟩
+    subst hk
+    have hky : y + k - y = k := by omega
+    rw [hky]
+    have e1' : d * y + d * k = a + 1 := by rw [← Nat.left_distrib d y k]; exact e1
+    omega
+
+/-!
 ### Teorema 4: MDC de Inteiros Consecutivos (Seção 3.3, Página 52)
 "Dois números inteiros consecutivos n e n + 1 são sempre primos entre si: mdc(n, n + 1) = 1."
 -/
 theorem hefez_gcd_succ (n : Nat) : Nat.gcd n (n + 1) = 1 := by
-  have h : n + 1 = 1 + n := Nat.add_comm n 1
-  rw [h]
-  rw [Nat.gcd_add_self_right n 1]
-  exact Nat.gcd_one_right n
+  have h1 : Nat.gcd n (n + 1) ∣ n + 1 := Nat.gcd_dvd_right n (n + 1)
+  have h2 : Nat.gcd n (n + 1) ∣ n := Nat.gcd_dvd_left n (n + 1)
+  exact (Nat.dvd_one).mp (dvd_consecutive (Nat.gcd n (n + 1)) n h1 h2)
 
 /-!
 ### Teorema 5: MDC de n e 2n + 1 (Problema 3.16a, Página 52)
 "Para todo n natural, os inteiros n e 2n + 1 são sempre primos entre si."
 -/
 theorem hefez_gcd_two_n_plus_one (n : Nat) : Nat.gcd n (2 * n + 1) = 1 := by
-  have h : 2 * n + 1 = (n + 1) + n := by omega
-  rw [h]
-  rw [Nat.gcd_add_self_right n (n + 1)]
-  exact hefez_gcd_succ n
+  have h1 : Nat.gcd n (2 * n + 1) ∣ 2 * n + 1 := Nat.gcd_dvd_right n (2 * n + 1)
+  have h2 : Nat.gcd n (2 * n + 1) ∣ 2 * n :=
+    Nat.dvd_trans (Nat.gcd_dvd_left n (2 * n + 1)) (Nat.dvd_mul_left n 2)
+  exact (Nat.dvd_one).mp (dvd_consecutive (Nat.gcd n (2 * n + 1)) (2 * n) h1 h2)
 
 /-!
 ### Teorema 6: Fatoração Externa do MDC (Problema 3.17, Página 53)

@@ -1429,6 +1429,19 @@ class TestAxiom(unittest.TestCase):
         assert pfs.evidence is not None
         self.assertEqual(pfs.evidence.reproducible_with, "axiom number-theory primefactors --n 360")
 
+        nxt = ax.number_theory("nextprime", n=7)
+        self.assertTrue(nxt.ok and nxt.verified)
+        self.assertEqual(nxt.value, 11)
+        self.assertEqual(nxt.guarantee, Guarantee.EXACT_SYMBOLIC)
+        assert nxt.evidence is not None
+        self.assertEqual(nxt.evidence.reproducible_with, "axiom number-theory nextprime --n 7")
+
+        # Edge case: the least prime (2) has no preceding prime, minimality is vacuous.
+        nxt_least = ax.number_theory("nextprime", n=1)
+        self.assertTrue(nxt_least.ok and nxt_least.verified)
+        self.assertEqual(nxt_least.value, 2)
+        self.assertEqual(nxt_least.guarantee, Guarantee.EXACT_SYMBOLIC)
+
     def test_adversarial_polynomial_counterexample_and_ternary_soundness(self) -> None:
         ax = Axiom()
 

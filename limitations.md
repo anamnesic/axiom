@@ -1,50 +1,62 @@
-# Limitações Técnicas e Teóricas — Chronokairo AXIOM
+# Limitações Técnicas, Formais e Teóricas — Chronokairo AXIOM
 
-Este documento explicita de forma honesta, transparente e cientificamente rigorosa os limites teóricos intrínsecos, as fronteiras computacionais e as restrições da implementação atual do **Chronokairo AXIOM (v0.2.1)**.
+> **Versão:** v0.2.8  
+> **Status:** Ativo & Auditado  
+> **Compromisso:** Honestidade computacional e postura estritamente *fail-closed*.
+
+Este documento explicita de forma transparente e cientificamente rigorosa os limites teóricos intrínsecos, as fronteiras computacionais e as restrições da implementação atual do **Chronokairo AXIOM (v0.2.8)**.
 
 ---
 
 ## 1. Limites Teóricos Fundamentais da Matemática e da Computação
 
-Nenhum software de álgebra computacional ou provador de teoremas pode transcender as barreiras formais da decidibilidade matemática:
+Nenhum software de álgebra computacional ou assistente de prova formal pode transcender as barreiras indecidíveis da lógica matemática:
 
 1. **Teorema de Richardson (1968)**:
-   A equivalência de expressões analíticas com zero é **indecidível** para a classe de funções gerada por inteiros, $\pi$, $\ln(2)$, adições, multiplicações, composições de funções trigonométricas ($\sin$), exponenciais ($\exp$) e a função valor absoluto ($|x|$).
-   - *Impacto no AXIOM*: O AXIOM não garante que todo par de expressões equivalentes terá sua diferença simbólica reduzida a zero. Perante o Teorema de Richardson, o AXIOM recorre à amostragem numérica de multiprecisão (`mpmath`). Se a amostragem for insuficiente para provar a identidade, o sistema rebaixa a garantia para `unverified` ou `numerical-approximation`, mantendo postura fail-closed.
+   A equivalência de expressões analíticas com zero é **indecidível** para a classe de funções gerada por inteiros, $\pi$, $\ln(2)$, operações aritméticas elementares, funções trigonométricas ($\sin$), exponenciais ($\exp$) e a função valor absoluto ($|x|$).
+   - *Postura do AXIOM*: O AXIOM não assume que duas expressões analíticas arbitrárias possam ter sua diferença simbolicamente reduzida a zero. Perante o Teorema de Richardson, o AXIOM combina simplificação canônica com amostragem numérica de multiprecisão (`mpmath`). Se a equivalência exata não for comprovada formalmente, o sistema rebaixa o resultado para `unverified` ou `numerical-approximation`, recusando a concessão de certificados indevidos de prova.
 2. **Teoremas de Incompletude de Gödel (1931)**:
-   Qualquer sistema formal consistente capaz de expressar a aritmética elementar (como ZFC ou a Teoria dos Tipos Dependentes do Lean 4) contém sentenças verdadeiras que não podem ser demonstradas dentro do próprio sistema.
-   - *Impacto no AXIOM*: O AXIOM não pode demonstrar a consistência do seu próprio conjunto de axiomas nem resolver todas as conjecturas matemáticas formuladas em Lean 4.
+   Qualquer sistema formal consistente capaz de axiomatizar a aritmética elementar (como ZFC ou o Cálculo de Construções Indutivas do Lean 4) contém proposições verdadeiras que não podem ser demonstradas nem refutadas dentro do próprio sistema.
+   - *Postura do AXIOM*: O AXIOM não pode demonstrar a consistência do seu próprio conjunto de axiomas nem garantir a resolução de conjecturas abertas arbitrárias formuladas no Lean 4.
 3. **Indecidibilidade do Décimo Problema de Hilbert (Matiyasevich, 1970)**:
-   Não existe algoritmo geral para decidir se uma equação diofantina polinomial arbitrária possui soluções inteiras.
-   - *Impacto no AXIOM*: A ferramenta `math_solve` com hipóteses de inteiros (`assumptions={'x': 'integer'}`) tem escopo restrito a equações lineares, quadráticas e sistemas solúveis via algoritmos específicos de bases de Gröbner e fatoração.
+   Não existe algoritmo computacional geral para decidir se uma equação diofantina polinomial arbitrária possui raízes inteiras.
+   - *Postura do AXIOM*: A ferramenta `math_solve` com hipóteses diofantinas (`assumptions={'x': 'integer'}`) atua estritamente sobre polinômios univariados, sistemas lineares, formas quadráticas e casos com algoritmos de terminação comprovada.
 
 ---
 
 ## 2. Limitações de Implementação e Dependências do Host
 
 ### 2.1. Dependência do Ambiente Local Lean 4 / Lake
-- O motor de prova formal `LeanEngine` depende da presença do executável `lake` e do compilador `lean` no ambiente do usuário (disponíveis via `~/.elan/bin` ou `PATH`).
-- **Comportamento quando ausente**: Se o Lean não estiver instalado no host, o AXIOM não quebra nem gera exceções não-tratadas; ele reporta status `unverified` com detalhe explícito indicando que o kernel formal não pôde ser executado localmente.
+- O motor de prova formal `LeanEngine` depende da presença dos executáveis `lean` e `lake` no ambiente do usuário (gerenciados via `elan`).
+- **Comportamento quando ausente**: Se o Lean não estiver instalado no host, o AXIOM não interrompe a execução com exceções não-tratadas; ele sinaliza o resultado como `unverified` com detalhe explícito indicando que o kernel formal não pôde ser invocado no host local.
 
-### 2.2. Aritmética de Ponto Flutuante e Tolerâncias Numéricas
-- Embora a conferência numérica utilize aritmética de multiprecisão arbitrária (`mpmath`) com 35 a 50 dígitos decimais de precisão de trabalho, avaliações numéricas estão sujeitas a cancelamento catastrófico em proximidade extrema de polos de ordem elevada ou oscilações de frequência infinita (e.g., $\sin(1/x)$ quando $x \to 0$).
-- Tolerâncias padrão adotadas ($\varepsilon = 10^{-4}$ a $10^{-8}$) são projetadas para distinguir identidades de desvios grosseiros, mas podem requerer ajustes em problemas com escalas físicas extremas.
+### 2.2. Isolamento de Processos e Sandbox do Lean 4
+- Scripts Lean 4 não confiáveis são executados em diretórios temporários isolados (*scratch sandbox*) com variáveis de ambiente sanitizadas (`_build_sandboxed_env` remove tokens de API, chaves AWS/GitHub e credenciais do usuário), com limites de memória (`-M 2048`), cota de passos do elaborador (`-T 100000`) e timeout estrito.
+- **Fronteira atual**: Esse isolamento opera no nível de processo da aplicação. Ele ainda não utiliza jaulas completas de contêiner ou namespaces do kernel do sistema operacional (como `bwrap` ou `cgroups` no Linux), que estão projetados para versões futuras.
 
-### 2.3. Equações Transcendentes e Completude de Conjuntos Solução
-- Para equações algébricas polinomiais, o campo `solution_complete` é garantido como `true` pelo Teorema Fundamental da Álgebra.
-- Para equações transcendentes (e.g. $\sin(x) = 0$, $x e^x = 1$), os motores retornam amostras de raízes principais acompanhadas da representação do conjunto de imagens periódicas (`ImageSet`). O AXIOM marca `solution_complete = false` para alertar o agente de que existem infinitas raízes adicionais.
+### 2.3. Auditoria Formal de Declarações e Alinhamento de Especificação
+- A extração de declarações Lean (`_extract_lean_declarations`) utiliza análise léxica com balanceamento de parênteses, chaves e colchetes para separar binders tipados `(n : Nat)`, binders implícitos `{α : Type}` e instâncias de classes `[CommRing α]`.
+- **Fronteira atual**: Essa extração não executa o elaborador completo do compilador Lean para desvendar abreviações sintáticas ultra-complexas ou metaprogramas avançados. Coincidências léxicas com conjecturas canônicas externas geram no máximo o status `candidate` (`congruent=False`), exigindo comprovação formal ou simbólica para a promoção a `verified`.
 
-### 2.4. Limites de Cobertura do Cálculo Tensorial
-- O módulo `axiom.tensor` calcula quantidades de geometria diferencial (Christoffel, Riemann, Ricci, Einstein) para métricas locais especificadas analiticamente em cartas de coordenadas fixas.
-- Ele não realiza análise topológica global (como cálculo de invariantes de homologia, números de Betti ou fluxo de Ricci com cirurgia) nem resolve equações de campo de Einstein de valor inicial sem hipóteses de simetria (como Birkhoff).
+### 2.4. Aritmética de Ponto Flutuante e Tolerâncias Numéricas
+- Embora as verificações numéricas empreguem aritmética de precisão arbitrária (`mpmath`) com 35 a 50 dígitos decimais de trabalho, cálculos analíticos próximos de singularidades essenciais ou polos de alta ordem continuam sujeitos a cancelamento catastrófico.
+- O AXIOM não promove aproximações numéricas a identidades exatas (`EXACT_SYMBOLIC`), mantendo-as na categoria `numerical-approximation` ou exigindo tolerância explícita do usuário.
 
-### 2.5. Allowlist do Parser AST
-- Por razões de segurança e sandbox para agentes autônomos, o `Parser` bloqueia qualquer chamada que utilize `eval`, `exec`, acesso a atributos privados `__class__`, imports dinâmicos ou lambdas.
-- Expressões matemáticas que dependem de construções imperativas de programação em Python devem ser normalizadas para funções matemáticas puras.
+### 2.5. Completude dos Conjuntos Solução
+- Para equações polinomiais em uma variável sobre $\mathbb{C}$, a completude do conjunto solução é formalmente auditada via soma das ordens de multiplicidade comparadas ao grau algébrico total (Teorema Fundamental da Álgebra).
+- Para equações transcendentes ou periódicas (e.g., $\sin(x) = 0$), os motores fornecem apenas uma amostra de soluções fundamentais e o AXIOM marca explicitamente `solution_complete = False` para alertar o agente sobre a existência de raízes infinitas adicionais.
+
+### 2.6. Cálculo Tensorial e Geometria Diferencial
+- O módulo `math_tensor` efetua diferenciação e contração simbólica rigorosa para tensores de curvatura (Christoffel, Riemann, Ricci, Einstein) em cartas de coordenadas locais fixadas.
+- O sistema não executa análise topológica global (cálculo de grupos de homologia, invariantes de Donaldson/Seiberg-Witten ou cirurgias de fluxo de Ricci).
+
+### 2.7. Sondas de Fronteira nos Problemas do Milênio
+- As suítes de validação dos sete Problemas do Prêmio Clay do Milênio em `reports/` e no benchmark `run_millennium_bench.py` funcionam **estritamente como sondas de estresse epistêmico e controles negativos**.
+- O AXIOM **não reivindica solução, avanço original ou resolução de nenhum problema aberto** (a Conjectura de Poincaré é verificada como resolvida pelo trabalho histórico de Grigori Perelman; Navier-Stokes valida a dissipação e energia clássica de Taylor-Green recusando qualquer certificação prematura de blowup ou regularidade global).
 
 ---
 
 ## 3. Resumo Ético e Epistemológico
 
-O AXIOM foi desenhado sob o lema da **honestidade computacional**:
-> *Um sistema que admite sua limitação com garantia `unverified` é infinitamente superior a um sistema que alucina uma demonstração falsa com aparência de certeza.*
+O AXIOM foi construído sob um princípio inegociável de integridade científica:
+> *Um sistema de IA que admite sua limitação com garantia `unverified` é infinitamente superior a um sistema que alucina uma demonstração falsa com falsa aparência de certeza.*

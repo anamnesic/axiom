@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T06:53:17.219636+00:00",
+  "timestamp_utc": "2026-10-20T16:49:03.840762+00:00",
   "axiom_version": "0.2.3",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -201,8 +201,8 @@
     "reports/birch-and-swinnerton-dyer/validate.py": "06bb882819cdee8238f39c62b49e7db60f22a2e041f714c55e62d7cbe875c3ee",
     "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
     "reports/birch-and-swinnerton-dyer/REPORT.md": "85d560e8ff66b5b16b1a80daec34c738e8a41adcbd38646c72d678ea1ad51784",
-    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
-    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
+    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
+    "src/axiom/core.py": "80999650026ded572fc3bb2d7a58ddcacd85afcacce9d62362404a54deb712b5"
   },
   "runs": {
     "doctor": {
@@ -219,17 +219,105 @@
         "ok": true,
         "python": "3.14.7",
         "mcp_tools_count": 21,
+        "skills_count": 17,
+        "skills": [
+          {
+            "name": "axiom-fluidsim-pde",
+            "path": "skills/computational/fluidsim/SKILL.md",
+            "description": "Guide AI agents on analyzing fluid dynamics PDEs, verifying Taylor-Green vortex incompressibility (div u = 0), momentum balance, and exact kinetic energy decay for Navier-Stokes investigations."
+          },
+          {
+            "name": "axiom-uncertainty-and-units",
+            "path": "skills/computational/uncertainty-and-units/SKILL.md",
+            "description": "Guide AI agents on performing dimensional analysis, verifying physical unit consistency, evaluating scale invariance, and propagating interval uncertainty bounds across equations."
+          },
+          {
+            "name": "axiom-lean4-proofs",
+            "path": "skills/formal/lean4/SKILL.md",
+            "description": "Guide AI agents on authoring, compiling, and auditing Lean 4 formal proofs using AXIOM, verifying declarations through the Lean 4 kernel, and auditing axioms with #print axioms to catch sorry, admit, and sorryAx."
+          },
+          {
+            "name": "axiom-navier-stokes-euler-blowup",
+            "path": "skills/formal/navier-stokes-euler/SKILL.md",
+            "description": "Guide AI agents on formalizing, analyzing, and auditing finite-time blowup singularities for 3D incompressible Navier-Stokes (Clay Millennium Alternatives C/D) and Euler equations in Lean 4 with multi-kernel verification (Comparator/Nanoda)."
+          },
+          {
+            "name": "axiom-statement-alignment",
+            "path": "skills/formal/statement-alignment/SKILL.md",
+            "description": "Guide AI agents on auditing formal mathematical propositions against canonical statements, preventing keyword spoofing, detecting tautology controls, and avoiding scope drift (e.g. externally forced vs unforced Navier-Stokes)."
+          },
+          {
+            "name": "axiom-writing-lean-proofs",
+            "path": "skills/formal/writing-lean-proofs/SKILL.md",
+            "description": "Guide AI agents on decomposing complex mathematical proofs into modular Lean 4 lemmas, selecting effective Mathlib tactics (omega, ring, linarith, aesop, simp), and structuring proof libraries."
+          },
+          {
+            "name": "mathematics",
+            "path": "skills/mathematics/SKILL.md",
+            "description": "Use the AXIOM Mathematical Reasoning Engine (MCP & CLI) to parse, simplify, solve, differentiate, integrate, evaluate, compare, explore, plot, and formally verify mathematical claims with independent verification and explicit guarantee levels."
+          },
+          {
+            "name": "axiom-math-research",
+            "path": "skills/research/math-research/SKILL.md",
+            "description": "Guide AI agents on conducting deep, reproducible mathematical investigations into open conjectures using AXIOM, tracking hypotheses, cataloging complexity barriers, and maintaining session derivation DAGs."
+          },
+          {
+            "name": "axiom-proof-auditing",
+            "path": "skills/research/proof-auditing/SKILL.md",
+            "description": "Guide AI agents on auditing informal mathematical manuscripts, preprints, and LaTeX proofs to identify logical gaps, circular reasoning, undeclared domain assumptions, and ungrounded symbolic deductions."
+          },
+          {
+            "name": "axiom-citation-verification",
+            "path": "skills/scientific/citation-verification/SKILL.md",
+            "description": "Guide AI agents on auditing academic citations, validating BibTeX entries against DOI and arXiv registries, detecting hallucinatory references, and ensuring research integrity."
+          },
+          {
+            "name": "axiom-literature-review",
+            "path": "skills/scientific/literature-review/SKILL.md",
+            "description": "Guide AI agents on conducting systematic mathematical literature reviews, mapping prior art taxonomies, tracing theorem dependencies, and synthesizing research context."
+          },
+          {
+            "name": "axiom-markitdown-document-converter",
+            "path": "skills/scientific/markitdown/SKILL.md",
+            "description": "Convert academic papers (PDFs), Office documents (Word, Excel, PowerPoint), presentations, and multimedia into clean, structured Markdown using Microsoft MarkItDown for downstream mathematical extraction, proof auditing, and evidence synthesis."
+          },
+          {
+            "name": "axiom-reproducibility-statement",
+            "path": "skills/scientific/reproducibility-statement/SKILL.md",
+            "description": "Guide AI agents on authoring cryptographic reproducibility statements, generating SHA-256 evidence manifests, recording toolchain versions, and publishing self-contained reproduction commands."
+          },
+          {
+            "name": "toolchain-management",
+            "path": "skills/toolchain-management/SKILL.md",
+            "description": "Guide AI agents on detecting, explaining, and installing external mathematical and formal toolchains (Lean 4, elan, Lake, Julia, SageMath) to PATH according to the host OS (Windows, Linux, macOS), with mandatory user notification and explanation of why the toolchain is required."
+          },
+          {
+            "name": "axiom-mutation-testing",
+            "path": "skills/verification/mutation-testing/SKILL.md",
+            "description": "Guide AI agents on conducting mutation testing on mathematical specifications, injecting deliberate perturbations (sign flips, boundary shifts, off-by-one errors) to ensure verifiers fail-closed."
+          },
+          {
+            "name": "axiom-property-based-testing",
+            "path": "skills/verification/property-based-testing/SKILL.md",
+            "description": "Guide AI agents on formulating algebraic property-based tests, generating dense stochastic inputs, testing mathematical invariants, and finding counterexamples using AXIOM's verification tools."
+          },
+          {
+            "name": "axiom-spec-to-code-compliance",
+            "path": "skills/verification/spec-to-code-compliance/SKILL.md",
+            "description": "Guide AI agents on ensuring mathematical implementations and solvers strictly satisfy their formal specification contracts, verifying preconditions, postconditions, and invariant guarantees."
+          }
+        ],
         "packages": {
           "sympy": "1.14.0",
           "mpmath": "1.3.0",
           "scipy": null,
           "matplotlib": null,
-          "mcp": null,
+          "mcp": "2.3.0",
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
-          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.EXE",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.EXE",
           "sage": null,
           "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
@@ -318,6 +406,7 @@
         "kind": "compare",
         "input": "-16 * (4 * (-1)^3 + 27 * 0^2) == 64",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -370,6 +459,7 @@
         "kind": "compare",
         "input": "-16 * (4 * (-25)^3 + 27 * 0^2) == 1000000",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -422,6 +512,7 @@
         "kind": "compare",
         "input": "-16 * (4 * (-3)^3 + 27 * 2^2) == 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -474,6 +565,7 @@
         "kind": "compare",
         "input": "-16 * (4 * (-3)^3 + 27 * 2^2) == 64",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -527,6 +619,7 @@
         "kind": "solve",
         "input": "x^3 - x = 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": [
           "-1",
           "0",
@@ -599,6 +692,7 @@
         "kind": "verify",
         "input": "6^2 == (-4)^3 - 25*(-4)",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -651,6 +745,7 @@
         "kind": "compare",
         "input": "(-62279/1728)^2 - ((1681/144)^3 - 25*(1681/144)) == 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -702,6 +797,7 @@
         "kind": "verify",
         "input": "5^2 == (-4)^3 - 25*(-4)",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -754,6 +850,7 @@
         "kind": "compare",
         "input": "3 + 1 - 4 == 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -805,6 +902,7 @@
         "kind": "evaluate",
         "input": "2*sqrt(5) - 2",
         "ok": true,
+        "epistemic_state": "proof",
         "value": "-2 + 2*sqrt(5)",
         "value_str": "-2 + 2*sqrt(5)",
         "latex": "-2 + 2 \\sqrt{5}",
@@ -848,6 +946,7 @@
         "kind": "compare",
         "input": "10 == 2*sqrt(5)",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -901,6 +1000,7 @@
         "kind": "solve",
         "input": "rank(E) - ord_s1(L(E, s)) = 0",
         "ok": false,
+        "epistemic_state": "inconclusive",
         "guarantee": "unverified",
         "evidence": {
           "engine": "axiom"
@@ -933,13 +1033,14 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"6^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"36\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"36 = 36\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 36\",\n      \"rhs = 36\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"6^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"epistemic_state\": \"proof\",\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"36\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"36 = 36\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 36\",\n      \"rhs = 36\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0\",\n    \"checks\": 1,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
           "kind": "verify",
           "input": "6^2 == (-4)^3 - 25*(-4)",
           "ok": true,
+          "epistemic_state": "proof",
           "value": {
             "status": "proven",
             "equivalent": true,
@@ -985,13 +1086,14 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -11 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -11 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
           "kind": "verify",
           "input": "5^2 == (-4)^3 - 25*(-4)",
           "ok": true,
+          "epistemic_state": "refutation",
           "value": {
             "status": "disproven",
             "equivalent": false,

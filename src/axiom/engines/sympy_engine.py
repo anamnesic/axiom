@@ -749,6 +749,17 @@ class SymPyEngine(Engine):
                 raw={"op": "primefactors", "n": n, "primefactors": pfs},
             )
 
+        if op == "nextprime":
+            n = int(args["n"])
+            p = int(sp.nextprime(n))
+            return Answer(
+                value=p,
+                value_str=f"nextprime({n}) = {p}",
+                method="least prime strictly greater than n (sympy.nextprime)",
+                steps=[f"nextprime({n}) -> {p}"],
+                raw={"op": "nextprime", "n": n, "prime": p},
+            )
+
         if op == "factors_perm_check":
             f1 = [int(x) for x in args["factors1"]]
             f2 = [int(x) for x in args["factors2"]]
@@ -792,7 +803,7 @@ class SymPyEngine(Engine):
 
         raise EngineError(
             f"unsupported number_theory operation '{operation}' "
-            "(choose from: factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, factors_perm_check)"
+            "(choose from: factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, nextprime, factors_perm_check)"
         )
 
     # --------------------------------------------------------- optimization

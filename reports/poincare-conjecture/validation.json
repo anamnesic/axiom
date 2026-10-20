@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-18T06:54:54.395287+00:00",
+  "timestamp_utc": "2026-10-20T16:49:44.487954+00:00",
   "axiom_version": "0.2.3",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/poincare-conjecture/validate.py": "6a3ce8219ce747aca3e821ce3bd76632626ad9baae957e50f80e1ca609d279b9",
     "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
     "reports/poincare-conjecture/REPORT.md": "43b44e347f43e4e2f7f16dc6b8ed1e53a6533d032effde30bd0cc35e0810dd4d",
-    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
-    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a"
+    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
+    "src/axiom/core.py": "80999650026ded572fc3bb2d7a58ddcacd85afcacce9d62362404a54deb712b5"
   },
   "runs": {
     "doctor": {
@@ -183,17 +183,105 @@
         "ok": true,
         "python": "3.14.7",
         "mcp_tools_count": 21,
+        "skills_count": 17,
+        "skills": [
+          {
+            "name": "axiom-fluidsim-pde",
+            "path": "skills/computational/fluidsim/SKILL.md",
+            "description": "Guide AI agents on analyzing fluid dynamics PDEs, verifying Taylor-Green vortex incompressibility (div u = 0), momentum balance, and exact kinetic energy decay for Navier-Stokes investigations."
+          },
+          {
+            "name": "axiom-uncertainty-and-units",
+            "path": "skills/computational/uncertainty-and-units/SKILL.md",
+            "description": "Guide AI agents on performing dimensional analysis, verifying physical unit consistency, evaluating scale invariance, and propagating interval uncertainty bounds across equations."
+          },
+          {
+            "name": "axiom-lean4-proofs",
+            "path": "skills/formal/lean4/SKILL.md",
+            "description": "Guide AI agents on authoring, compiling, and auditing Lean 4 formal proofs using AXIOM, verifying declarations through the Lean 4 kernel, and auditing axioms with #print axioms to catch sorry, admit, and sorryAx."
+          },
+          {
+            "name": "axiom-navier-stokes-euler-blowup",
+            "path": "skills/formal/navier-stokes-euler/SKILL.md",
+            "description": "Guide AI agents on formalizing, analyzing, and auditing finite-time blowup singularities for 3D incompressible Navier-Stokes (Clay Millennium Alternatives C/D) and Euler equations in Lean 4 with multi-kernel verification (Comparator/Nanoda)."
+          },
+          {
+            "name": "axiom-statement-alignment",
+            "path": "skills/formal/statement-alignment/SKILL.md",
+            "description": "Guide AI agents on auditing formal mathematical propositions against canonical statements, preventing keyword spoofing, detecting tautology controls, and avoiding scope drift (e.g. externally forced vs unforced Navier-Stokes)."
+          },
+          {
+            "name": "axiom-writing-lean-proofs",
+            "path": "skills/formal/writing-lean-proofs/SKILL.md",
+            "description": "Guide AI agents on decomposing complex mathematical proofs into modular Lean 4 lemmas, selecting effective Mathlib tactics (omega, ring, linarith, aesop, simp), and structuring proof libraries."
+          },
+          {
+            "name": "mathematics",
+            "path": "skills/mathematics/SKILL.md",
+            "description": "Use the AXIOM Mathematical Reasoning Engine (MCP & CLI) to parse, simplify, solve, differentiate, integrate, evaluate, compare, explore, plot, and formally verify mathematical claims with independent verification and explicit guarantee levels."
+          },
+          {
+            "name": "axiom-math-research",
+            "path": "skills/research/math-research/SKILL.md",
+            "description": "Guide AI agents on conducting deep, reproducible mathematical investigations into open conjectures using AXIOM, tracking hypotheses, cataloging complexity barriers, and maintaining session derivation DAGs."
+          },
+          {
+            "name": "axiom-proof-auditing",
+            "path": "skills/research/proof-auditing/SKILL.md",
+            "description": "Guide AI agents on auditing informal mathematical manuscripts, preprints, and LaTeX proofs to identify logical gaps, circular reasoning, undeclared domain assumptions, and ungrounded symbolic deductions."
+          },
+          {
+            "name": "axiom-citation-verification",
+            "path": "skills/scientific/citation-verification/SKILL.md",
+            "description": "Guide AI agents on auditing academic citations, validating BibTeX entries against DOI and arXiv registries, detecting hallucinatory references, and ensuring research integrity."
+          },
+          {
+            "name": "axiom-literature-review",
+            "path": "skills/scientific/literature-review/SKILL.md",
+            "description": "Guide AI agents on conducting systematic mathematical literature reviews, mapping prior art taxonomies, tracing theorem dependencies, and synthesizing research context."
+          },
+          {
+            "name": "axiom-markitdown-document-converter",
+            "path": "skills/scientific/markitdown/SKILL.md",
+            "description": "Convert academic papers (PDFs), Office documents (Word, Excel, PowerPoint), presentations, and multimedia into clean, structured Markdown using Microsoft MarkItDown for downstream mathematical extraction, proof auditing, and evidence synthesis."
+          },
+          {
+            "name": "axiom-reproducibility-statement",
+            "path": "skills/scientific/reproducibility-statement/SKILL.md",
+            "description": "Guide AI agents on authoring cryptographic reproducibility statements, generating SHA-256 evidence manifests, recording toolchain versions, and publishing self-contained reproduction commands."
+          },
+          {
+            "name": "toolchain-management",
+            "path": "skills/toolchain-management/SKILL.md",
+            "description": "Guide AI agents on detecting, explaining, and installing external mathematical and formal toolchains (Lean 4, elan, Lake, Julia, SageMath) to PATH according to the host OS (Windows, Linux, macOS), with mandatory user notification and explanation of why the toolchain is required."
+          },
+          {
+            "name": "axiom-mutation-testing",
+            "path": "skills/verification/mutation-testing/SKILL.md",
+            "description": "Guide AI agents on conducting mutation testing on mathematical specifications, injecting deliberate perturbations (sign flips, boundary shifts, off-by-one errors) to ensure verifiers fail-closed."
+          },
+          {
+            "name": "axiom-property-based-testing",
+            "path": "skills/verification/property-based-testing/SKILL.md",
+            "description": "Guide AI agents on formulating algebraic property-based tests, generating dense stochastic inputs, testing mathematical invariants, and finding counterexamples using AXIOM's verification tools."
+          },
+          {
+            "name": "axiom-spec-to-code-compliance",
+            "path": "skills/verification/spec-to-code-compliance/SKILL.md",
+            "description": "Guide AI agents on ensuring mathematical implementations and solvers strictly satisfy their formal specification contracts, verifying preconditions, postconditions, and invariant guarantees."
+          }
+        ],
         "packages": {
           "sympy": "1.14.0",
           "mpmath": "1.3.0",
           "scipy": null,
           "matplotlib": null,
-          "mcp": null,
+          "mcp": "2.3.0",
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
-          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.EXE",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.EXE",
           "sage": null,
           "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
@@ -284,6 +372,7 @@
         "kind": "compare",
         "input": "(6 / R0^2) * R0^2 == 6",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -350,6 +439,7 @@
         "kind": "compare",
         "input": "6 / (3 * R0^2) == 2 / R0^2",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -417,6 +507,7 @@
         "kind": "compare",
         "input": "6 / R0^2 == 0",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -489,6 +580,7 @@
         "kind": "compare",
         "input": "6 / (3 * R0^2) == 5 / R0^2",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -561,6 +653,7 @@
         "kind": "differentiate",
         "input": "R0^2 - 4*t",
         "ok": true,
+        "epistemic_state": "proof",
         "value": "-4",
         "value_str": "-4",
         "latex": "-4",
@@ -604,6 +697,7 @@
         "kind": "solve",
         "input": "R0^2 - 4*T = 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": [
           "R0**2/4"
         ],
@@ -665,6 +759,7 @@
         "kind": "compare",
         "input": "R0^2 - 4*T == R0^2",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -737,6 +832,7 @@
         "kind": "compare",
         "input": "0 + 0 + 0 == 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -789,6 +885,7 @@
         "kind": "compare",
         "input": "M_manifold == S_sphere",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -862,13 +959,14 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / (3 * R0^2) == 2 / R0^2\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"2/R0**2\",\n    \"right\": \"2/R0**2\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"\\\\frac{2}{R_{0}^{2}} = \\\\frac{2}{R_{0}^{2}}\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 2/R0**2\",\n      \"rhs = 2/R0**2\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / (3 * R0^2)\\\" \\\"2 / R0^2\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"domain_constraints\": [\n        \"3*R0**2 != 0\",\n        \"R0**2 != 0\"\n      ],\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / (3 * R0^2) == 2 / R0^2\",\n  \"ok\": true,\n  \"epistemic_state\": \"proof\",\n  \"value\": {\n    \"status\": \"proven\",\n    \"equivalent\": true,\n    \"consistent_with_samples\": true,\n    \"left\": \"2/R0**2\",\n    \"right\": \"2/R0**2\",\n    \"simplified_difference\": \"0\"\n  },\n  \"value_str\": \"equivalent\",\n  \"latex\": \"\\\\frac{2}{R_{0}^{2}} = \\\\frac{2}{R_{0}^{2}}\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 2/R0**2\",\n      \"rhs = 2/R0**2\",\n      \"status = proven\",\n      \"simplify(lhs - rhs) -> 0\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): 3*R0**2 != 0, R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / (3 * R0^2)\\\" \\\"2 / R0^2\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"symbolic-identity\",\n    \"passed\": true,\n    \"detail\": \"Symbolic difference reduces to 0 and 10 numerical sample(s) agree\",\n    \"checks\": 10,\n    \"max_error\": 0.0,\n    \"data\": {\n      \"domain_constraints\": [\n        \"3*R0**2 != 0\",\n        \"R0**2 != 0\"\n      ],\n      \"status\": \"proven\",\n      \"proven\": true\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
           "kind": "compare",
           "input": "6 / (3 * R0^2) == 2 / R0^2",
           "ok": true,
+          "epistemic_state": "proof",
           "value": {
             "status": "proven",
             "equivalent": true,
@@ -926,13 +1024,14 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / R0^2 == 0\",\n  \"ok\": true,\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"6/R0**2\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"6/R0**2\",\n    \"counterexample\": {\n      \"R0\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'R0': '2'})\",\n  \"latex\": \"\\\\frac{6}{R_{0}^{2}} \\\\neq 0\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 6/R0**2\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 6/R0**2\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / R0^2\\\" \\\"0\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'R0': '2'} (|diff| = 1.500e+00)\",\n    \"checks\": 1,\n    \"max_error\": 1.5,\n    \"data\": {\n      \"domain_constraints\": [\n        \"R0**2 != 0\"\n      ],\n      \"counterexample\": {\n        \"R0\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / R0^2 == 0\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"6/R0**2\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"6/R0**2\",\n    \"counterexample\": {\n      \"R0\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'R0': '2'})\",\n  \"latex\": \"\\\\frac{6}{R_{0}^{2}} \\\\neq 0\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 6/R0**2\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 6/R0**2\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / R0^2\\\" \\\"0\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'R0': '2'} (|diff| = 1.500e+00)\",\n    \"checks\": 1,\n    \"max_error\": 1.5,\n    \"data\": {\n      \"domain_constraints\": [\n        \"R0**2 != 0\"\n      ],\n      \"counterexample\": {\n        \"R0\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
           "kind": "compare",
           "input": "6 / R0^2 == 0",
           "ok": true,
+          "epistemic_state": "refutation",
           "value": {
             "status": "disproven",
             "equivalent": false,

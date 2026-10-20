@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-18T06:51:16.539423+00:00",
+  "generated_at_utc": "2026-10-20T16:48:18.065753+00:00",
   "axiom_version": "0.2.6",
   "scope": "Clay finite combinatorial example, structural complexity barriers, and AXIOM environment validation",
   "p_vs_np_proven": false,
@@ -8,15 +8,15 @@
     "https://www.claymath.org/wp-content/uploads/2022/06/pvsnp.pdf"
   ],
   "source_sha256": {
-    "src/axiom/contract.py": "71841152fc843e49cab44de39488f05854c53f277f7853294e9ce489ecd307ac",
+    "src/axiom/contract.py": "b399117993c51b7c1c37db1a90199300409897cf55cfde21d1117d66f0521ca9",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "d90246c3c64a194e0db9f87d76b9b5ecef185718b45b7cde709a529f66493a3a",
-    "src/axiom/verification.py": "ba1495793485c259023cd42544396248128868d13b92c738f569d1e684d98ef2",
-    "src/axiom/engines/lean_engine.py": "763694089684689108a0aef41e0cf68702585d61e01000a09e98d6b3ddf0984c",
-    "src/axiom/engines/sympy_engine.py": "0717740253131aed51aa8ff3e9af16e5e6656ae7a41c551e63d3f43a72a7c359",
-    "src/axiom/mcp_server.py": "56578a7a430dd049d4e30f71076fb7bf2143a2a96dd594f936e3bad320aedcf1",
-    "src/axiom/cli.py": "4ce26593586b7c06d25542892f530cfe12138ad4a18ca8860b5ffc3921a04807",
-    "src/axiom/setup_agent.py": "56448014cc53dd117dfc61932b8e0dd218ebb00e3e04c6717836aeb945cd8e5c",
+    "src/axiom/core.py": "80999650026ded572fc3bb2d7a58ddcacd85afcacce9d62362404a54deb712b5",
+    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
+    "src/axiom/engines/lean_engine.py": "d683e4555012d487f05cf08a1d46d0f9c517395c0fef0889581eb5f9244bb511",
+    "src/axiom/engines/sympy_engine.py": "618c33eaf16733970481af77455c3f7d14dbe4de28523f1172bca1a949e55b75",
+    "src/axiom/mcp_server.py": "0a48f745c7b4ec7a356afb52ba2f3a4a1523b3aaa13157b8180fd57cf7abbd71",
+    "src/axiom/cli.py": "abedb4b6cadb19f98c397b87bdae24b8729bbfe170b7010412c1d53cce2bff30",
+    "src/axiom/setup_agent.py": "1a3d6d1b8cdc1eca855e5beef737da4901e05aabed7d96a56863a63fa987e35a",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
   },
   "cli_runs": {
@@ -34,17 +34,105 @@
         "ok": true,
         "python": "3.14.7",
         "mcp_tools_count": 21,
+        "skills_count": 17,
+        "skills": [
+          {
+            "name": "axiom-fluidsim-pde",
+            "path": "skills/computational/fluidsim/SKILL.md",
+            "description": "Guide AI agents on analyzing fluid dynamics PDEs, verifying Taylor-Green vortex incompressibility (div u = 0), momentum balance, and exact kinetic energy decay for Navier-Stokes investigations."
+          },
+          {
+            "name": "axiom-uncertainty-and-units",
+            "path": "skills/computational/uncertainty-and-units/SKILL.md",
+            "description": "Guide AI agents on performing dimensional analysis, verifying physical unit consistency, evaluating scale invariance, and propagating interval uncertainty bounds across equations."
+          },
+          {
+            "name": "axiom-lean4-proofs",
+            "path": "skills/formal/lean4/SKILL.md",
+            "description": "Guide AI agents on authoring, compiling, and auditing Lean 4 formal proofs using AXIOM, verifying declarations through the Lean 4 kernel, and auditing axioms with #print axioms to catch sorry, admit, and sorryAx."
+          },
+          {
+            "name": "axiom-navier-stokes-euler-blowup",
+            "path": "skills/formal/navier-stokes-euler/SKILL.md",
+            "description": "Guide AI agents on formalizing, analyzing, and auditing finite-time blowup singularities for 3D incompressible Navier-Stokes (Clay Millennium Alternatives C/D) and Euler equations in Lean 4 with multi-kernel verification (Comparator/Nanoda)."
+          },
+          {
+            "name": "axiom-statement-alignment",
+            "path": "skills/formal/statement-alignment/SKILL.md",
+            "description": "Guide AI agents on auditing formal mathematical propositions against canonical statements, preventing keyword spoofing, detecting tautology controls, and avoiding scope drift (e.g. externally forced vs unforced Navier-Stokes)."
+          },
+          {
+            "name": "axiom-writing-lean-proofs",
+            "path": "skills/formal/writing-lean-proofs/SKILL.md",
+            "description": "Guide AI agents on decomposing complex mathematical proofs into modular Lean 4 lemmas, selecting effective Mathlib tactics (omega, ring, linarith, aesop, simp), and structuring proof libraries."
+          },
+          {
+            "name": "mathematics",
+            "path": "skills/mathematics/SKILL.md",
+            "description": "Use the AXIOM Mathematical Reasoning Engine (MCP & CLI) to parse, simplify, solve, differentiate, integrate, evaluate, compare, explore, plot, and formally verify mathematical claims with independent verification and explicit guarantee levels."
+          },
+          {
+            "name": "axiom-math-research",
+            "path": "skills/research/math-research/SKILL.md",
+            "description": "Guide AI agents on conducting deep, reproducible mathematical investigations into open conjectures using AXIOM, tracking hypotheses, cataloging complexity barriers, and maintaining session derivation DAGs."
+          },
+          {
+            "name": "axiom-proof-auditing",
+            "path": "skills/research/proof-auditing/SKILL.md",
+            "description": "Guide AI agents on auditing informal mathematical manuscripts, preprints, and LaTeX proofs to identify logical gaps, circular reasoning, undeclared domain assumptions, and ungrounded symbolic deductions."
+          },
+          {
+            "name": "axiom-citation-verification",
+            "path": "skills/scientific/citation-verification/SKILL.md",
+            "description": "Guide AI agents on auditing academic citations, validating BibTeX entries against DOI and arXiv registries, detecting hallucinatory references, and ensuring research integrity."
+          },
+          {
+            "name": "axiom-literature-review",
+            "path": "skills/scientific/literature-review/SKILL.md",
+            "description": "Guide AI agents on conducting systematic mathematical literature reviews, mapping prior art taxonomies, tracing theorem dependencies, and synthesizing research context."
+          },
+          {
+            "name": "axiom-markitdown-document-converter",
+            "path": "skills/scientific/markitdown/SKILL.md",
+            "description": "Convert academic papers (PDFs), Office documents (Word, Excel, PowerPoint), presentations, and multimedia into clean, structured Markdown using Microsoft MarkItDown for downstream mathematical extraction, proof auditing, and evidence synthesis."
+          },
+          {
+            "name": "axiom-reproducibility-statement",
+            "path": "skills/scientific/reproducibility-statement/SKILL.md",
+            "description": "Guide AI agents on authoring cryptographic reproducibility statements, generating SHA-256 evidence manifests, recording toolchain versions, and publishing self-contained reproduction commands."
+          },
+          {
+            "name": "toolchain-management",
+            "path": "skills/toolchain-management/SKILL.md",
+            "description": "Guide AI agents on detecting, explaining, and installing external mathematical and formal toolchains (Lean 4, elan, Lake, Julia, SageMath) to PATH according to the host OS (Windows, Linux, macOS), with mandatory user notification and explanation of why the toolchain is required."
+          },
+          {
+            "name": "axiom-mutation-testing",
+            "path": "skills/verification/mutation-testing/SKILL.md",
+            "description": "Guide AI agents on conducting mutation testing on mathematical specifications, injecting deliberate perturbations (sign flips, boundary shifts, off-by-one errors) to ensure verifiers fail-closed."
+          },
+          {
+            "name": "axiom-property-based-testing",
+            "path": "skills/verification/property-based-testing/SKILL.md",
+            "description": "Guide AI agents on formulating algebraic property-based tests, generating dense stochastic inputs, testing mathematical invariants, and finding counterexamples using AXIOM's verification tools."
+          },
+          {
+            "name": "axiom-spec-to-code-compliance",
+            "path": "skills/verification/spec-to-code-compliance/SKILL.md",
+            "description": "Guide AI agents on ensuring mathematical implementations and solvers strictly satisfy their formal specification contracts, verifying preconditions, postconditions, and invariant guarantees."
+          }
+        ],
         "packages": {
           "sympy": "1.14.0",
           "mpmath": "1.3.0",
           "scipy": null,
           "matplotlib": null,
-          "mcp": null,
+          "mcp": "2.3.0",
           "pytest": "9.1.1"
         },
         "external_toolchains": {
-          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.exe",
-          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.exe",
+          "lean": "C:\\Users\\luann\\.elan\\bin\\lean.EXE",
+          "lake": "C:\\Users\\luann\\.elan\\bin\\lake.EXE",
           "sage": null,
           "julia": "C:\\Users\\luann\\AppData\\Local\\Programs\\Julia-1.13.2\\bin\\julia.exe"
         },
@@ -136,6 +224,7 @@
         "kind": "number_theory",
         "input": "binomial({'n': 400, 'k': 100})",
         "ok": true,
+        "epistemic_state": "proof",
         "value": 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320,
         "value_str": "C(400, 100) = 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320",
         "guarantee": "exact-symbolic",
@@ -176,6 +265,7 @@
         "kind": "number_theory",
         "input": "binomial({'n': 100, 'k': 2})",
         "ok": true,
+        "epistemic_state": "proof",
         "value": 4950,
         "value_str": "C(100, 2) = 4950",
         "guarantee": "exact-symbolic",
@@ -216,6 +306,7 @@
         "kind": "verify",
         "input": "x^2 - 5*x + 6 = 0 @ x in ['4']",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "verified": false,
           "candidates": [
@@ -271,6 +362,7 @@
         "kind": "verify",
         "input": "2 + 2 == 5",
         "ok": true,
+        "epistemic_state": "refutation",
         "value": {
           "status": "disproven",
           "equivalent": false,
@@ -324,6 +416,7 @@
         "kind": "prove",
         "input": "examples/theorems.lean",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "checked": true,
           "verified": true,
@@ -332,6 +425,7 @@
             "add_zero_right",
             "eq_refl_nat"
           ],
+          "definitions": [],
           "audited_theorems": [
             "add_zero_right",
             "eq_refl_nat"
@@ -552,6 +646,7 @@
         "kind": "limit",
         "input": "n^3 / 2^n",
         "ok": true,
+        "epistemic_state": "approximation",
         "value": "0",
         "value_str": "0",
         "latex": "0",
@@ -595,6 +690,7 @@
         "kind": "solve_system",
         "input": "(1 - x)*(1 - y) = 0; x*(1 - y) = 0",
         "ok": true,
+        "epistemic_state": "proof",
         "value": [
           {
             "x": "x",
@@ -644,6 +740,7 @@
         "kind": "solve_system",
         "input": "x = 1; x = 0",
         "ok": true,
+        "epistemic_state": "inconclusive",
         "value": [],
         "value_str": "[]",
         "latex": "\\emptyset",
@@ -685,6 +782,7 @@
         "kind": "compare",
         "input": "1 - (1 - (1 - x))*(1 - (1 - y)) == 1 - x*y",
         "ok": true,
+        "epistemic_state": "proof",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -742,6 +840,7 @@
         "kind": "matrix",
         "input": "[[0, 1, 1, 0], [1, 0, 0, 1], [1, 0, 0, -1], [0, 1, -1, 0]]",
         "ok": true,
+        "epistemic_state": "proof",
         "value": [
           {
             "eigenvalue": "-sqrt(2)",
@@ -812,7 +911,7 @@
             ]
           }
         ],
-        "value_str": "?=-sqrt(2) (m=2), ?=sqrt(2) (m=2)",
+        "value_str": "λ=-sqrt(2) (m=2), λ=sqrt(2) (m=2)",
         "latex": "- \\sqrt{2}, \\sqrt{2}",
         "guarantee": "verified-substitution",
         "evidence": {
@@ -828,7 +927,7 @@
         "verification": {
           "kind": "eigenpair-substitution",
           "passed": true,
-          "detail": "Verified det(A - ?I) = 0 and A*v = ?*v across 6 checks",
+          "detail": "Verified det(A - λI) = 0 and A*v = λ*v across 6 checks",
           "checks": 6,
           "max_error": 0.0
         }
@@ -853,6 +952,7 @@
         "kind": "prove",
         "input": "2 + 2 == 4",
         "ok": true,
+        "epistemic_state": "inconclusive",
         "value": {
           "status": "proven",
           "equivalent": true,
@@ -1569,7 +1669,7 @@
             },
             {
               "name": "math_number_theory",
-              "description": "Execute verified number-theory and combinatorics operations: factorint, isprime, extgcd, crt, totient, binomial.",
+              "description": "Execute verified number-theory and combinatorics operations: factorint, isprime, extgcd, crt, totient, binomial, nextprime.",
               "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1581,12 +1681,13 @@
                       "extgcd",
                       "crt",
                       "totient",
-                      "binomial"
+                      "binomial",
+                      "nextprime"
                     ]
                   },
                   "n": {
                     "type": "integer",
-                    "description": "Integer input for factorint, isprime, totient, binomial."
+                    "description": "Integer input for factorint, isprime, totient, binomial, nextprime."
                   },
                   "a": {
                     "type": "integer",
@@ -1836,13 +1937,14 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"number_theory\",\n  \"input\": \"binomial({'n': 400, 'k': 100})\",\n  \"ok\": true,\n  \"value\": 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320,\n  \"value_str\": \"C(400, 100) = 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact binomial coefficient (sympy.binomial)\",\n    \"steps\": [\n      \"binomial(400, 100) -> 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320\"\n    ],\n    \"reproducible_with\": \"axiom number-theory binomial --n 400 --k 100\"\n  },\n  \"verification\": {\n    \"kind\": \"binomial-comb-and-pascal-check\",\n    \"passed\": true,\n    \"detail\": \"Verified C(400, 100) against independent math.comb and Pascal recurrence\",\n    \"checks\": 2,\n    \"max_error\": 0.0\n  }\n}"
+              "text": "{\n  \"kind\": \"number_theory\",\n  \"input\": \"binomial({'n': 400, 'k': 100})\",\n  \"ok\": true,\n  \"epistemic_state\": \"proof\",\n  \"value\": 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320,\n  \"value_str\": \"C(400, 100) = 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320\",\n  \"guarantee\": \"exact-symbolic\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"exact binomial coefficient (sympy.binomial)\",\n    \"steps\": [\n      \"binomial(400, 100) -> 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320\"\n    ],\n    \"reproducible_with\": \"axiom number-theory binomial --n 400 --k 100\"\n  },\n  \"verification\": {\n    \"kind\": \"binomial-comb-and-pascal-check\",\n    \"passed\": true,\n    \"detail\": \"Verified C(400, 100) against independent math.comb and Pascal recurrence\",\n    \"checks\": 2,\n    \"max_error\": 0.0\n  }\n}"
             }
           ],
           "structuredContent": {
             "kind": "number_theory",
             "input": "binomial({'n': 400, 'k': 100})",
             "ok": true,
+            "epistemic_state": "proof",
             "value": 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320,
             "value_str": "C(400, 100) = 2241854791554337561923210387201698554845411177476295990399942258896013007429693894018935107174320",
             "guarantee": "exact-symbolic",

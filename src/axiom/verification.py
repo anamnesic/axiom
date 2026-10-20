@@ -1763,6 +1763,28 @@ def verify_number_theory_op(raw: dict) -> tuple[Verification, Guarantee]:
             Guarantee.VERIFIED_SUBSTITUTION if ok else Guarantee.UNVERIFIED,
         )
 
+    if op == "nextprime":
+        n, p = int(raw["n"]), int(raw["prime"])
+        is_p_prime = p >= 2 and bool(sp.isprime(p))
+        gt_ok = p > n
+        if p == 2:
+            # 2 is the smallest prime, so (n, 2) contains no prime whenever n < 2.
+            minimal_ok = True
+        else:
+            # prevprime(p) is the greatest prime below p; minimality requires it <= n.
+            minimal_ok = int(sp.prevprime(p)) <= n
+        ok = is_p_prime and gt_ok and minimal_ok
+        return (
+            Verification(
+                kind="nextprime-primality-and-minimality-check",
+                passed=ok,
+                detail=f"Verified {p} is prime, {p} > {n}, and no prime lies in ({n}, {p})",
+                checks=3,
+                max_error=0.0 if ok else None,
+            ),
+            Guarantee.EXACT_SYMBOLIC if ok else Guarantee.UNVERIFIED,
+        )
+
     if op == "factors_perm_check":
         f1 = [int(x) for x in raw["factors1"]]
         f2 = [int(x) for x in raw["factors2"]]

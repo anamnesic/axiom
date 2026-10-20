@@ -55,7 +55,7 @@ O job `formal-lean` em `.github/workflows/ci.yml` executa a checagem formal auto
 ---
 
 ## 🏛️ Registros de Decisão Arquitetural (ADRs)
-- [ADR-0023: Formal Arithmetic Verification Dossier](../docs/adr/0023-formal-arithmetic-verification-dossier-and-agent-skills.md)
-- [ADR-0024: Number Theory Payload Reverification](../docs/adr/0024-number-theory-payload-reverification-and-fundamental-arithmetic-existence.md)
-- [ADR-0025: Fundamental Theorem of Arithmetic Uniqueness](../docs/adr/0025-fundamental-theorem-of-arithmetic-uniqueness-and-hefez-corpus.md)
-- [ADR-0026: CI Recovery, Tamper Detection and Versioned Arithmetic Corpus](../docs/adr/0026-ci-recovery-tamper-detection-and-versioned-arithmetic-corpus.md)
+- [ADR-0023: Constructive Definition Tracking in Lean 4, LEAN_PATH Injection & Number Theory Expansion](../../docs/adr/0023-constructive-definition-tracking-lean-path-and-number-theory-expansion.md)
+- [ADR-0024: Number Theory Payload Re-Verification in Sessions & Fundamental Theorem of Arithmetic (Existence)](../../docs/adr/0024-number-theory-payload-reverification-and-fundamental-arithmetic-existence.md)
+- [ADR-0025: Payload Re-Verification Completeness, Proof Timeout Control, Metaprogramming Linter & Multiset Factors](../../docs/adr/0025-payload-reverification-completeness-timeout-linter-and-multiset-factors.md)
+- [ADR-0026: CI Recovery, Tamper-Resistant Revalidation, Imported Hypothesis Downgrading & Versioned Arithmetic Corpus](../../docs/adr/0026-ci-recovery-tamper-detection-and-versioned-arithmetic-corpus.md)

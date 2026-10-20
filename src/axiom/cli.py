@@ -283,11 +283,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_nt = sub.add_parser(
         "number-theory",
         aliases=["nt"],
-        help="Verified number theory & combinatorics (factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, factors_perm_check).",
+        help="Verified number theory & combinatorics (factorint, isprime, extgcd, crt, totient, binomial, divisors, primefactors, nextprime, factors_perm_check).",
     )
     p_nt.add_argument(
         "operation",
-        choices=["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "divisors", "primefactors", "factors_perm_check"],
+        choices=["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "divisors", "primefactors", "nextprime", "factors_perm_check"],
     )
     p_nt.add_argument("-n", type=int, help="Integer parameter n.")
     p_nt.add_argument("-a", type=int, help="Integer parameter a (for extgcd).")

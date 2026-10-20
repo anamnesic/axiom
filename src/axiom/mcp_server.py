@@ -393,16 +393,16 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "name": "math_number_theory",
         "description": (
             "Execute verified number-theory and combinatorics operations: "
-            "factorint, isprime, extgcd, crt, totient, binomial."
+            "factorint, isprime, extgcd, crt, totient, binomial, nextprime."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "operation": {
                     "type": "string",
-                    "enum": ["factorint", "isprime", "extgcd", "crt", "totient", "binomial"],
+                    "enum": ["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "nextprime"],
                 },
-                "n": {"type": "integer", "description": "Integer input for factorint, isprime, totient, binomial."},
+                "n": {"type": "integer", "description": "Integer input for factorint, isprime, totient, binomial, nextprime."},
                 "a": {"type": "integer", "description": "First integer for extgcd."},
                 "b": {"type": "integer", "description": "Second integer for extgcd."},
                 "k": {"type": "integer", "description": "k parameter for binomial(n, k)."},
