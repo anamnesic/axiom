@@ -1,8 +1,8 @@
 # Relatório Técnico: EXP-0001 — Integridade de Domínio, Semântica Ternária e Comportamento Fail-Closed
 
-**Identificador**: EXP-0001 (Revisão v0.2.2)  
-**Data de Execução**: 17 de outubro de 2026  
-**Ambiente**: Python 3.14.7 / SymPy 1.14.0 / mpmath 1.3.0 / AXIOM v0.2.2  
+**Identificador**: EXP-0001 (Revisão v0.2.8)  
+**Data de Execução**: 20 de outubro de 2026  
+**Ambiente**: Python 3.14.7 / SymPy 1.14.0 / mpmath 1.3.0 / AXIOM v0.2.8  
 **Arquivo de Dados Brutos**: [`results.json`](results.json)  
 **Script de Reprodução**: [`run.py`](run.py)  
 
@@ -14,9 +14,9 @@ Avaliar empiricamente a integridade de domínio, a semântica de equivalência u
 
 > [!IMPORTANT]
 > **Delimitação de Escopo Científico e Intervalos de Confiança**: O experimento avalia uma bateria controlada de $n = 21$ casos de teste adversariais selecionados contra o baseline do Naive CAS. O AXIOM não apresentou falsos positivos ($0/13$, $0.0\%$) nos 13 casos inválidos/adversariais delimitados.
-> - **Intervalo de Confiança Estatístico (Regra dos Três)**: Para zero eventos observados em $n = 21$, o limite superior de 95% de confiança é $\approx 3/n = 3/21 \approx 14.28\%$ (Clopper-Pearson 95%: $[0.00\%, 13.06\%]$). Restringindo aos $n = 13$ casos especificamente inválidos, o limite superior de 95% é $3/13 \approx 23.08\%$ (Clopper-Pearson 95%: $[0.00\%, 24.71\%]$).
+> - **Intervalo de Confiança Estatístico (Regra dos Três)**: Para zero eventos observados nos $n = 13$ casos inválidos, o limite superior de 95% de confiança é $\approx 3/n = 3/13 \approx 23.08\%$ (Clopper-Pearson 95% bilateral: $[0.00\%, 24.71\%]$; unilateral: $20.58\%$). Considerando a bateria completa de $n = 21$, o limite é $3/21 \approx 14.29\%$ (Clopper-Pearson 95% bilateral: $[0.00\%, 16.11\%]$; unilateral: $13.29\%$).
 > - **Metodologia de Seleção**: Os casos constituem uma **bateria adversarial direcionada** aos modos clássicos de falha de CAS (ramos complexos, singularidades, polinômios com raízes coincidentes com nós de amostragem), e **não uma distribuição uniforme aleatória**.
-> - **Baseline Naive CAS**: Definido formalmente como chamadas desprotegidas ao SymPy 1.12 (`simplify` e `evalf`) sem rastreamento de denominadores na AST, sem sondas gaussianas complexas e sem validação por substituição independente.
+> - **Baseline Naive CAS (proveniência registrada em `results.json`, campo `baseline`)**: Define-se como um **CAS desprotegido emulado sobre SymPy** — chamadas a `simplify`/`evalf` **sem rastreamento de denominadores na AST** e **sem validação por substituição independente**, acrescido de uma **sonda fixa de 6 pontos** ($x \in \{-1, 2, i, -i, 1+i, -2\}$) sobre o resíduo antes de declarar equivalência. A linha `formal_proof` do baseline é **simulada** (retorna "accepted" sem invocar o compilador Lean) e por isso descreve um executor de provas *emulado*, e não uma medição observada de uma ferramenta externa; a linha é marcada com `simulated: true` nos resultados emitidos.
 > Estes resultados comprovam a eficácia das salvaguardas implementadas (sondagens gaussianas complexas, rastreamento de denominadores na AST, detecção de polinômios não-nulos e auditoria `#print axioms`), não devendo ser extrapolados como uma garantia incondicional contra qualquer expressão imaginável.
 
 O benchmark abrange 21 casos em 5 categorias críticas:
@@ -37,8 +37,8 @@ O benchmark abrange 21 casos em 5 categorias críticas:
 | **Casos Inválidos / Singularidades** | 13 | 13 | — |
 | **Falsos Positivos ($FP$)** | **0** | **6** | **-100% de erros** |
 | **Taxa de Falso Positivo ($FPR$)** | **0.0%** | **46.2%** | **0.0% vs 46.2%** |
-| **Falsos Negativos ($FN$)** | **0** | **3** | Sem falsos alarmes |
-| **Acurácia Global** | **100.0%** | **57.1%** | **+42.9 p.p.** |
+| **Falsos Negativos ($FN$)** | **0** | **4** | Sem falsos alarmes |
+| **Acurácia Global** | **100.0%** | **52.4%** | **+47.6 p.p.** |
 | **Taxa de Fail-Closed ($FCR$)** | **100.0%** | **53.8%** | **+46.2 p.p.** |
 
 ---
@@ -65,6 +65,21 @@ O Naive CAS produziu falsos positivos em 6 cenários que o AXIOM interceptou e r
 6. **TC-21: Polinômio Adversarial $P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) == 0$**:
    - *Naive CAS / Amostragem Ingênua*: O polinômio é construído para anular exatamente os 6 primeiros pontos de sondagem fixa ($-1, 2, i, -i, 1+i, -2$). Uma ferramenta baseada apenas em amostras numéricas declara falsa equivalência.
    - *AXIOM v0.2.2*: O verificador inspeciona a estrutura polinomial da diferença (`as_poly`), constata que os coeficientes não são identicamente nulos, expande a busca além dos 6 zeros e descobre contraexemplos explícitos em $x = 0$ ($P(0) = 4 + 4i \neq 0$) e $x = 3$ ($P(3) = 400 - 200i \neq 0$), refutando a identidade com `status = disproven`.
+
+---
+
+## 3.1 Falsos Negativos do Baseline (Transparência Metodológica)
+
+O baseline produziu **4 falsos negativos** (recusa de proposições matematicamente válidas), o que limita a leitura do differential e é reportado abertamente:
+
+| Caso | Proposição válida rejeitada | Causa no baseline |
+| --- | --- | --- |
+| TC-02 | $\sqrt{x^2} = x$ sob hipótese $x > 0$ | O emulador não propaga hipóteses: compara a forma irrestrita, que é falsa. |
+| TC-04 | $\sqrt{x^2} = |x|$ sob hipótese $x$ real | Idem: ausência de propagação de hipóteses. |
+| TC-14 | $\lim_{s \to 1} (s-1)\zeta(s) = 1$ | O emulador usa `sp.limit` unilateral por padrão, sem detectar o cancelamento do resíduo. |
+| TC-18 | $\int_0^{\infty} \frac{x}{e^x - 1}\,dx = \frac{\pi^2}{6}$ | O emulador não avalia o limite superior infinito como integral imprópria. |
+
+A taxa de acerto global do baseline é, portanto, $11/21 = 52.4\%$, e não $100\% - 46.2\%$; a assimetria entre $6$ falsos positivos e $4$ falsos negativos é uma propriedade do emulador, e não uma propriedade do SymPy em geral.
 
 ---
 

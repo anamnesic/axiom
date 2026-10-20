@@ -393,16 +393,31 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "name": "math_number_theory",
         "description": (
             "Execute verified number-theory and combinatorics operations: "
-            "factorint, isprime, extgcd, crt, totient, binomial, nextprime."
+            "factorint, isprime, extgcd, crt, totient, binomial, nextprime, "
+            "divisors, primefactors, factors_perm_check."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "operation": {
                     "type": "string",
-                    "enum": ["factorint", "isprime", "extgcd", "crt", "totient", "binomial", "nextprime"],
+                    "enum": [
+                        "factorint",
+                        "isprime",
+                        "extgcd",
+                        "crt",
+                        "totient",
+                        "binomial",
+                        "nextprime",
+                        "divisors",
+                        "primefactors",
+                        "factors_perm_check",
+                    ],
                 },
-                "n": {"type": "integer", "description": "Integer input for factorint, isprime, totient, binomial, nextprime."},
+                "n": {
+                    "type": "integer",
+                    "description": "Integer input for factorint, isprime, totient, binomial, nextprime, divisors, primefactors.",
+                },
                 "a": {"type": "integer", "description": "First integer for extgcd."},
                 "b": {"type": "integer", "description": "Second integer for extgcd."},
                 "k": {"type": "integer", "description": "k parameter for binomial(n, k)."},
@@ -415,6 +430,16 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": "array",
                     "items": {"type": "integer"},
                     "description": "Moduli m_i for Chinese Remainder Theorem (crt).",
+                },
+                "factors1": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "First factor list for factors_perm_check.",
+                },
+                "factors2": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Second factor list for factors_perm_check.",
                 },
             },
             "required": ["operation"],
@@ -562,8 +587,19 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 
 
 def get_authorized_roots() -> list[Path]:
-    """Return authorized directory roots for MCP file reads and writes."""
-    roots = [Path.cwd().resolve(), Path(tempfile.gettempdir()).resolve()]
+    """Return authorized directory roots for MCP file reads and writes.
+
+    Restricted strictly to the current workspace (cwd) and an isolated
+    subfolder in temp ('axiom') to prevent arbitrary traversal of the host's
+    entire temporary directory (CWE-22 / Least Privilege).
+    Additional paths can be authorized via AXIOM_ALLOWED_DIRS.
+    """
+    sandbox_temp = Path(tempfile.gettempdir()).resolve() / "axiom"
+    try:
+        sandbox_temp.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    roots = [Path.cwd().resolve(), sandbox_temp]
     env_dirs = os.environ.get("AXIOM_ALLOWED_DIRS", "")
     if env_dirs:
         for p in env_dirs.split(os.pathsep):
@@ -799,6 +835,8 @@ def dispatch_tool(
             k=args.get("k"),
             remainders=args.get("remainders"),
             moduli=args.get("moduli"),
+            factors1=args.get("factors1"),
+            factors2=args.get("factors2"),
         )
 
     if name == "math_optimize":

@@ -153,9 +153,30 @@ theorem bezout_of_invertible (a m x : Int) (hinv : Congruent (a * x) 1 m) :
   refine ⟨-k, ?_⟩
   calc
     a * x + m * (-k) = a * x - m * k := by
-      rw [Int.mul_neg, Int.add_neg_eq_sub]
+      -- `Int.sub_eq_add_neg` is available in Lean 4.14.0 (the CI-pinned
+      -- toolchain) and in 4.35.0, unlike `Int.add_neg_eq_sub` which only
+      -- exists from Lean 4.16.0 onwards. Keeping the proof on the oldest
+      -- supported core lemma preserves the CI contract.
+      rw [Int.mul_neg, Int.sub_eq_add_neg]
     _ = a * x - (a * x - 1) := by rw [hk]
     _ = 1 := by omega
+
+/-!
+### 7.1 Teorema de Coprimaridade Modular: Divisores Comuns Dividem 1
+Se um inteiro `a` é invertível módulo `m`, todo divisor comum `d` de `a` e `m` divide 1.
+Isto estabelece a caracterização completa de coprimaridade (mdc(a, m) = 1) no anel ℤ.
+-/
+theorem common_divisor_dvd_one_of_invertible (a m x d : Int)
+    (hinv : Congruent (a * x) 1 m)
+    (hda : d ∣ a)
+    (hdm : d ∣ m) :
+    d ∣ 1 := by
+  obtain ⟨y, hbez⟩ := bezout_of_invertible a m x hinv
+  have h1 : d ∣ a * x := Int.dvd_trans hda (Int.dvd_mul_right a x)
+  have h2 : d ∣ m * y := Int.dvd_trans hdm (Int.dvd_mul_right m y)
+  have hsum : d ∣ a * x + m * y := Int.dvd_add h1 h2
+  rw [hbez] at hsum
+  exact hsum
 
 /-!
 ### 8. Exemplos Numéricos Clássicos de Abramo Hefez (Cap. 4.1, pág. 82)

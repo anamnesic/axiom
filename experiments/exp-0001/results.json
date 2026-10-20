@@ -1,11 +1,29 @@
 {
   "experiment_id": "EXP-0001",
   "title": "Verificação Quantitativa de Integridade de Domínio e Comportamento Fail-Closed",
-  "timestamp_utc": "2026-10-17T18:40:59.767826+00:00",
-  "elapsed_seconds": 4.667,
+  "timestamp_utc": "2026-10-20T17:54:39.339947+00:00",
+  "elapsed_seconds": 3.759,
   "total_test_cases": 21,
   "valid_cases": 8,
   "invalid_cases": 13,
+  "baseline": {
+    "name": "Naive CAS (emulated)",
+    "kind": "emulated-on-sympy",
+    "sympy_version": "1.14.0",
+    "description": "Emulation of an unguarded CAS: sp.simplify / sp.evalf without AST denominator analysis, without orthogonal proof contracts, and with a fixed 6-point sampling probe (-1, 2, I, -I, 1+I, -2) that is applied to the residual before declaring equivalence.",
+    "includes_fixed_point_sampling": true,
+    "fixed_probe_points": [
+      "-1",
+      "2",
+      "I",
+      "-I",
+      "1 + I",
+      "-2"
+    ],
+    "formal_proof_branch": "simulated: returns accepted=True without invoking the Lean compiler",
+    "is_observed_measurement": false,
+    "caveat": "The formal_proof baseline row is a SIMULATION of an unaudited Lean runner, not an observed execution of an external compiler. The reported false-positive rate therefore describes the emulation, not a measured SymPy/Lean toolchain."
+  },
   "metrics": {
     "axiom": {
       "false_positives": 0,
@@ -40,7 +58,8 @@
         "accepted": false,
         "detail": "simplify(lhs - rhs) == -x + sqrt(x**2)",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -60,7 +79,8 @@
         "accepted": false,
         "detail": "simplify(lhs - rhs) == -x + sqrt(x**2)",
         "is_false_positive": false,
-        "is_false_negative": true
+        "is_false_negative": true,
+        "simulated": false
       }
     },
     {
@@ -80,7 +100,8 @@
         "accepted": false,
         "detail": "simplify(lhs - rhs) == sqrt(x**2) - Abs(x)",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -100,7 +121,8 @@
         "accepted": false,
         "detail": "simplify(lhs - rhs) == sqrt(x**2) - Abs(x)",
         "is_false_positive": false,
-        "is_false_negative": true
+        "is_false_negative": true,
+        "simulated": false
       }
     },
     {
@@ -120,7 +142,8 @@
         "accepted": true,
         "detail": "simplify(lhs - rhs) == 0",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -140,7 +163,8 @@
         "accepted": true,
         "detail": "simplify(lhs - rhs) == 0",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -160,7 +184,8 @@
         "accepted": true,
         "detail": "simplify(lhs - rhs) == 0",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -180,7 +205,8 @@
         "accepted": false,
         "detail": "sub = nan",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -200,7 +226,8 @@
         "accepted": true,
         "detail": "sub = 0",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -220,7 +247,8 @@
         "accepted": true,
         "detail": "1",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -240,7 +268,8 @@
         "accepted": true,
         "detail": "oo",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -260,7 +289,8 @@
         "accepted": true,
         "detail": "oo",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -280,7 +310,8 @@
         "accepted": false,
         "detail": "zoo",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -300,7 +331,8 @@
         "accepted": false,
         "detail": "Limit(s*zeta(s) - zeta(s), s, 1, dir='+')",
         "is_false_positive": false,
-        "is_false_negative": true
+        "is_false_negative": true,
+        "simulated": false
       }
     },
     {
@@ -320,7 +352,8 @@
         "accepted": false,
         "detail": "oo",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -340,7 +373,8 @@
         "accepted": false,
         "detail": "nan",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -360,7 +394,8 @@
         "accepted": true,
         "detail": "2",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -380,7 +415,8 @@
         "accepted": false,
         "detail": "Integral(x/(exp(x) - 1), (x, 0, oo))",
         "is_false_positive": false,
-        "is_false_negative": true
+        "is_false_negative": true,
+        "simulated": false
       }
     },
     {
@@ -391,7 +427,7 @@
       "axiom": {
         "accepted": false,
         "guarantee": "unverified",
-        "verification_kind": "equivalence",
+        "verification_kind": "constant-exact-disproof",
         "verification_passed": false,
         "is_false_positive": false,
         "is_false_negative": false
@@ -400,7 +436,8 @@
         "accepted": false,
         "detail": "simplify(lhs - rhs) == pi**2/24",
         "is_false_positive": false,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     },
     {
@@ -418,9 +455,10 @@
       },
       "naive_cas": {
         "accepted": true,
-        "detail": "lean accepted with exit code 0 (unaudited sorryAx)",
+        "detail": "SIMULATED: lean accepted with exit code 0 (unaudited sorryAx)",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": true
       }
     },
     {
@@ -440,7 +478,8 @@
         "accepted": true,
         "detail": "simplify(lhs - rhs) == -(x - 2)*(x + 1)*(x + 2)*(x - I)*(x + I)*(-x + 1 + I)",
         "is_false_positive": true,
-        "is_false_negative": false
+        "is_false_negative": false,
+        "simulated": false
       }
     }
   ]

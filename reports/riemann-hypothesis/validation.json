@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-20T16:48:02.522782+00:00",
+  "generated_at_utc": "2026-10-20T18:16:47.154588+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -8,13 +8,13 @@
     "https://www.claymath.org/wp-content/uploads/2022/05/riemann.pdf"
   ],
   "source_sha256": {
-    "src/axiom/contract.py": "b399117993c51b7c1c37db1a90199300409897cf55cfde21d1117d66f0521ca9",
+    "src/axiom/contract.py": "eb99bb120127af4774a27b84505bb630b504af81b97c2ec5efd30294bf0bcd1e",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "80999650026ded572fc3bb2d7a58ddcacd85afcacce9d62362404a54deb712b5",
+    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383",
     "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
     "src/axiom/engines/lean_engine.py": "d683e4555012d487f05cf08a1d46d0f9c517395c0fef0889581eb5f9244bb511",
     "src/axiom/engines/sympy_engine.py": "618c33eaf16733970481af77455c3f7d14dbe4de28523f1172bca1a949e55b75",
-    "src/axiom/mcp_server.py": "0a48f745c7b4ec7a356afb52ba2f3a4a1523b3aaa13157b8180fd57cf7abbd71",
+    "src/axiom/mcp_server.py": "8858d44c96e59f48ca6a8e42a11c14f2f3258e03dd8534aa881787551be8d2d8",
     "src/axiom/cli.py": "abedb4b6cadb19f98c397b87bdae24b8729bbfe170b7010412c1d53cce2bff30",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
   },
@@ -1011,7 +1011,7 @@
         "kind": "integrate",
         "input": "1/x^2",
         "ok": true,
-        "epistemic_state": "inconclusive",
+        "epistemic_state": "refutation",
         "value": "oo",
         "value_str": "oo",
         "latex": "\\infty",
@@ -2603,7 +2603,7 @@
             },
             {
               "name": "math_number_theory",
-              "description": "Execute verified number-theory and combinatorics operations: factorint, isprime, extgcd, crt, totient, binomial, nextprime.",
+              "description": "Execute verified number-theory and combinatorics operations: factorint, isprime, extgcd, crt, totient, binomial, nextprime, divisors, primefactors, factors_perm_check.",
               "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -2616,12 +2616,15 @@
                       "crt",
                       "totient",
                       "binomial",
-                      "nextprime"
+                      "nextprime",
+                      "divisors",
+                      "primefactors",
+                      "factors_perm_check"
                     ]
                   },
                   "n": {
                     "type": "integer",
-                    "description": "Integer input for factorint, isprime, totient, binomial, nextprime."
+                    "description": "Integer input for factorint, isprime, totient, binomial, nextprime, divisors, primefactors."
                   },
                   "a": {
                     "type": "integer",
@@ -2648,6 +2651,20 @@
                       "type": "integer"
                     },
                     "description": "Moduli m_i for Chinese Remainder Theorem (crt)."
+                  },
+                  "factors1": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "First factor list for factors_perm_check."
+                  },
+                  "factors2": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Second factor list for factors_perm_check."
                   }
                 },
                 "required": [

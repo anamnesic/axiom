@@ -263,7 +263,13 @@ class TestUseCases(unittest.TestCase):
     # ----------------------------------------------------------- Use Case 10
     def test_use_case_10_plot_sandboxed(self) -> None:
         """Use Case 10: Vector Plotting with Sandboxed Output Security."""
-        with tempfile.TemporaryDirectory() as td:
+        # The MCP file layer authorizes only the workspace and its dedicated
+        # temp sandbox ('<temp>/axiom'); an arbitrary temp directory is
+        # *not* an authorized root. The output file must therefore be created
+        # inside an authorized root, which is exactly the behaviour under test.
+        sandbox_root = Path(tempfile.gettempdir()).resolve() / "axiom"
+        sandbox_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=str(sandbox_root)) as td:
             out_file = Path(td) / "sinc.svg"
 
             # 1. CLI

@@ -81,19 +81,21 @@ AXIOM's verification contracts are constructed upon the foundational limits of m
 
 The **EXP-0001** benchmark ([experiments/exp-0001/REPORT.md](experiments/exp-0001/REPORT.md)) evaluates how mathematical reasoning harnesses handle adversarial and singular inputs:
 
-- **Sample Size:** $n = 21$ hand-crafted adversarial benchmark cases targeting known computer algebra failure modes:
-  - 7 removable and essential singularities (e.g., $\frac{x-1}{x-1}$, $\frac{\sin(x)}{x}$ at $x=0$, $\frac{1}{x(x-1)}$);
-  - 7 branch cuts and multi-valued complex functions (e.g., $\sqrt{x^2}$ over $\mathbb{C}$, $\ln(x^2) - 2\ln(x)$ for negative/complex arguments);
-  - 7 constructed adversarial polynomials with non-trivial roots designed to defeat simple random evaluations.
+- **Sample Size:** $n = 21$ hand-crafted adversarial benchmark cases, organised into the 5 categories of the report (4 branch-cut / complex-domain, 5 domain-integrity and root-verification, 5 limit / discontinuity, 4 definite-integral, 3 arithmetic and formal-audit), targeting known computer algebra failure modes:
+  - removable and essential singularities (e.g., $\frac{x-1}{x-1}$, $\frac{\sin(x)}{x}$ at $x=0$, $\frac{1}{x(x-1)}$);
+  - branch cuts and multi-valued complex functions (e.g., $\sqrt{x^2}$ over $\mathbb{C}$, $\ln(x^2) - 2\ln(x)$ for negative/complex arguments);
+  - constructed adversarial polynomials with non-trivial roots designed to defeat simple random evaluations.
 - **Methodology & Selection Bias:** The benchmark cases were deliberately selected as **adversarial edge cases** rather than drawn from a uniform random distribution of textbook expressions. Standard CAS failures cluster sharply at boundary points; targeted stress-testing is standard practice in software security and formal methods.
 - **Statistical Confidence Bounds (Rule of Three):**
-  - Observed False Positive Rate (AXIOM): $0 / 21$ ($0.0\%$).
-  - Under the standard statistical **Rule of Three** for zero observed events, the upper bound of the 95% confidence interval is:
-    $$\text{Upper } 95\% \text{ CI} \approx \frac{3}{n} = \frac{3}{21} \approx 14.28\%$$
-  - Exact binomial Clopper-Pearson 95% confidence interval: $[0.00\%, 13.06\%]$.
-- **Baseline Definition:**
-  - The comparison baseline (*"Naive CAS"*) is explicitly defined as **standard unwrapped SymPy 1.12** invoking `sp.simplify()` and `sp.evalf()` without pre-evaluation AST denominator analysis, complex Gaussian probe injection, or independent substitution verification.
-  - Naive CAS exhibited a **46.2% false positive rate** on this adversarial set by silently simplifying singular expressions to 1 and dropping domain constraints.
+  - Observed False Positive Rate (AXIOM): $0 / 13$ ($0.0\%$). The false-positive rate is measured over the $13$ *mathematically invalid* cases, which is the correct denominator; the AXIOM likewise produced no false positive over the full $21$-case battery.
+  - Under the standard statistical **Rule of Three** for zero observed events, the upper bound of the 95% confidence interval over the $n = 13$ invalid cases is:
+    $$\text{Upper } 95\% \text{ CI} \approx \frac{3}{n} = \frac{3}{13} \approx 23.08\%$$
+  - Exact binomial Clopper-Pearson 95% confidence interval (two-sided): $[0.00\%, 24.71\%]$; the corresponding one-sided 95% upper bound is $20.58\%$.
+  - Over the full $n = 21$ battery, the Rule of Three bound is $\frac{3}{21} \approx 14.29\%$ and the two-sided Clopper-Pearson 95% interval is $[0.00\%, 16.11\%]$ (one-sided: $13.29\%$).
+- **Baseline Definition (provenance recorded in [`results.json`](experiments/exp-0001/results.json) under `baseline`):**
+  - The comparison baseline (*"Naive CAS"*) is an **emulated unguarded CAS** built on top of SymPy, *not* unwrapped SymPy. It applies `sp.simplify()`/`sp.evalf()` without pre-evaluation AST denominator analysis and without independent substitution verification, and it adds a **fixed 6-point sampling probe** ($x \in \{-1,\, 2,\, i,\, -i,\, 1+i,\, -2\}$) on the residual before declaring equivalence.
+  - Its `formal_proof` row is **simulated**: the baseline returns "accepted" without invoking the Lean compiler, so that row describes an *emulated* unaudited proof runner and not an observed measurement of an external executor. The row is flagged as `simulated` in the emitted results.
+  - Naive CAS exhibited a **46.2% false positive rate** ($6/13$ invalid cases) by silently simplifying singular expressions to 1 and dropping domain constraints, and a **52.4% global accuracy** ($11/21$), i.e. $4$ false negatives.
 
 ### 4.2 Millennium Bench (Stress-Testing Boundary Probes)
 
@@ -102,8 +104,8 @@ The Millennium Bench ([benchmarks/millennium/](benchmarks/millennium/)) comprise
 - 28 numerical and analytical sanity checks;
 - 43 exact invariant verifications.
 - **Observed False Positive Rate on Negative Controls:** $0 / 40$ ($0.0\%$).
-- **Rule of Three 95% Confidence Upper Bound:** $\frac{3}{40} = 7.5\%$.
-- Exact binomial Clopper-Pearson 95% confidence interval: $[0.00\%, 7.22\%]$.
+- **Rule of Three 95% Confidence Upper Bound:** $\frac{3}{40} = 7.50\%$.
+- Exact binomial Clopper-Pearson 95% confidence interval (two-sided): $[0.00\%, 8.81\%]$; the corresponding one-sided 95% upper bound is $7.22\%$.
 
 ---
 

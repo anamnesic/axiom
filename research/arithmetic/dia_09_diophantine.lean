@@ -142,6 +142,22 @@ theorem hefez_diophantine_complete (a b c x₀ y₀ x y u v : Int)
   omega
 
 /-!
+### 6.1 Teorema Bicondicional (Se e Somente Se) da Solução Geral
+Combina a necessidade (Teorema 3.5) e suficiência em um único enunciado de equivalência lógica:
+uma tupla (x, y) é solução inteira se e somente se pertence à família parametrizada por t.
+-/
+theorem diophantine_general_iff (a b c x₀ y₀ x y u v : Int)
+    (hcoprime : a * u + b * v = 1)
+    (hsol₀ : IsSolution a b c x₀ y₀)
+    (hb_ne_zero : b ≠ 0) :
+    IsSolution a b c x y ↔ ∃ t : Int, x = x₀ + t * b ∧ y = y₀ - t * a := by
+  constructor
+  · intro hsol
+    exact hefez_diophantine_complete a b c x₀ y₀ x y u v hcoprime hsol₀ hsol hb_ne_zero
+  · rintro ⟨t, rfl, rfl⟩
+    exact diophantine_general_valid a b c x₀ y₀ t hsol₀
+
+/-!
 ### 7. Aplicação Numérica Canônica de Abramo Hefez (Problema 3.54, pág. 79)
 Equação dos selos: 3x + 5y = 50.
 Solução particular: x₀ = 0, y₀ = 10 (pois 3*0 + 5*10 = 50).

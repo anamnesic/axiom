@@ -22,7 +22,7 @@ from axiom.parsing import ParseError, Parser
 from axiom.registry import EngineRegistry
 from axiom.session import ResearchSession
 
-__version__ = "0.2.8"
+__version__ = "0.2.9"
 
 __all__ = [
     "Axiom",

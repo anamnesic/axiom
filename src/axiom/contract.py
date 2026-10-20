@@ -71,6 +71,92 @@ class EpistemicState(str, Enum):
     INCONCLUSIVE = "inconclusive"
 
 
+# Verification kinds that carry *positive evidence of falsity*: each one
+# records a witness (a counterexample, a violating substitution, a domain
+# violation, a divergence, ...) that decisively shows the checked claim to be
+# false.
+#
+# A verification that merely *fails* is NOT a refutation. Checks such as
+# ``constant-exact-inconclusive``, ``unevaluated-integral``,
+# ``definite-integral-check``, ``inequality-check`` or
+# ``empty-solution-set`` fail because the question could not be decided (or
+# was out of scope), which is an INCONCLUSIVE outcome, not a disproof.
+REFUTING_VERIFICATION_KINDS: frozenset[str] = frozenset(
+    {
+        "approximate-disproof",
+        "assumption-violation",
+        "constant-exact-disproof",
+        "counterexample-search",
+        "divergent-integral",
+        "domain-mismatch",
+        "interior-singularity-check",
+        "numerical-quadrature",
+        "substitution",
+        "substitution-domain-error",
+        "system-substitution",
+    }
+)
+
+# Payload statuses that assert falsity.
+REFUTING_STATUSES: frozenset[str] = frozenset({"disproven", "refuted"})
+
+
+def has_refutation_evidence(
+    verification: Verification | None, value: Any = None
+) -> bool:
+    """True when a verification carries positive evidence that a claim is false.
+
+    A *failed* verification is not by itself a refutation: the check may have
+    been undecidable, out of scope, or aborted by a parse/timeout error. Only
+    an explicit witness qualifies, so that ``REFUTATION`` is never used as a
+    synonym for "the check did not succeed".
+
+    The witness must be verifiable:
+    * an explicit counterexample/witness recorded in ``verification.data`` or ``value``;
+    * a verification kind that is, by construction, a disproof
+      (:data:`REFUTING_VERIFICATION_KINDS`) with a non-empty detail describing the witness;
+    * or a refuting status backed by a recognized refuting verification kind.
+    """
+    if verification is None or verification.passed:
+        return False
+
+    data = verification.data or {}
+    # 1. Explicit counterexample or witness dictionary/object
+    if data.get("counterexample") or data.get("witness"):
+        return True
+    if isinstance(value, dict) and (value.get("counterexample") or value.get("witness")):
+        return True
+
+    # 2. Inherently refuting verification kind with explanatory witness detail
+    if verification.kind in REFUTING_VERIFICATION_KINDS and verification.detail:
+        return True
+
+    # 3. Status flag in data or value only accepted if backed by a refuting kind
+    if verification.kind in REFUTING_VERIFICATION_KINDS:
+        if str(data.get("status") or "") in REFUTING_STATUSES:
+            return True
+        if isinstance(value, dict) and str(value.get("status") or "") in REFUTING_STATUSES:
+            return True
+
+    return False
+
+
+def outcome_word(
+    verification: Verification | None, value: Any = None
+) -> str:
+    """Classify a verification outcome as a single status word.
+
+    * ``verified`` - the independent check passed;
+    * ``refuted`` - the check produced positive evidence of falsity;
+    * ``inconclusive`` - the check failed without deciding the question.
+    """
+    if verification is not None and verification.passed:
+        return "verified"
+    if has_refutation_evidence(verification, value):
+        return "refuted"
+    return "inconclusive"
+
+
 _GUARANTEE_RANK = {
     Guarantee.FORMAL_PROOF: 5,
     Guarantee.EXACT_SYMBOLIC: 4,
@@ -151,21 +237,36 @@ class MathResult:
         return bool(self.verification and self.verification.passed)
 
     @property
+    def has_refutation_evidence(self) -> bool:
+        """True only when this result carries positive evidence that a claim is false.
+
+        A *failed* verification is not by itself a refutation: the check may
+        have been undecidable, out of scope, or aborted by a parse/timeout
+        error. Only an explicit witness qualifies, so that ``REFUTATION`` is
+        never used as a synonym for "the check did not succeed".
+
+        The witness is one of:
+
+        * an explicit counterexample/witness recorded by the verifier
+          (``verification.data``);
+        * a ``disproven``/``refuted`` status recorded by the verifier or
+          carried by the result payload;
+        * a verification kind that is, by construction, a disproof
+          (:data:`REFUTING_VERIFICATION_KINDS`) with a non-empty detail
+          describing the witness.
+        """
+        return has_refutation_evidence(self.verification, self.value)
+
+    @property
+    def outcome(self) -> str:
+        """Single status word for this result: verified / refuted / inconclusive."""
+        return outcome_word(self.verification, self.value)
+
+    @property
     def epistemic_state(self) -> EpistemicState:
         """Categorize this result into one of the four foundational epistemic states."""
-        # 1. Active refutation (proven false via concrete counterexample or contradiction)
-        if (
-            self.value_str == "refuted"
-            or (
-                isinstance(self.value, dict)
-                and self.value.get("status") in ("disproven", "refuted")
-            )
-            or (
-                self.verification
-                and self.verification.kind in ("counterexample-search", "constant-exact-disproof")
-                and not self.verification.passed
-            )
-        ):
+        # 1. Active refutation: requires positive evidence of falsity (a witness).
+        if self.has_refutation_evidence:
             return EpistemicState.REFUTATION
 
         # 2. Certified proof (kernel-checked formal proof or exact symbolic derivation)

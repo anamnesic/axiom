@@ -1,8 +1,8 @@
 # Auditoria de Gaps & Matriz de Rastreabilidade — Chronokairo AXIOM
 
-> **Status:** Atualizado para **v0.2.8** (commit `b9dcd00` / `HEAD`)  
+> **Status:** Atualizado para **v0.2.9** (commit `7981df2` / `HEAD` + ADR-0031)  
 > **Referência Histórica:** Auditoria inicial realizada na **v0.2.5** (commit `66307c38b67a`)  
-> **Suíte de Testes:** 84/84 testes automatizados aprovados (incluindo testes adversariais sem mocks e detecção de adulteração)  
+> **Suíte de Testes:** 101/101 testes automatizados aprovados em 6 suítes (incluindo testes adversariais sem mocks, detecção de adulteração de alta precisão e suíte dedicada aos estados epistémicos)  
 > **Millennium Research Bench:** 111/111 critérios aprovados · 40/40 controles negativos fail-closed (0.0% falsos positivos)
 
 ---
@@ -13,8 +13,8 @@ Entre as versões **v0.2.5** e **v0.2.8**, o AXIOM passou por um ciclo abrangent
 
 * **Checklist de Aceite:** **10/10 critérios concluídos (100%)**
 * **P0 (Gaps Críticos Bloqueantes):** **4/4 concluídos (100%)**
-* **P1 (Segurança, Solidez e Benchmarks):** **20/28 concluídos (71.4%)**, 5 parciais/mitigados, 3 planejados
-* **P2 (Expansão Científica, Produto e Governança):** **9/22 concluídos (40.9%)**, 13 planejados para v0.3.0+
+* **P1 (Segurança, Solidez e Benchmarks):** **24/28 concluídos (85.7%)**, 4 em aberto/planejados
+* **P2 (Expansão Científica, Produto e Governança):** **12/22 concluídos (54.5%)**, 10 planejados para v0.3.0+
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -23,12 +23,29 @@ Entre as versões **v0.2.5** e **v0.2.8**, o AXIOM passou por um ciclo abrangent
 │ Nível de Prioridade     │ Total Gaps   │ Concluídos   │ Em Aberto      │
 ├─────────────────────────┼──────────────┼──────────────┼────────────────┤
 │ P0 — Críticos           │ 4            │ 4 (100.0%)   │ 0 (0.0%)       │
-│ P1 — Segurança/Solidez  │ 28           │ 20 (71.4%)   │ 8 (28.6%)      │
-│ P2 — Científico/Produto │ 22           │ 9 (40.9%)    │ 13 (59.1%)     │
+│ P1 — Segurança/Solidez  │ 28           │ 24 (85.7%)   │ 4 (14.3%)      │
+│ P2 — Científico/Produto │ 22           │ 12 (54.5%)   │ 10 (45.5%)     │
 ├─────────────────────────┼──────────────┼──────────────┼────────────────┤
-│ Total                   │ 54           │ 33 (61.1%)   │ 21 (38.9%)     │
+│ Total                   │ 54           │ 40 (74.1%)   │ 14 (25.9%)     │
 └─────────────────────────┴──────────────┴──────────────┴────────────────┘
 ```
+
+---
+
+## 1.1 Resolução Integral da Auditoria Externa (20/10/2026 — ADR-0031)
+
+A auditoria externa independente sobre o commit `7981df2` identificou 8 pontos de atenção, todos remediados e testados com zero falhas:
+
+| Nível | Gap da Auditoria Externa | Status | Resolução & Verificação |
+| :---: | :--- | :---: | :--- |
+| **P0** | Comparação de inteiros via float em `_values_semantically_equal` (`core.py:145-147`) gerava falso-positivo para inteiros $> 2^{53}$. | ✅ **RESOLVIDO** | `_values_semantically_equal` em `src/axiom/core.py` agora compara inteiros de forma estritamente exata (nunca via `float`), suporta `Decimal` para strings numéricas exatas e rejeita adulteração de 1 unidade para inteiros $> 2^{53}$ (`2**53` vs `2**53+1`, `binomial(100, 50)`). Testado em [tests/test_epistemic_states.py](tests/test_epistemic_states.py). |
+| **P1** | Asserção rígida de índice de passo em teste de sessão (`test_axiom.py:402, 415`) quebrava matriz CI. | ✅ **RESOLVIDO** | Localização dinâmica do passo Lean via `kind == "prove"` implementada em [tests/test_axiom.py](tests/test_axiom.py), eliminando dependência frágil de índices ordinais fixos. |
+| **P1** | `REFUTATION` podia ser inferido de string ou status sem exigir certificado de testemunha. | ✅ **RESOLVIDO** | `has_refutation_evidence` em [src/axiom/contract.py](src/axiom/contract.py) exige prova positiva de falsidade: contraexemplo/testemunha explícito ou tipo de verificação inerentemente refutador com detalhe, retornando `INCONCLUSIVE` em qualquer falha sem testemunha. Testado em [tests/test_epistemic_states.py](tests/test_epistemic_states.py). |
+| **P1** | Permissões MCP abrangiam o diretório temporário global do sistema operacional (`mcp_server.py:564-575`). | ✅ **RESOLVIDO** | `get_authorized_roots` em [src/axiom/mcp_server.py](src/axiom/mcp_server.py) restringe o acesso por padrão estritamente ao diretório do projeto (`cwd`) e a um subdiretório isolado em temp (`tempfile/axiom`), prevenindo acesso a arquivos arbitrários do SO (Least Privilege / CWE-22). |
+| **P1** | Completude dos teoremas formais dos Dias 09 e 10 frente aos enunciados acadêmicos. | ✅ **RESOLVIDO** | Adicionado o teorema bicondicional `diophantine_general_iff` em [research/arithmetic/dia_09_diophantine.lean](research/arithmetic/dia_09_diophantine.lean) e o teorema de coprimaridade modular `common_divisor_dvd_one_of_invertible` em [research/arithmetic/dia_10_congruences.lean](research/arithmetic/dia_10_congruences.lean). |
+| **P2** | Esquema MCP de `math_number_theory` omitia operações disponíveis no motor e CLI (`divisors`, `primefactors`, `factors_perm_check`). | ✅ **RESOLVIDO** | Atualizado esquema JSON-RPC de `math_number_theory` e despacho em [src/axiom/mcp_server.py](src/axiom/mcp_server.py) com todos os parâmetros (`factors1`, `factors2`). Testado em [tests/test_axiom.py](tests/test_axiom.py). |
+| **P2** | Exemplo em `research/arithmetic/README.md` referenciava `res.status` inexistente em `MathResult`. | ✅ **RESOLVIDO** | Corrigido para `print(res.epistemic_state, res.verified, res.guarantee)` em [research/arithmetic/README.md](research/arithmetic/README.md). |
+| **P2** | ADRs referenciavam checklist sem versão rastreada no repositório. | ✅ **RESOLVIDO** | Checklist sincronizado e versionado em [research/CHECKLIST_PROVAS.md](research/CHECKLIST_PROVAS.md), registrando 10/120 dias e clarificando o marco acadêmico de 100% dos tópicos fundamentais selecionados do Livro 1. |
 
 ---
 

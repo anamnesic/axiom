@@ -52,7 +52,7 @@ from axiom import Axiom
 
 ax = Axiom()
 res = ax.verify_lean_file("research/arithmetic/dia_06_fundamental_theorem_existence.lean")
-print(res.status, res.verified, res.guarantee)
+print(res.epistemic_state, res.verified, res.guarantee)
 ```
 
 ### 3. Na Integração Contínua (CI)

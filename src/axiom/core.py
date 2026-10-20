@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import json
+from decimal import Decimal
 from pathlib import Path
 import re
 from typing import Any
@@ -17,11 +18,13 @@ import mpmath as mp
 import sympy as sp
 
 from axiom.contract import (
+    EpistemicState,
     Evidence,
     Guarantee,
     MathResult,
     Verification,
     error_result,
+    outcome_word,
 )
 from axiom.engines.base import Answer, Engine, EngineError
 from axiom.parsing import ParseError, Parser, extract_expression_excluded_points
@@ -128,21 +131,75 @@ def _split_top_level_equality(text: str) -> tuple[str, str] | None:
         i += 1
 
 
+# Numeric literal accepted for exact (decimal) comparison of a persisted value.
+_NUMERIC_LITERAL_RE = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
+
+
+def _is_exact_int(value: Any) -> bool:
+    """True for a genuine Python ``int``.
+
+    ``bool`` is a subclass of ``int`` but is not a numeric payload, so it is
+    excluded on purpose.
+    """
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def _values_semantically_equal(
     recomputed_val: Any,
     persisted_val: Any,
     recomputed_str: str | None = None,
     persisted_str: str | None = None,
 ) -> bool:
-    """Compare a recomputed value with a persisted JSON payload value for tamper detection."""
+    """Compare a recomputed value with a persisted JSON payload value for tamper detection.
+
+    Integrity contract (ADR-0031):
+
+    * Two integers are compared **exactly**. Integer equality is never routed
+      through a binary ``float``: IEEE-754 doubles silently collapse distinct
+      integers above ``2**53`` (``float(2**53) == float(2**53 + 1)`` is
+      ``True``), so a float-mediated comparison would accept a tampered
+      payload whose value was altered by one unit.
+    * A numeric *tolerance* is admissible only between values that are
+      already floating-point approximations. It is never used to reconcile two
+      different exact integers, nor an exact integer with a different float.
+    """
     if persisted_val is None:
         return True
     if recomputed_val == persisted_val:
         return True
     if str(recomputed_val) == str(persisted_val):
         return True
+
+    # --- numeric comparison -------------------------------------------------
+    # NB: the `recomputed_val == persisted_val` check above already performed
+    # an *exact* int/float comparison (Python compares an int against a float
+    # without rounding the int), so reaching this point means the two differ.
+    if _is_exact_int(recomputed_val) and isinstance(persisted_val, str):
+        # Persisted as a numeric string. Compare it as an exact decimal so
+        # that a large integer is not rounded through a binary float.
+        text = persisted_val.strip()
+        if _NUMERIC_LITERAL_RE.fullmatch(text):
+            try:
+                return Decimal(text) == recomputed_val
+            except (ArithmeticError, ValueError):
+                pass
+    if _is_exact_int(persisted_val) and isinstance(recomputed_val, str):
+        text = recomputed_val.strip()
+        if _NUMERIC_LITERAL_RE.fullmatch(text):
+            try:
+                return Decimal(text) == persisted_val
+            except (ArithmeticError, ValueError):
+                pass
     try:
         if isinstance(recomputed_val, (int, float)) and isinstance(persisted_val, (int, float, str)):
+            if _is_exact_int(recomputed_val) and _is_exact_int(persisted_val):
+                # Two distinct exact integers: never reconcile them via float.
+                return False
+            if _is_exact_int(recomputed_val) != _is_exact_int(persisted_val):
+                # Exact integer vs. float: the exact comparison above already
+                # decided this pair, and a float conversion could round the
+                # integer (and hide a one-unit tampering).
+                return False
             if float(recomputed_val) == float(persisted_val):
                 return True
     except Exception:
@@ -1449,7 +1506,7 @@ class Axiom:
                 input=f"{target_str} @ {var} in {[str(s) for s in sols]}",
                 ok=True,
                 value={"verified": ver.passed, "candidates": [str(s) for s in sols]},
-                value_str="verified" if ver.passed else "refuted",
+                value_str=outcome_word(ver),
                 latex=sp.latex(equation),
                 variables=[str(var)],
                 guarantee=guar,
@@ -1558,7 +1615,7 @@ class Axiom:
                 input=label,
                 ok=True,
                 value={"verified": ver.passed},
-                value_str="verified" if ver.passed else "refuted",
+                value_str=outcome_word(ver),
                 variables=[str(sym_var)],
                 guarantee=guar,
                 evidence=Evidence(
@@ -2842,7 +2899,10 @@ class Axiom:
                 detail = (
                     ver_res.verification.detail if ver_res.verification else "verified"
                 )
-            elif ver_res.ok and not ver_res.verified:
+            elif ver_res.ok and ver_res.epistemic_state is EpistemicState.REFUTATION:
+                # Only a result carrying positive evidence of falsity (an explicit
+                # counterexample / violating substitution) may be reported as
+                # refuted. A check that merely failed leaves the hypothesis open.
                 status = "refuted"
                 guar = Guarantee.UNVERIFIED
                 detail = (
@@ -2851,7 +2911,11 @@ class Axiom:
             else:
                 status = "open"
                 guar = Guarantee.UNVERIFIED
-                detail = ver_res.error or "unverified conjecture"
+                detail = (
+                    ver_res.verification.detail
+                    if ver_res.ok and ver_res.verification
+                    else (ver_res.error or "unverified conjecture")
+                )
             sess.add_hypothesis(
                 hypothesis, status=status, guarantee=guar, detail=detail
             )

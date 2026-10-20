@@ -1,10 +1,16 @@
 """EXP-0001: Verificação Quantitativa de Integridade de Domínio e Comportamento Fail-Closed.
 
 Compara o comportamento do AXIOM v0.2.1 frente a um CAS ingênuo (SymPy cru sem contratos)
-em 20 casos críticos de fronteira de domínio, branch cuts, singularidades e polos.
+em 21 casos críticos de fronteira de domínio, branch cuts, singularidades e polos.
 
 Uso:
     python experiments/exp-0001/run.py
+
+Nota de proveniência (ADR-0031): o baseline "Naive CAS" é um *emulador* do
+comportamento de um CAS sem contrato, executado sobre SymPy. Ele NÃO é o
+SymPy 1.12 cru, e a ramo ``formal_proof`` é *simulado* (não invoca o
+compilador Lean). Ver ``BASELINE_PROVENANCE`` e ``summary["baseline"]`` para
+os metadados exatos registrados em ``results.json``.
 """
 
 from __future__ import annotations
@@ -17,6 +23,8 @@ import time
 
 # Garantir importação do pacote local axiom
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
@@ -24,8 +32,39 @@ from axiom import Axiom, Guarantee
 import sympy as sp
 
 
+# Metadados de proveniência do baseline. Registrados em ``results.json`` para
+# que qualquer leitor possa distinguir *medição observada* de *simulação*.
+BASELINE_PROVENANCE = {
+    "name": "Naive CAS (emulated)",
+    "kind": "emulated-on-sympy",
+    "sympy_version": sp.__version__,
+    "description": (
+        "Emulation of an unguarded CAS: sp.simplify / sp.evalf without AST "
+        "denominator analysis, without orthogonal proof contracts, and with a "
+        "fixed 6-point sampling probe (-1, 2, I, -I, 1+I, -2) that is applied "
+        "to the residual before declaring equivalence."
+    ),
+    "includes_fixed_point_sampling": True,
+    "fixed_probe_points": ["-1", "2", "I", "-I", "1 + I", "-2"],
+    "formal_proof_branch": "simulated: returns accepted=True without invoking the Lean compiler",
+    "is_observed_measurement": False,
+    "caveat": (
+        "The formal_proof baseline row is a SIMULATION of an unaudited Lean "
+        "runner, not an observed execution of an external compiler. The "
+        "reported false-positive rate therefore describes the emulation, not "
+        "a measured SymPy/Lean toolchain."
+    ),
+}
+
+
 def run_naive_cas(test_type: str, item: dict) -> dict:
-    """Simula a execução de um CAS ingênuo sem verificação ortogonal nem auditoria de domínio."""
+    """Emulate the execution of an unguarded CAS.
+
+    This is *not* unwrapped SymPy: the equivalence branch adds a fixed
+    6-point sampling probe on the residual, and the ``formal_proof`` branch
+    is simulated (the Lean compiler is never invoked). See
+    :data:`BASELINE_PROVENANCE`.
+    """
     try:
         if test_type == "equivalence":
             lhs = sp.sympify(item["left"])
@@ -67,10 +106,17 @@ def run_naive_cas(test_type: str, item: dict) -> dict:
             is_finite = not res.has(sp.Integral, sp.zoo, sp.nan, sp.oo, -sp.oo)
             return {"accepted": is_finite, "value": str(res)}
         elif test_type == "formal_proof":
+            # SIMULATED BASELINE (no Lean invocation).
             # Runner ingênuo sem auditoria de axiomas (#print axioms):
             # O compilador Lean aceita teoremas com 'sorry' emitindo apenas warning com exit code 0;
-            # Um verificador sem auditoria rigorosa de axiomas aceita a declaração como provada
-            return {"accepted": True, "detail": "lean accepted with exit code 0 (unaudited sorryAx)"}
+            # Um verificador sem auditoria rigorosa de axiomas aceita a declaração como provada.
+            # NOTE: this row is a SIMULATION, not an observed external-executor
+            # measurement. It is flagged as such in the emitted results.
+            return {
+                "accepted": True,
+                "detail": "SIMULATED: lean accepted with exit code 0 (unaudited sorryAx)",
+                "simulated": True,
+            }
     except Exception as exc:
         return {"accepted": False, "error": str(exc)}
     return {"accepted": False, "detail": "unknown"}
@@ -373,6 +419,7 @@ def main() -> int:
                 "detail": naive_res.get("detail", naive_res.get("value", "")),
                 "is_false_positive": naive_fp,
                 "is_false_negative": naive_fn,
+                "simulated": bool(naive_res.get("simulated", False)),
             },
         })
 
@@ -403,6 +450,7 @@ def main() -> int:
         "total_test_cases": n,
         "valid_cases": valid_cases,
         "invalid_cases": invalid_cases,
+        "baseline": BASELINE_PROVENANCE,
         "metrics": {
             "axiom": {
                 "false_positives": ax_fp_count,

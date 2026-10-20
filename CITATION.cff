@@ -3,8 +3,8 @@ message: "If you use Chronokairo AXIOM in your academic research or applications
 title: "Chronokairo AXIOM: Mathematical Reasoning Engine with Independent Verification and Domain Integrity"
 abstract: "AXIOM is a neuro-symbolic mathematical reasoning engine designed for autonomous coding agents. It unifies Computer Algebra Systems (SymPy, mpmath), Interactive Theorem Provers (Lean 4, Mathlib4), and a strict six-level mathematical guarantee hierarchy over the Model Context Protocol (MCP) and deterministic CLI."
 type: software
-version: 0.2.3
-date-released: "2026-10-17"
+version: 0.2.9
+date-released: "2026-10-20"
 license: MIT
 repository-code: "https://github.com/chronokairo/axiom"
 url: "https://chronokairo.com"

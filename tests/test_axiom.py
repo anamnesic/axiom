@@ -393,14 +393,37 @@ class TestAxiom(unittest.TestCase):
             
             lean_avail = ax.registry.get("lean").available
             st = ax.session("status", name="demo", directory=td)
+
+            def _prove_step_indices(status_result) -> list[int]:
+                """Indices of the Lean/formal-proof steps of a session.
+
+                The step ordinal is positional, not semantic: it shifts as soon
+                as a hypothesis or an extra record is added. Identifying the
+                Lean step by its operation kind keeps the assertion attached
+                to the step it actually describes.
+                """
+                return [
+                    e["step_index"]
+                    for e in status_result.value["entries"]
+                    if e.get("kind") == "prove"
+                ]
+
             if lean_avail:
                 self.assertTrue(st.value["step_validity"]["all_steps_valid"])
             else:
-                # Fail-closed integrity: without Lean toolchain on runner, Lean step 5 is unverified,
-                # while all other steps (algebraic, symbolic, number-theory) are fully valid.
+                # Fail-closed integrity: without Lean toolchain on runner, the Lean
+                # step is unverified, while all other steps (algebraic, symbolic,
+                # number-theory) are fully valid.
                 self.assertFalse(st.value["step_validity"]["all_steps_valid"])
-                self.assertIn(5, st.value["step_validity"]["invalid_steps"])
-                self.assertEqual(st.value["step_validity"]["valid_count"], len(st.value["entries"]) - 1)
+                prove_steps = _prove_step_indices(st)
+                self.assertEqual(len(prove_steps), 1)
+                self.assertEqual(
+                    set(st.value["step_validity"]["invalid_steps"]), set(prove_steps)
+                )
+                self.assertEqual(
+                    st.value["step_validity"]["valid_count"],
+                    len(st.value["entries"]) - len(prove_steps),
+                )
 
             # Direct diff, limit, and stats revalidation
             r_diff = ax.differentiate("x^3 + 2*x", variable="x")
@@ -412,8 +435,15 @@ class TestAxiom(unittest.TestCase):
                 self.assertTrue(st_multi.value["step_validity"]["all_steps_valid"])
             else:
                 self.assertFalse(st_multi.value["step_validity"]["all_steps_valid"])
-                self.assertIn(5, st_multi.value["step_validity"]["invalid_steps"])
-                self.assertEqual(st_multi.value["step_validity"]["valid_count"], len(st_multi.value["entries"]) - 1)
+                prove_steps = _prove_step_indices(st_multi)
+                self.assertEqual(len(prove_steps), 1)
+                self.assertEqual(
+                    set(st_multi.value["step_validity"]["invalid_steps"]), set(prove_steps)
+                )
+                self.assertEqual(
+                    st_multi.value["step_validity"]["valid_count"],
+                    len(st_multi.value["entries"]) - len(prove_steps),
+                )
 
     def test_number_theory_factors_perm_check(self) -> None:
         ax = Axiom()
@@ -959,6 +989,30 @@ class TestAxiom(unittest.TestCase):
             dispatch_tool(
                 "math_number_theory",
                 {"operation": "factorint", "n": 120},
+            ).verified
+        )
+        self.assertTrue(
+            dispatch_tool(
+                "math_number_theory",
+                {"operation": "nextprime", "n": 10},
+            ).verified
+        )
+        self.assertTrue(
+            dispatch_tool(
+                "math_number_theory",
+                {"operation": "divisors", "n": 12},
+            ).verified
+        )
+        self.assertTrue(
+            dispatch_tool(
+                "math_number_theory",
+                {"operation": "primefactors", "n": 360},
+            ).verified
+        )
+        self.assertTrue(
+            dispatch_tool(
+                "math_number_theory",
+                {"operation": "factors_perm_check", "factors1": [2, 3, 5], "factors2": [5, 2, 3]},
             ).verified
         )
         self.assertTrue(

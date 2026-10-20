@@ -13,7 +13,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from axiom.contract import Evidence, Guarantee, MathResult, Verification
+from axiom.contract import (
+    EpistemicState,
+    Evidence,
+    Guarantee,
+    MathResult,
+    Verification,
+)
 
 
 @dataclass
@@ -291,14 +297,21 @@ class ResearchSession:
                 h.status = "verified"
                 h.guarantee = ver_res.guarantee.value
                 h.detail = ver_res.verification.detail if ver_res.verification else "verified"
-            elif ver_res.ok and not ver_res.verified:
+            elif ver_res.ok and ver_res.epistemic_state is EpistemicState.REFUTATION:
+                # Only a result carrying positive evidence of falsity (an explicit
+                # counterexample / violating substitution) may be reported as
+                # refuted. A check that merely failed is inconclusive.
                 h.status = "refuted"
                 h.guarantee = Guarantee.UNVERIFIED.value
                 h.detail = ver_res.verification.detail if ver_res.verification else "refuted"
             else:
                 h.status = "open"
                 h.guarantee = Guarantee.UNVERIFIED.value
-                h.detail = ver_res.error or "unverified conjecture"
+                h.detail = (
+                    ver_res.verification.detail
+                    if ver_res.ok and ver_res.verification
+                    else (ver_res.error or "unverified conjecture")
+                )
         return self.all_steps_valid
 
     def format_status(self) -> str:
