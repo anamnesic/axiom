@@ -8,52 +8,56 @@
 
 **English** · [简体中文](docs/readme/README_zh.md) · [繁體中文](docs/readme/README_zh-TW.md) · [日本語](docs/readme/README_ja.md) · [한국어](docs/readme/README_ko.md) · [Türkçe](docs/readme/README_tr.md) · [Русский](docs/readme/README_ru.md) · [Tiếng Việt](docs/readme/README_vi.md) · [ไทย](docs/readme/README_th.md) · [Deutsch](docs/readme/README_de.md) · [Español](docs/readme/README_es.md) · [Français](docs/readme/README_fr.md) · [Português (Brasil)](docs/readme/README_pt-BR.md) · [العربية](docs/readme/README_ar.md) · [فارسی](docs/readme/README_fa.md) · [Italiano](docs/readme/README_it.md) · [Ελληνικά](docs/readme/README_el.md)
 
-AXIOM is a computational mathematics infrastructure for AI agents, researchers, students, and developers. It connects any MCP client to specialized mathematics engines — **SymPy**, **mpmath / SciPy**, **SageMath**, **Julia**, and **Lean 4 / Mathlib 4** — through a unified contract, with traceable results that are **independently verified**.
+AXIOM is a computational mathematics infrastructure for AI agents, researchers, students, and developers. It connects any Model Context Protocol (MCP) client to specialized mathematics engines — **SymPy**, **mpmath / SciPy**, **SageMath**, **Julia**, and **Lean 4 / Mathlib 4** — through a unified contract, where every result carries structured evidence and is **independently verified**.
 
-It is not an AI-powered calculator. It is not another Mathematica, SageMath, or Lean. It is the infrastructure that lets agents use all of them through a single interface.
+It is not an AI-powered calculator. It is not another Mathematica, SageMath, or Lean. It is the neuro-symbolic infrastructure that lets reasoning agents interact with all of them through a single verified interface.
 
 > Inspired by the philosophy of [REA](https://github.com/morluto/rea): *reverse engineer anything* → **investigate mathematics with agents**.
 
+---
+
 ## Why AXIOM
 
-An agent may claim it solved an equation. AXIOM **requires independent verification** before a result is trusted.
+When an AI agent claims it solved an equation, standard tools take its word for it. AXIOM **requires independent mathematical verification** before a claim is accepted.
 
 ```bash
 axiom solve "x^2 - 5*x + 6 = 0"
 ```
 
 ```text
-┌─ AXIOM · solve ──────────────────────────────────────────────────────┐
-│ Input         x^2 - 5*x + 6 = 0                                      │
-│ Result        [2, 3]                                                 │
-│ LaTeX         2, 3                                                   │
-│ Guarantee     [VERIFIED] VERIFIED-SUBSTITUTION                       │
-│ Engine        sympy 1.14.0 (symbolic algebraic solver (sympy.solve)) │
-│ Verification  exact-substitution: PASSED — All 2 solution(s)         │
-│               verified by exact symbolic substitution (max residual  │
-│               0.00e+00)                                              │
-│ Reproduce     axiom solve "x^2 - 5*x + 6 = 0" --variable x           │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · solve ───────────────────────────────────────────────────────────────────────┐
+│ Solve            x^2 - 5*x + 6 = 0                                                    │
+│ Result           ['2', '3']                                                           │
+│ LaTeX            2, 3                                                                 │
+│ Engine           sympy 1.14.0                                                         │
+│ Method           algebraic solve (sympy.solve + domain & solveset completeness audit) │
+│ Verification     exact-substitution: PASSED                                           │
+│ Detail           Both roots satisfy the equation by exact substitution                │
+│ Epistemic State  PROOF                                                                │
+│ Guarantee        [VERIFIED] VERIFIED-SUBSTITUTION                                     │
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### The Four Epistemic States
+---
+
+## The Four Epistemic States
 
 AXIOM strictly categorizes all mathematical reasoning and computational output into **four mutually exclusive epistemic states** ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md)):
 
-| Epistemic State | Core Guarantees & Status | Definition & Invariants | Fail-Closed Verification Criteria |
+| Epistemic State | Underlying Guarantees | Epistemic Definition | Fail-Closed Verification Criteria |
 | :--- | :--- | :--- | :--- |
-| **Proof** *(Prova)* | `formal-proof`, `exact-symbolic`, `verified-substitution` | Certified mathematical truth. An exact symbolic identity, machine-checked Lean 4 kernel derivation (`#print axioms`), or verified equation roots. | `Verification.passed == True`, exact symbolic residual $0$, no unverified axioms/hypotheses, congruent spec alignment. |
-| **Approximation** *(Aproximação)* | `numerical-approximation`, `approximately_equal` | Numerical evaluation or bounded sequence probing within specified tolerance $\epsilon$. Inexact float absorption is rejected. | Finite error $\le \epsilon$, `equivalent == False`, `approximately_equal == True`. Never granted `EXACT_SYMBOLIC`. |
-| **Refutation** *(Refutação)* | `refuted`, `disproven` | Concrete counterexample discovered, candidate root fails substitution ($f(r) \neq 0$), or reflexive tautology rejected. | Independent verification proves the claim is false. `Verification.passed == False`, `value_str == "refuted"`. |
-| **Inconclusive** *(Inconclusão)* | `inconclusive`, `unverified` | Truth or equivalence cannot be determined within available symbolic algorithms, samples, or timeouts. | Fail-closed state. `guarantee == Guarantee.UNVERIFIED`. Never promoted to proof. |
+| **Proof** | `formal-proof`, `exact-symbolic`, `verified-substitution` | Certified mathematical truth. An exact symbolic identity, machine-checked Lean 4 kernel derivation (`#print axioms`), or verified equation roots. | `Verification.passed == True`, exact symbolic residual $0$, no unverified axioms/hypotheses, congruent spec alignment. |
+| **Approximation** | `numerical-approximation` | Quantitative evaluation or bounded sequence probing within specified tolerance $\epsilon$. Inexact float absorption is rejected. | Finite error $\le \epsilon$, `equivalent == False`, `approximately_equal == True`. Never granted `EXACT_SYMBOLIC`. |
+| **Refutation** | `[REFUTED] DISPROVEN` | The proposition is decisively proven false via a concrete counterexample ($f(x^*) \neq 0$), contradiction, or non-zero residual. | Independent verification disproves the claim. `Verification.passed == False`, witness recorded in `detail`. |
+| **Inconclusive** | `[UNVERIFIED] UNVERIFIED` | Truth value cannot be established within available symbolic algorithms, branch bounds, or execution timeouts. | Fail-closed state. `guarantee == Guarantee.UNVERIFIED`. Never promoted to proof. |
 
-### Guarantee levels
+### Guarantee Hierarchy
 
-Not every operation carries the same logical strength. AXIOM separates **mathematical correctness claims** (`guarantee.is_mathematical_claim == True`, which strictly require an executed `Verification(passed=True)` in `MathResult`) from **operational / structural states** (`is_mathematical_claim == False`):
+Not every computation carries the same logical strength. AXIOM separates **mathematical correctness claims** (`is_mathematical_claim == True`, requiring an executed `Verification(passed=True)`) from **operational states** (`is_mathematical_claim == False`):
 
 | Level | Category | Meaning |
-| --- | --- | --- |
-| `formal-proof` | Mathematical Claim | Proof verified by the Lean 4 kernel (`#print axioms` confirmed, `sorry`/`admit` and trivial `X = X` tautologies rejected) |
+| :--- | :--- | :--- |
+| `formal-proof` | Mathematical Claim | Proof verified by the Lean 4 kernel (`#print axioms` confirmed, `sorry`/`admit` and trivial $X = X$ tautologies rejected) |
 | `exact-symbolic` | Mathematical Claim | Verified symbolic identity (canonical simplification, FTC antiderivative round-trip, symbolic L'Hôpital, with optional `assumptions`) |
 | `verified-substitution` | Mathematical Claim | Solution validated by independent substitution ($f(r)=0$, $A A^{-1}=I$, $\nabla_\lambda g_{\mu\nu}=0$) with pole & domain-error rejection |
 | `numerical-approximation` | Mathematical Claim | Arbitrary-precision evaluation, finite-difference check, adaptive quadrature, or two-sided sequence limit probe with declared `max_error` |
@@ -61,34 +65,18 @@ Not every operation carries the same logical strength. AXIOM separates **mathema
 | `catalog-lookup` | Operational State | Indexed declaration retrieved from the curated Mathlib 4 catalog or Loogle API |
 | `sampled-visualization` | Operational State | Sampled 1D curve coordinates rendered to vector SVG and ASCII preview |
 | `heuristic` | Operational State | Plausible pattern, exploratory summary, or open conjecture not yet verified |
-| `unverified` | Operational State | Refuted claim, interior pole / jump discontinuity failure, or unverified computation |
+| `unverified` | Operational State | Refuted claim, interior pole / jump discontinuity failure, or inconclusive computation |
 
 Every result carries structured `Evidence` metadata: `engine`, `engine_version`, `method`, `steps`, `limitations`, and `reproducible_with`.
 
-## Philosophy (inherited from REA)
-
-| REA (Reverse Engineer Anything) | AXIOM (Investigate Mathematics) |
-| --- | --- |
-| Reverse engineer anything | Investigate mathematics |
-| Target binary, app, or behavior | Equation, conjecture, theorem, or mathematical model |
-| Decompilation & disassembly | Symbolic decomposition, binders & formal signature extraction |
-| Call graph & control flow graph (CFG) | Proof Dependency Graph (DAG of lemmas and premises) |
-| Static & symbolic analysis | Algebraic reduction, domain invariants & FTC verification |
-| Dynamic analysis & fuzzing | Complex Gaussian probing, numerical quadrature & counterexamples |
-| Function tracing | Proof step tracing & derivation tracking |
-| Behavior comparison | Equivalence verification (ternary: proven / disproven / inconclusive) |
-| Ghidra / Hopper / IDA / GDB | SymPy / mpmath / SageMath / Julia / Lean 4 |
-| Evidence bundle (`get_evidence_bundle`) | Mathematical Evidence Bundle (`.axiom/investigations/<id>/bundle.json`) |
-| Unknowns catalog (`list_unknowns`) | **Unknown Ledger**: explicit gaps and open proof obligations |
-| MCP for reverse engineering agents | One MCP for mathematical investigation, computation & verification |
-| Interactive CLI | Rigorous Mathematical CLI |
+---
 
 ## Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │  AI Agents                                               │
-│  Antigravity · Codex · Claude Code · Cursor · Gemini CLI │
+│  Antigravity · Codex · Claude Code · Cursor · Copilot    │
 └────────────────────────┬─────────────────────────────────┘
                          │  MCP (21 tools) / CLI
 ┌────────────────────────▼─────────────────────────────────┐
@@ -103,11 +91,14 @@ Every result carries structured `Evidence` metadata: `engine`, `engine_version`,
  SageMath   Julia       Mathlib4   ASCII Preview · Matplotlib
 ```
 
-The same contract holds regardless of which software performs the computation: swapping engines changes neither the result format nor the guarantee level.
+---
 
 ## Quick Start
 
 ```bash
+# Clone and install locally
+git clone https://github.com/chronokairo/axiom.git
+cd axiom
 pip install -e .
 
 # Run environment & verification diagnostics
@@ -120,173 +111,148 @@ axiom setup --apply
 axiom mcp
 ```
 
-## Domains & Capabilities
+---
 
-| Module | Capabilities & Independent Verification |
-| --- | --- |
-| `arithmetic` | Exact rationals, arbitrary-precision `mpmath` evaluation |
-| `algebra` | Equations, non-linear systems, polynomials, factoring, simplification, symbol `assumptions`, periodic solution families |
-| `calculus` | Two-sided & directional limits, derivatives, definite/indefinite integrals with interior pole detection, Taylor series |
-| `linear-algebra` | Matrices (`eigen`, `inv`, `det`, `lu`, `rref`, `solve`, `trace`) verified via $A A^{-1}=I$, $PA=LU$, $Av=\lambda v$ |
-| `tensor` | Differential geometry: $g^{\mu\nu}$, Christoffel $\Gamma^\lambda_{\mu\nu}$, Riemann, Ricci, Einstein tensors verified via Levi-Civita $\nabla_\lambda g_{\mu\nu}=0$ |
-| `number-theory` | Prime factorization (`factorint`), primality, Extended GCD (Bézout check), Chinese Remainder Theorem (`crt`), Euler totient, binomials |
-| `differential-equations` | Symbolic ODE solver (`dsolve`) verified by back-substitution into the differential equation |
-| `optimization` | Symbolic/numerical minimization & maximization verified via $f'(x^*)=0$ and neighborhood perturbations |
-| `statistics` | Exact rational/symbolic mean, median, variance, stdev verified via König-Huygens identity $\sigma^2 = E[X^2] - \mu^2$ |
-| `proof` | Lean 4 kernel checking (`#print axioms` + `X = X` tautology audit), symbolic-to-Lean auto-formalization, and Mathlib 4 theorem search |
-| `visualization` | Zero-dependency vector SVG generation, terminal ASCII curve preview, and optional Matplotlib export (`sampled-visualization`) |
-| `research` | Multi-step persistent sessions (`math_session`) with weakest-link `chain_guarantee` tracking and Markdown export |
+## The Four Epistemic States in Action (CLI & MCP)
 
-## 21 Composable MCP Tools (by Category)
-
-| Category | Count | Tools |
-| --- | :---: | --- |
-| **1. Mathematical Computation** (independently verified) | 12 | `math_simplify`, `math_solve`, `math_differentiate`, `math_integrate`, `math_limit`, `math_evaluate`, `math_matrix`, `math_ode`, `math_number_theory`, `math_optimize`, `math_statistics`, `math_tensor` |
-| **2. Verification & Formal Proof** | 3 | `math_prove`, `math_verify`, `math_compare` |
-| **3. Structural & Diagnostic** | 3 | `math_parse` (`structural-parse`), `math_explain`, `math_explore` (`heuristic`) |
-| **4. Catalog Lookup** | 1 | `math_search_mathlib` (`catalog-lookup`) |
-| **5. Visualization & Session** | 2 | `math_plot` (`sampled-visualization`), `math_session` (weakest-link `chain_guarantee`) |
-
-### Use Cases: The Four Epistemic States in Action (CLI & MCP)
-
-AXIOM ensures that AI agents and human researchers can reliably trigger and inspect each epistemic state via both the command line (`axiom`) and MCP tools:
-
-#### 1. Proof (Certified Mathematical Truth)
-- **CLI (Equation Root Verification)**:
-  ```bash
-  axiom solve "x^2 - 5*x + 6 = 0"
-  # Output: Guarantee: [VERIFIED] VERIFIED-SUBSTITUTION (residual 0.00e+00)
-  ```
-- **CLI (Lean 4 Formal Proof Audit)**:
-  ```bash
-  axiom prove "theorem nat_add_comm (n m : Nat) : n + m = m + n := by omega" --engine lean
-  # Output: Guarantee: [VERIFIED] FORMAL-PROOF (Lean 4 kernel checked, #print axioms verified)
-  ```
-- **MCP Tool (`math_solve` / `math_prove`)**:
-  ```json
-  // Request: math_solve {"equation": "x^2 - 5*x + 6 = 0"}
-  // Result: {"value": [2, 3], "guarantee": "verified-substitution", "verification": {"passed": true}}
-  ```
-
-#### 2. Approximation (Bounded Numerical Evidence)
-- **CLI (High-Precision Numerical Comparison)**:
-  ```bash
-  axiom compare "pi" "3.141592653589793" --tolerance 1e-12
-  # Output: Guarantee: [APPROXIMATE] NUMERICAL-APPROXIMATION (approximately_equal=true, equivalent=false)
-  ```
-- **CLI (Arbitrary-Precision Arithmetic)**:
-  ```bash
-  axiom evaluate "sqrt(2)" --precision 50
-  # Output: Guarantee: [APPROXIMATE] NUMERICAL-APPROXIMATION (50 decimal places)
-  ```
-- **MCP Tool (`math_compare` / `math_evaluate`)**:
-  ```json
-  // Request: math_compare {"a": "pi", "b": "3.141592653589793", "tolerance": 1e-12}
-  // Result: {"value": "approximately_equal", "guarantee": "numerical-approximation", "verification": {"passed": true}}
-  ```
-
-#### 3. Refutation (Active Counterexample Discovery)
-- **CLI (Refuting Adversarial Identity Claim)**:
-  ```bash
-  # Claim: P(x) = (x+1)*(x-2)*(x^2+1)*(x^2-2*x+2) == 0
-  axiom compare "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)" "0"
-  # Output: Guarantee: [REFUTED] UNVERIFIED (counterexample discovered at x=3: P(3)=130 != 0)
-  ```
-- **CLI (Rejecting Fake/Trivial Tautology in Lean)**:
-  ```bash
-  axiom prove "theorem fake : 1 = 2 := by admit" --engine lean
-  # Output: Verification: FAILED (sorry/admit detected, UNVERIFIED)
-  ```
-- **MCP Tool (`math_compare` / `math_verify`)**:
-  ```json
-  // Request: math_compare {"a": "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)", "b": "0"}
-  // Result: {"value": "refuted", "guarantee": "unverified", "verification": {"passed": false, "counterexample": {"x": 3}}}
-  ```
-
-#### 4. Inconclusive & Multi-Step Derivation Chains
-- **CLI (Multi-Step Research Session with Isolated Step vs. Chain Validity)**:
-  ```bash
-  axiom session new --title "Navier-Stokes Dissipation"
-  axiom session record --step 1 --command "axiom solve 'x - 1 = 0'"
-  axiom session record --step 2 --command "axiom prove 'x = 2' --engine sympy" --depends-on 1
-  axiom session status
-  # Step 1: step_valid=True, chain_valid=True
-  # Step 2: step_valid=False, chain_valid=False (broken dependency triggers fail-closed chain)
-  ```
-- **MCP Tool (`math_session` / `math_plot`)**:
-  ```json
-  // Request: math_session {"action": "record", "expression": "x = 2", "depends_on": [1]}
-  // Result: {"step_valid": false, "chain_valid": false, "chain_guarantee": "unverified"}
-  // Request: math_plot {"expression": "sin(x)/x", "output": "sinc.svg"}
-  // Result: {"guarantee": "sampled-visualization", "verification": {"passed": true}}
-  ```
-
-### CLI Quick Reference
+### 1. Proof (Certified Mathematical Truth)
 
 ```bash
 axiom solve "x^2 - 5*x + 6 = 0"
-axiom integrate "sin(x)^2" --variable x
-axiom matrix "[[4, 1], [2, 3]]" --op eigen
-axiom ode "diff(y(x), x) + 2*y(x) = exp(x)"
-axiom number-theory crt --remainders 2,3,2 --moduli 3,5,7
-axiom tensor sphere
-axiom search-mathlib "binomial square"
-axiom plot "sin(x)/x" --range -10:10 --output sinc.svg
-axiom prove examples/theorems.lean --engine lean
-axiom verify solution.json
-axiom session status
+```
+```text
+┌─ AXIOM · solve ───────────────────────────────────────────────────────────────────────┐
+│ Solve            x^2 - 5*x + 6 = 0                                                    │
+│ Result           ['2', '3']                                                           │
+│ LaTeX            2, 3                                                                 │
+│ Engine           sympy 1.14.0                                                         │
+│ Method           algebraic solve (sympy.solve + domain & solveset completeness audit) │
+│ Verification     exact-substitution: PASSED                                           │
+│ Detail           Both roots satisfy the equation by exact substitution                │
+│ Epistemic State  PROOF                                                                │
+│ Guarantee        [VERIFIED] VERIFIED-SUBSTITUTION                                     │
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Documentation & ADR Log
+### 2. Approximation (Bounded Numerical Evidence)
 
-- **[Architecture Decision Records (ADR Log)](docs/adr/README.md)** — Full history of architectural decisions (`ADR-0001` through `ADR-0020`).
-- **[Catálogo de Agent Skills](docs/skills-catalog.md)** — Catálogo de GitHub Agent Skills em 5 pilares para matemática, pesquisa, provas e testes.
-- **[Skills Library (`skills/README.md`)](skills/README.md)** — 15 Agent Skills padronizadas para Claude Code, Codex, Antigravity e Copilot.
-- **[Tutorial AXIOM (`TUTORIAL.md`)](TUTORIAL.md)** — Guia prático de uso via CLI e MCP para humanos e agentes.
-- **[Use Cases & Verification Guide](docs/use-cases.md)** — 10 end-to-end CLI & MCP demonstrations across the Four Epistemic States.
-- **[MCP Contracts Specification](docs/mcp-contracts.md)** — JSON-RPC 2.0 schemas, `MathResult` payload format, and guarantee rules.
-- **[Competitive Landscape Analysis (2026)](docs/analise-concorrencia-mcp-2026.md)** — Comparison against `symkit-mcp` (`nsforge-mcp`), Official Wolfram MCP, `oOo0oOo/lean-lsp-mcp`, `Jsewill/math-mcp`, and `sympy-mcp`.
-- **[Agent Instructions (`AGENTS.md`)](AGENTS.md)** & **[Mathematics Skill (`skills/mathematics/SKILL.md`)](skills/mathematics/SKILL.md)**.
+```bash
+axiom compare "pi" "3.141592653589793" --tolerance 1e-12
+```
+```text
+┌─ AXIOM · compare ──────────────────────────────────────────────────────────────────────────────┐
+│ Compare          pi == 3.141592653589793                                                                       │
+│ Result           approximately equal within tolerance 1.0e-12 (max error: 2.33e-16, exact equality not proven) │
+│ LaTeX            \pi \approx 3.141592653589793                                                                 │
+│ Engine           sympy 1.14.0                                                                                  │
+│ Method           symbolic difference reduction + domain & multi-point sampling                                 │
+│ Verification     numerical-tolerance: PASSED                                                                   │
+│ Detail           numerical-tolerance: PASSED (error <= 1e-12)                                                  │
+│ Epistemic State  APPROXIMATION                                                                                 │
+│ Guarantee        [APPROXIMATE] NUMERICAL-APPROXIMATION                                                         │
+│ Invariant        equivalent=False, approximately_equal=True                                                    │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3. Refutation (Active Counterexample Discovery)
+
+```bash
+axiom compare "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)" "0"
+```
+```text
+┌─ AXIOM · compare ─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Compare          (x+1)*(x-2)*(x^2+1)*(x^2-2*x+2) == 0                                                             │
+│ Result           not equivalent (counterexample: {'x': '-2'})                                                     │
+│ LaTeX            \left(x - 2\right) \left(x + 1\right) \left(x^{2} + 1\right) \left(x^{2} - 2 x + 2\right) \neq 0 │
+│ Engine           sympy 1.14.0                                                                                     │
+│ Method           symbolic difference reduction + domain & multi-point sampling                                    │
+│ Verification     counterexample-search: FAILED                                                                    │
+│ Detail           counterexample found at {'x': '-2'} (|diff| = 2.000e+02)                                         │
+│ Epistemic State  REFUTATION                                                                                       │
+│ Guarantee        [REFUTED] DISPROVEN                                                                              │
+│ Invariant        equivalent=False, approximately_equal=False                                                      │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 4. Inconclusive (Fail-Closed Indecidability)
+
+```bash
+axiom integrate "exp(-x^3)" --variable x
+```
+```text
+┌─ AXIOM · integrate ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Integrate        exp(-x^3)                                                                                                                     │
+│ Result           gamma(1/3)*lowergamma(1/3, x**3)/(9*gamma(4/3))                                                                               │
+│ LaTeX            \frac{\Gamma\left(\frac{1}{3}\right) \gamma\left(\frac{1}{3}, x^{3}\right)}{9 \Gamma\left(\frac{4}{3}\right)}                 │
+│ Engine           sympy 1.14.0                                                                                                                  │
+│ Method           symbolic indefinite integration (sympy.integrate)                                                                             │
+│ Verification     differentiate-antiderivative: FAILED                                                                                          │
+│ Detail           d/dx(gamma(1/3)*lowergamma(1/3, x**3)/(9*gamma(4/3))) = x**2*exp(-x**3)*gamma(1/3)/(3*(x**3)**(2/3)*gamma(4/3)) != exp(-x**3) │
+│ Epistemic State  INCONCLUSIVE                                                                                                                  │
+│ Guarantee        [UNVERIFIED] UNVERIFIED                                                                                                       │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 21 Composable MCP Tools
+
+| Category | Count | Tools |
+| :--- | :---: | :--- |
+| **1. Mathematical Computation** | 12 | `math_simplify`, `math_solve`, `math_differentiate`, `math_integrate`, `math_limit`, `math_evaluate`, `math_matrix`, `math_ode`, `math_number_theory`, `math_optimize`, `math_statistics`, `math_tensor` |
+| **2. Verification & Formal Proof** | 3 | `math_prove`, `math_verify`, `math_compare` |
+| **3. Structural & Diagnostic** | 3 | `math_parse`, `math_explain`, `math_explore` |
+| **4. Catalog Lookup** | 1 | `math_search_mathlib` |
+| **5. Visualization & Session** | 2 | `math_plot`, `math_session` |
+
+---
 
 ## Scientific Research & Academic Foundation
 
-AXIOM operates as a rigorous neuro-symbolic research harness designed for mathematical exploration, cross-checking computer algebra against interactive theorem provers, and enforcing fail-closed formal guarantees for AI reasoning agents.
+AXIOM operates as a rigorous neuro-symbolic research harness. For theoretical justifications, statistical bounds, literature positioning, and formal arithmetic proofs, see:
 
-- **[Research Proposal (`proposal.md`)](proposal.md)** — Delimits the central research question: *To what extent can an independent neuro-symbolic mediation layer eliminate algebraic/branch-cut hallucinations and enforce formal semantic soundness in AI agents?*
-- **[Curriculum & Study Program (`curriculum.md`)](curriculum.md)** — Graduate-level study track across 7 foundational disciplines (Calculus, Linear Algebra, Real Analysis, Abstract Algebra, Differential Geometry, Analytic Number Theory, and Interactive Theorem Proving in Lean 4).
-- **[Study Log & Demonstrations (`study-log.md`)](study-log.md)** — Daily research log recording formal demonstrations, counterexamples, and dual SymPy + Lean 4 cross-verifications.
-- **[Related Work (`related-work.md`)](related-work.md)** — Systematic positioning against AlphaGeometry, Minerva, SymKit-MCP, Lean-LSP, and Wolfram Language.
-- **[Methodology & Validation (`methodology.md`)](methodology.md)** — Mathematical guarantee hierarchy, invariant contracts, verification protocols, and empirical evaluation metrics.
-- **[Benchmark EXP-0001 (`experiments/exp-0001/`)](experiments/exp-0001/REPORT.md)** — Empirical benchmark of domain integrity: AXIOM achieves **0.0% False Positive Rate** and **100% Fail-Closed Rate** on singular, complex, and adversarial cases vs. 46.2% false positives in naive CAS baselines.
-- **[Theoretical & Implementation Limitations (`limitations.md`)](limitations.md)** — Explicit analysis of undecidability boundaries (Richardson's theorem, Gödel incompleteness, Matiyasevich DPRM) and operational boundaries.
-- **[Field Reports & Millennium Problems (`reports/`)](reports/README.md)** — Dedicated research workspaces, autonomous validation suites (`validate.py`), and 100% fail-closed integrity audits across all seven Clay Millennium Prize Problems (Riemann Hypothesis, P vs NP, Navier-Stokes, Birch-Swinnerton-Dyer, Hodge, Yang-Mills, Poincaré).
-- **[Citation Metadata (`CITATION.cff`)](CITATION.cff)** — Machine-readable academic citation schema.
+- **[Scientific Research Whitepaper (`RESEARCH.md`)](RESEARCH.md)** — Core research document detailing:
+  - Epistemological taxonomy and proof theory foundations;
+  - Decidability bounds (Richardson's Theorem, Gödel Incompleteness, MRDP Theorem);
+  - **Benchmark EXP-0001 ($n=21$ targeted adversarial cases)**: 0.0% False Positive Rate, 95% CI upper bound $\approx 14.3\%$ via Rule of Three (Clopper-Pearson: $[0.0\%, 13.1\%]$) vs 46.2% in naive CAS baseline (unwrapped SymPy 1.12);
+  - **Millennium Boundary Probes ($n=111$ criteria, 40 negative controls)**: 95% CI upper bound $\le 7.5\%$;
+  - **Boundary Stress-Test Disclaimer**: Clarifies that AXIOM makes **no claim** of solving open Millennium Prize Problems (Poincaré is verified as solved by Perelman; Navier-Stokes validates known Taylor-Green analytical solutions while refusing to certify unproven regularity);
+  - **Versioned Arithmetic Corpus (`research/arithmetic/`)**: Machine-checked Lean 4 proofs (Bézout, Euclid's Lemma, Fundamental Theorem of Arithmetic Existence and Uniqueness) based on Abramo Hefez.
+- **[Research Proposal (`proposal.md`)](proposal.md)** & **[Experimental Methodology (`methodology.md`)](methodology.md)**.
+- **[Curriculum Track (`curriculum.md`)](curriculum.md)** & **[Daily Research Log (`study-log.md`)](study-log.md)**.
+- **[Academic Citation (`CITATION.cff`)](CITATION.cff)**.
+
+---
 
 ## Roadmap
 
-- [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, hardened fail-closed verifiers, Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix (Python 3.10 & 3.12 on Ubuntu, Windows, macOS).
-- [x] **v0.1.1 — Verification Integrity**: Strict separation between `exact-symbolic` identities (FTC antiderivative round-trip, symbolic L'Hôpital/series) and `numerical-approximation` evidence (finite differences, quadrature, sequence probes), plus mandatory non-empty theorem confirmation in `#print axioms`.
-- [x] **v0.1.2 — Formal Integration**: Live Lean 4 + Lake formal verification job in GitHub Actions CI (`formal-lean`) validating constructive, classical, and invalid/spoofed proofs end-to-end.
-- [x] **v0.2.0 — Mathematical Coverage**: Separation of mathematical correctness claims from operational states (`structural-parse`, `catalog-lookup`, `sampled-visualization`), domain `assumptions`, branch-cut counterexample generation ($\sqrt{x^2} \neq x$ over $\mathbb{R}$), definite integral interior pole rejection, two-sided limit discontinuity rejection, extraneous pole filtering & periodic solution sets (`solveset`), and Lean 4 `X = X` reflexive tautology detection (`37` `pytest` tests).
-- [x] **v0.2.1 — Domain Integrity & Academic Research Foundation**: Pre-evaluation AST denominator tracking preventing silent domain loss ($\frac{x-1}{x-1} \neq 1$), complex Gaussian probes ($i, -i, 1+i$) invalidating unstated real branch-cuts ($\sqrt{x^2} \neq |x|$ over $\mathbb{C}$), explicit `assumptions` exposed across all MCP schemas and CLI commands (`-A`), periodic solution completeness flags, quantitative validation on Riemann Hypothesis (`reports/riemann-hypothesis/`), empirical benchmark `EXP-0001`, and formal research artifacts (`42` tests).
-- [x] **v0.2.2 — Verification Soundness & Adversarial Hardening**: Ternary equivalence semantics (`proven`, `disproven`, `inconclusive`), adversarial polynomial refutation ($P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) == 0$ refuted via non-zero polynomial inspection and active counterexample search), relational assumption grammar (`x!=1`, `x>0`, `x<=0`), assumptions propagated to system solvers (`solve_system`) with nonlinear fallback, revised EXP-0001 benchmark (21 cases, 0% FPR vs 46.2% naive CAS), and hardened test suite (`45` tests).
-- [x] **v0.2.3 — Scientific Benchmark Integrity & Millenium Research Bench**: Dynamic computation of fail-closed and false-positive rates from test records, Taylor-Green analytical kinetic energy $E(t) = \pi^2 e^{-4\nu t}$, strict contemporary evidence isolation in benchmark runners, and 100% fail-closed open problem boundary probes across all 7 Clay Millennium problems (`49` tests).
-- [x] **v0.2.4 — Formal Specification Soundness & Alignment Governance**: Semantic specification alignment auditor (`_audit_specification_alignment`) decoupling declared from verified alignment, SymPy kernel validity strictly gated to `False` (`status: not_applicable`), transparent fail-closed assumptions audit (`warning_undeclared_hypotheses`), zero-fallback evidence isolation, Navier-Stokes viscous dissipation $D(t) = 4\nu\pi^2 e^{-4\nu t}$ completely derived by spatial integration from velocity fields, and formal Lean 4 forced variant model with anti-drift control (`51` tests).
-- [x] **v0.2.5 — Formal Statement Integrity & Four-State Semantic Alignment**: Comment stripping and Lean 4 proposition signature parsing preventing keyword spoofing, canonical 4-state alignment (`verified`, `scoped`, `candidate`, `unaligned`), strict decoupling of Lean 4 kernel validity from spec alignment, fail-closed blocking of canonical certification on undeclared hypotheses, and Navier-Stokes Taylor-Green kinetic energy $E(t) = \pi^2 e^{-4\nu t}$ fully derived by double spatial integration of velocity fields (`54` tests).
-- [x] **v0.2.6 — Four Epistemic States & Adversarial Soundness**: Complete 4-epistemic-state separation (Proof, Approximation, Refutation, Inconclusive), zero lexical match to verified, depth-aware Lean binder parsing, revalidation gating on imported results, step vs. chain validity tracking, untrusted Lean sandbox with memory/heartbeat/timeout limits, MCP authorized path restriction, benchmark invariant enforcement, and zero-mock adversarial test suite ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md), `63` `pytest` tests).
-- [x] **v0.2.7 — Evidence Integrity, Process Sandboxing & Interface Alignment**: Fail-closed distrust of imported JSON sessions (`imported=True`, `revalidated_locally=False`), sanitized process environment for Lean execution, DAG dependency integrity decoupled from mathematical implication, `--tolerance` and session subcommands (`new`, `status`, `record`) fully aligned with use-cases guide, and atomic benchmark metric recalculation ([ADR-0018](docs/adr/0018-evidence-integrity-sandboxing-and-interface-alignment.md), `73` `pytest` tests).
+- [x] **v0.1.0 — Verified Foundation**: 21-tool MCP server, CLI, safe AST parser, fail-closed verifiers, Lean 4 `#print axioms` audit + Lake environment support, and 6/6 cross-platform CI matrix.
+- [x] **v0.1.1 — Verification Integrity**: Separation between `exact-symbolic` identities and `numerical-approximation` evidence, plus non-empty theorem confirmation in `#print axioms`.
+- [x] **v0.1.2 — Formal Integration**: Live Lean 4 + Lake formal verification in GitHub Actions CI (`formal-lean`).
+- [x] **v0.2.0 — Mathematical Coverage**: Operational states separation, domain `assumptions`, branch-cut counterexample generation, interior pole rejection, and Lean 4 tautology detection (`37` tests).
+- [x] **v0.2.1 — Domain Integrity**: Pre-evaluation AST denominator tracking ($\frac{x-1}{x-1} \neq 1$), complex Gaussian probes ($\sqrt{x^2} \neq |x|$ over $\mathbb{C}$), and benchmark `EXP-0001` (`42` tests).
+- [x] **v0.2.2 — Adversarial Hardening**: Ternary equivalence semantics, adversarial polynomial refutation, relational assumption grammar, and system solvers (`45` tests).
+- [x] **v0.2.3 — Scientific Benchmark Integrity**: Taylor-Green analytical kinetic energy $E(t) = \pi^2 e^{-4\nu t}$, evidence isolation, and boundary stress probes across all 7 Clay Millennium problems (`49` tests).
+- [x] **v0.2.4 — Formal Specification Soundness**: Semantic alignment auditor, SymPy kernel validity gating, Navier-Stokes viscous dissipation $D(t) = 4\nu\pi^2 e^{-4\nu t}$ derived from velocity gradients, and Lean 4 forced variant model (`51` tests).
+- [x] **v0.2.5 — Formal Statement Integrity**: Lean 4 binder and signature parsing, 4-state semantic alignment, and kinetic energy spatial integration derivation (`54` tests).
+- [x] **v0.2.6 — Four Epistemic States & Adversarial Soundness**: 4-epistemic-state separation, Lean sandbox with resource bounds, authorized path restriction, and zero-mock adversarial test suite ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md), `63` tests).
+- [x] **v0.2.7 — Evidence Integrity & Sandboxing**: Untrusted JSON session quarantine, sanitized process environment for Lean, and interface alignment ([ADR-0018](docs/adr/0018-evidence-integrity-sandboxing-and-interface-alignment.md), `73` tests).
+- [x] **v0.2.8 — CI Recovery, Tamper-Resistant Revalidation & Versioned Arithmetic Corpus**: Recover 6-platform failing CI matrix; strict semantic value comparison for tamper detection across all operations; hypothesis downgrading on load; versioned Abramo Hefez Lean 4 arithmetic corpus in `research/arithmetic/` ([ADR-0026](docs/adr/0026-ci-recovery-tamper-detection-and-versioned-arithmetic-corpus.md), `84` automated tests).
 - [ ] **v0.3.0 — The Mathematical Investigation Layer (Porting REA to Mathematics)**: Mathematical Investigation Dossiers (`.axiom/investigations/<id>/`), Proof Dependency Graphs (DAG), the **Unknown Ledger** (`list_unknowns`), Evidence Bundles with SHA-256 provenance hashes (`get_evidence_bundle`), 8 high-level investigation primitives, and reproducible cross-engine validation across Lean 4, SymPy, SageMath, and Julia ([ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md)).
+
+---
 
 ## Repository Layout
 
 ```text
 axiom/
-├── README.md
+├── README.md                  # Developer & user quickstart guide
+├── RESEARCH.md                # Academic research whitepaper, bounds & methodology
 ├── TUTORIAL.md                # Comprehensive user tutorial & agent guide
 ├── TODO.md                    # Gap audit & roadmap tracking
-├── LICENSE
+├── LICENSE                    # MIT License
 ├── CITATION.cff               # Academic citation metadata
-├── AGENTS.md
+├── AGENTS.md                  # Multi-agent coordination & skills index
 ├── curriculum.md              # Research study program & bibliography
 ├── study-log.md               # Daily research log & Lean 4 cross-checks
 ├── proposal.md                # Neuro-symbolic research proposal
@@ -297,48 +263,44 @@ axiom/
 ├── src/
 │   └── axiom/
 │       ├── core.py            # Mathematical core & dispatcher
-│       ├── contract.py        # MathResult, Evidence, Verification, Guarantee
+│       ├── contract.py        # MathResult, Evidence, Verification, EpistemicState, Guarantee
 │       ├── parsing.py         # Safe AST mathematical parser & relational assumptions
 │       ├── verification.py    # Independent verifiers & ternary equivalence
 │       ├── registry.py        # Multi-engine registry
 │       ├── mcp_server.py      # 21-tool MCP JSON-RPC 2.0 stdio server
-│       ├── cli.py             # CLI & Unicode box renderer
+│       ├── cli.py             # CLI & Unicode evidence box renderer
 │       ├── session.py         # Reproducible research sessions
 │       ├── setup_agent.py     # Agent auto-config (setup) & diagnostics (doctor)
 │       └── engines/           # sympy, numeric (mpmath), lean, sagemath, julia
 ├── experiments/
-│   └── exp-0001/              # Domain integrity & adversarial benchmark (run.py, results.json, REPORT.md)
-├── reports/
-│   ├── birch-and-swinnerton-dyer/ # Elliptic curves and L-functions queue
-│   ├── hodge-conjecture/          # Algebraic cycles & cohomology queue
-│   ├── navier-stokes/             # 3D fluid existence & smoothness
-│   ├── p-vs-np/                   # Combinatorial verification audit & barrier research
-│   ├── poincare-conjecture/       # Solved 3-manifold geometrization study
-│   ├── riemann-hypothesis/        # Critical line zero audits (RH)
-│   └── yang-mills-mass-gap/       # Quantum gauge theory mass gap queue
+│   └── exp-0001/              # Domain integrity & adversarial benchmark (n=21, results.json, REPORT.md)
+├── reports/                   # Boundary stress tests & epistemic sanity probes across Clay problems
 ├── research/
+│   ├── arithmetic/            # Versioned, Git-tracked Lean 4 arithmetic corpus (Days 04-07)
 │   ├── conjectures/           # Working hypotheses & empirical claims
 │   ├── lemmas/                # Proven lemmas & Lean 4 kernel-checked proofs
 │   └── counterexamples/       # Systematically cataloged refutations
 ├── benchmarks/
-│   ├── millennium/            # Consolidated Millennium Bench (105 criteria, 0% FPR)
+│   ├── millennium/            # Consolidated Millennium Bench (111 criteria, 40 negative controls)
 │   └── run_benchmarks.py      # Execution time benchmarks
-├── skills/
-│   └── mathematics/SKILL.md
-├── examples/
-│   └── theorems.lean
+├── skills/                    # Standardized GitHub Agent Skills
+├── examples/                  # Verified Lean 4 example proofs
 ├── tests/
-│   ├── test_axiom.py          # 54 automated test_* methods
+│   ├── test_axiom.py          # 56 automated unit tests
 │   ├── test_adversarial.py    # 9 adversarial soundness & isolation tests
+│   ├── test_use_cases.py      # 10 end-to-end workflow tests
+│   ├── test_tamper_detection.py # 5 payload tamper detection & hypothesis integrity tests
+│   ├── test_skills.py         # 4 agent skill specification tests
 │   └── lean_project/          # Lake workspace for live Lean 4 formal CI tests
 └── docs/
-    ├── adr/                   # Architecture Decision Records (ADR-0001..0019)
+    ├── adr/                   # Architecture Decision Records (ADR-0001..0026)
     ├── use-cases.md           # 10 end-to-end CLI & MCP workflows
-    ├── mcp-contracts.md
-    ├── analise-concorrencia-mcp-2026.md
+    ├── mcp-contracts.md       # JSON-RPC schemas & guarantee contracts
+    ├── analise-concorrencia-mcp-2026.md # Competitive landscape analysis
     └── readme/                # 17 localized README translations
 ```
 
+---
 
 ## License
 

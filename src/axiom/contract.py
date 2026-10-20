@@ -62,6 +62,15 @@ class Guarantee(str, Enum):
         return self if self.rank <= other.rank else other
 
 
+class EpistemicState(str, Enum):
+    """The four mutually exclusive epistemic states of mathematical reasoning."""
+
+    PROOF = "proof"
+    APPROXIMATION = "approximation"
+    REFUTATION = "refutation"
+    INCONCLUSIVE = "inconclusive"
+
+
 _GUARANTEE_RANK = {
     Guarantee.FORMAL_PROOF: 5,
     Guarantee.EXACT_SYMBOLIC: 4,
@@ -141,11 +150,49 @@ class MathResult:
         """True when an independent verification actually passed."""
         return bool(self.verification and self.verification.passed)
 
+    @property
+    def epistemic_state(self) -> EpistemicState:
+        """Categorize this result into one of the four foundational epistemic states."""
+        # 1. Active refutation (proven false via concrete counterexample or contradiction)
+        if (
+            self.value_str == "refuted"
+            or (
+                isinstance(self.value, dict)
+                and self.value.get("status") in ("disproven", "refuted")
+            )
+            or (
+                self.verification
+                and self.verification.kind in ("counterexample-search", "constant-exact-disproof")
+                and not self.verification.passed
+            )
+        ):
+            return EpistemicState.REFUTATION
+
+        # 2. Certified proof (kernel-checked formal proof or exact symbolic derivation)
+        if (
+            self.guarantee
+            in (
+                Guarantee.FORMAL_PROOF,
+                Guarantee.EXACT_SYMBOLIC,
+                Guarantee.VERIFIED_SUBSTITUTION,
+            )
+            and self.verified
+        ):
+            return EpistemicState.PROOF
+
+        # 3. Bounded numerical approximation
+        if self.guarantee == Guarantee.NUMERICAL_APPROXIMATION:
+            return EpistemicState.APPROXIMATION
+
+        # 4. Fail-closed inconclusive
+        return EpistemicState.INCONCLUSIVE
+
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
             "kind": self.kind,
             "input": self.input,
             "ok": self.ok,
+            "epistemic_state": self.epistemic_state.value,
         }
         if self.ok:
             d["value"] = self.value

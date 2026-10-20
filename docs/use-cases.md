@@ -3,10 +3,10 @@
 > **Research Math for All Time by [Chronokairo](https://chronokairo.com)**
 
 This guide provides 10 end-to-end, reproducible use cases demonstrating AXIOM's CLI and MCP tools across the **Four Epistemic States** ([ADR-0017](adr/0017-four-epistemic-states-and-soundness-governance.md)):
-1. **Proof** (*Prova*): Machine-checked Lean 4 kernel theorems, exact symbolic identities, and verified equation roots.
-2. **Approximation** (*Aproximação*): Bounded numerical evaluations and tolerance-constrained comparisons.
-3. **Refutation** (*Refutação*): Active counterexample discovery and rejection of fake tautologies.
-4. **Inconclusive** (*Inconclusão*): Fail-closed handling of undecidable, unproven, or broken derivation steps.
+1. **Proof**: Machine-checked Lean 4 kernel theorems, exact symbolic identities, and verified equation roots.
+2. **Approximation**: Bounded numerical evaluations and tolerance-constrained comparisons.
+3. **Refutation**: Active counterexample discovery and rejection of fake tautologies.
+4. **Inconclusive**: Fail-closed handling of undecidable, unproven, or broken derivation steps.
 
 ---
 
@@ -22,13 +22,17 @@ axiom solve "x^2 - 5*x + 6 = 0"
 ```
 **Output**:
 ```text
-┌─ AXIOM · solve ──────────────────────────────────────────────────────┐
-│ Input         x^2 - 5*x + 6 = 0                                      │
-│ Result        [2, 3]                                                 │
-│ Guarantee     [VERIFIED] VERIFIED-SUBSTITUTION                       │
-│ Verification  exact-substitution: PASSED — All 2 solution(s)         │
-│               verified by exact symbolic substitution (residual 0)   │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · solve ───────────────────────────────────────────────────────────────────────┐
+│ Solve            x^2 - 5*x + 6 = 0                                                    │
+│ Result           ['2', '3']                                                           │
+│ LaTeX            2, 3                                                                 │
+│ Engine           sympy 1.14.0                                                         │
+│ Method           algebraic solve (sympy.solve + domain & solveset completeness audit) │
+│ Verification     exact-substitution: PASSED                                           │
+│ Detail           Both roots satisfy the equation by exact substitution                │
+│ Epistemic State  PROOF                                                                │
+│ Guarantee        [VERIFIED] VERIFIED-SUBSTITUTION                                     │
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP JSON-RPC
@@ -61,12 +65,17 @@ axiom simplify "cos(x)^2 + sin(x)^2"
 ```
 **Output**:
 ```text
-┌─ AXIOM · simplify ───────────────────────────────────────────────────┐
-│ Input         cos(x)^2 + sin(x)^2                                    │
-│ Result        1                                                      │
-│ Guarantee     [VERIFIED] EXACT-SYMBOLIC                              │
-│ Verification  exact-symbolic: PASSED                                 │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · simplify ─────────────────────────────────────────────────────────────────┐
+│ Simplify         cos(x)^2 + sin(x)^2                                               │
+│ Result           1                                                                 │
+│ LaTeX            1                                                                 │
+│ Engine           sympy 1.14.0                                                      │
+│ Method           symmetric simplification (sympy.simplify)                         │
+│ Verification     symbolic-identity: PASSED                                         │
+│ Detail           Symbolic difference reduces to 0 and 10 numerical sample(s) agree │
+│ Epistemic State  PROOF                                                             │
+│ Guarantee        [VERIFIED] EXACT-SYMBOLIC                                         │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP JSON-RPC
@@ -136,12 +145,18 @@ axiom compare "pi" "3.141592653589793" --tolerance 1e-12
 ```
 **Output**:
 ```text
-┌─ AXIOM · compare ────────────────────────────────────────────────────┐
-│ Result        approximately_equal                                    │
-│ Guarantee     [APPROXIMATE] NUMERICAL-APPROXIMATION                  │
-│ Verification  numerical-tolerance: PASSED (error <= 1e-12)          │
-│ Invariant     equivalent=False, approximately_equal=True             │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · compare ──────────────────────────────────────────────────────────────────────────────┐
+│ Compare          pi == 3.141592653589793                                                                       │
+│ Result           approximately equal within tolerance 1.0e-12 (max error: 2.33e-16, exact equality not proven) │
+│ LaTeX            \pi \approx 3.141592653589793                                                                 │
+│ Engine           sympy 1.14.0                                                                                  │
+│ Method           symbolic difference reduction + domain & multi-point sampling                                 │
+│ Verification     numerical-tolerance: PASSED                                                                   │
+│ Detail           numerical-tolerance: PASSED (error <= 1e-12)                                                  │
+│ Epistemic State  APPROXIMATION                                                                                 │
+│ Guarantee        [APPROXIMATE] NUMERICAL-APPROXIMATION                                                         │
+│ Invariant        equivalent=False, approximately_equal=True                                                    │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP JSON-RPC
@@ -176,9 +191,16 @@ axiom evaluate "sqrt(2)" --precision 50
 **Output**:
 ```text
 ┌─ AXIOM · evaluate ───────────────────────────────────────────────────┐
-│ Input         sqrt(2)                                                │
-│ Result        1.41421356237309504880168872420969807856967187537695   │
-│ Guarantee     [APPROXIMATE] NUMERICAL-APPROXIMATION                  │
+│ Evaluate         sqrt(2)                                             │
+│ Result           1.4142135623730950488016887242096980785696718753769 │
+│ LaTeX            1.4142135623730950488016887242096980785696718753769 │
+│ Engine           numeric 1.3.0                                       │
+│ Method           arbitrary-precision float evaluation (dps=50)       │
+│ Verification     arbitrary-precision-eval: PASSED                    │
+│ Detail           Evaluated with 50 digits of working precision       │
+│ Epistemic State  APPROXIMATION                                       │
+│ Guarantee        [APPROXIMATE] NUMERICAL-APPROXIMATION               │
+│ Limitation       rounded to 50 significant digits                    │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -203,8 +225,8 @@ axiom evaluate "sqrt(2)" --precision 50
 ## 6. Active Refutation of Adversarial Algebraic Claims (`math_compare` / `axiom compare`)
 
 - **Epistemic State**: **Refutation**
-- **Guarantee Level**: `unverified` (refuted)
-- **Verification Rule**: A constructed 6-root adversarial polynomial $P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) == 0$ is tested against root probes and refuted by discovering an explicit counterexample ($P(3) = 130 \neq 0$).
+- **Guarantee Level**: `[REFUTED] DISPROVEN`
+- **Verification Rule**: A constructed 6-root adversarial polynomial $P(x) = (x+1)(x-2)(x-i)(x+i)(x-1-i)(x+2) == 0$ is tested against root probes and refuted by discovering an explicit counterexample ($P(-2) = 200 \neq 0$).
 
 ### CLI
 ```bash
@@ -212,11 +234,18 @@ axiom compare "(x+1)*(x-2)*(x^2+1)*(x^2-2*x+2)" "0"
 ```
 **Output**:
 ```text
-┌─ AXIOM · compare ────────────────────────────────────────────────────┐
-│ Result        refuted                                                │
-│ Guarantee     [REFUTED] UNVERIFIED                                   │
-│ Verification  counterexample: PASSED (at x=3, value=130 != 0)        │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · compare ─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Compare          (x+1)*(x-2)*(x^2+1)*(x^2-2*x+2) == 0                                                             │
+│ Result           not equivalent (counterexample: {'x': '-2'})                                                     │
+│ LaTeX            \left(x - 2\right) \left(x + 1\right) \left(x^{2} + 1\right) \left(x^{2} - 2 x + 2\right) \neq 0 │
+│ Engine           sympy 1.14.0                                                                                     │
+│ Method           symbolic difference reduction + domain & multi-point sampling                                    │
+│ Verification     counterexample-search: FAILED                                                                    │
+│ Detail           counterexample found at {'x': '-2'} (|diff| = 2.000e+02)                                         │
+│ Epistemic State  REFUTATION                                                                                       │
+│ Guarantee        [REFUTED] DISPROVEN                                                                              │
+│ Invariant        equivalent=False, approximately_equal=False                                                      │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP JSON-RPC
@@ -327,12 +356,17 @@ axiom tensor sphere
 ```
 **Output**:
 ```text
-┌─ AXIOM · tensor ─────────────────────────────────────────────────────┐
-│ Manifold      2D Sphere (metric: diag(R^2, R^2*sin(theta)^2))        │
-│ Scalar Curv   2 / R^2                                                │
-│ Guarantee     [VERIFIED] VERIFIED-SUBSTITUTION                       │
-│ Verification  levi-civita-metric-compatibility: PASSED               │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ AXIOM · tensor ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Tensor           sphere                                                                                                                                             │
+│ Result           dim=2 (theta, phi), det(g)=sin(theta)**2, |Gamma != 0|=2, R=2                                                                                      │
+│ LaTeX            R = 2                                                                                                                                              │
+│ Engine           sympy 1.14.0                                                                                                                                       │
+│ Method           symbolic Levi-Civita connection & Riemann curvature tensor contractions                                                                            │
+│ Verification     levi-civita-metric-compatibility: PASSED                                                                                                           │
+│ Detail           Verified g*g^-1 = I, torsion-free symmetry (Gamma^k_ij = Gamma^k_ji), and Levi-Civita metric compatibility (nabla_k g_ij = 0) across 13 identities │
+│ Epistemic State  PROOF                                                                                                                                              │
+│ Guarantee        [VERIFIED] VERIFIED-SUBSTITUTION                                                                                                                   │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP JSON-RPC

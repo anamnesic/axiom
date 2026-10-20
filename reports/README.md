@@ -1,9 +1,10 @@
-# Problemas do Milênio — Fila de Investigação e Validação AXIOM
+# Problemas do Milênio — Sondas de Fronteira e Testes de Estresse Epistêmico
 
-Registrado em 17 de outubro de 2026 a pedido do usuário. Cada problema possui sua
-própria pasta de pesquisa reprodutível com formulação matemática formal, suíte de verificação
-autônoma (`validate.py`), evidências integrais serializadas (`validation.json`) e relatório
-detalhado com controles negativos (`REPORT.md`).
+> [!IMPORTANT]
+> **Delimitação e Isenção Científica**: O AXIOM **não reivindica avanço ou resolução** de nenhum dos problemas em aberto do Clay Mathematics Institute. As suítes abaixo funcionam como **sondas de fronteira e testes de estresse epistêmico**, projetadas para auditar que o motor de verificação recusa estritamente certificar alegações espúrias (fail-closed) e reproduz fielmente soluções exatas clássicas conhecidas.
+> A Conjectura de Poincaré foi **demonstrada por Grigori Perelman (2002–2003)**; nossa suíte apenas audita invariantes de geometria diferencial e fluxo de Ricci, sem propor nova demonstração.
+
+Registrado em 17 de outubro de 2026. Cada problema possui sua pasta de pesquisa reprodutível com formulação matemática formal, suíte de verificação autônoma (`validate.py`), evidências integrais serializadas (`validation.json`) e relatório detalhado com controles negativos (`REPORT.md`).
 
 | Problema | Situação matemática | Situação no AXIOM v0.2.3 | Critérios & Fail-Closed |
 | --- | --- | --- | --- |

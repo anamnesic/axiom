@@ -10,7 +10,7 @@ results carry evidence, and claims are independently verified.
     ("['2', '3']", 'verified-substitution')
 """
 
-from axiom.contract import Evidence, Guarantee, MathResult, Verification
+from axiom.contract import EpistemicState, Evidence, Guarantee, MathResult, Verification
 from axiom.core import Axiom, solve_expression
 from axiom.engines.base import Engine, EngineError
 from axiom.engines.external_engines import JuliaEngine, SageEngine
@@ -29,6 +29,7 @@ __all__ = [
     "Engine",
     "EngineError",
     "EngineRegistry",
+    "EpistemicState",
     "Evidence",
     "Guarantee",
     "JuliaEngine",

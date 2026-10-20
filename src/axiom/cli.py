@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Sequence
 
-from axiom.contract import Guarantee, MathResult
+from axiom.contract import EpistemicState, Guarantee, MathResult
 from axiom.core import Axiom
 from axiom.mcp_server import run_stdio_server
 from axiom.setup_agent import configure_clients, run_doctor
@@ -41,26 +41,20 @@ def render_box(result: MathResult) -> str:
             )
             if result.verification.detail:
                 rows.append(("Detail", result.verification.detail))
+        state = result.epistemic_state
+        rows.append(("Epistemic State", state.value.upper()))
+
         g_val = result.guarantee.value.upper()
-        g_prefix = ""
-        if result.guarantee in (
-            Guarantee.FORMAL_PROOF,
-            Guarantee.EXACT_SYMBOLIC,
-            Guarantee.VERIFIED_SUBSTITUTION,
-        ):
-            g_prefix = "[VERIFIED] "
-        elif result.guarantee == Guarantee.NUMERICAL_APPROXIMATION:
-            g_prefix = "[APPROXIMATE] "
-        elif result.value_str == "refuted" or (
-            isinstance(result.value, dict)
-            and result.value.get("status") == "disproven"
-        ):
-            g_prefix = "[REFUTED] "
+        if state == EpistemicState.REFUTATION:
+            rows.append(("Guarantee", "[REFUTED] DISPROVEN"))
+        elif state == EpistemicState.PROOF:
+            rows.append(("Guarantee", f"[VERIFIED] {g_val}"))
+        elif state == EpistemicState.APPROXIMATION:
+            rows.append(("Guarantee", f"[APPROXIMATE] {g_val}"))
         elif result.guarantee == Guarantee.SAMPLED_VISUALIZATION:
-            g_prefix = "[SAMPLED] "
-        elif result.guarantee == Guarantee.UNVERIFIED:
-            g_prefix = "[UNVERIFIED] "
-        rows.append(("Guarantee", f"{g_prefix}{g_val}"))
+            rows.append(("Guarantee", f"[SAMPLED] {g_val}"))
+        else:
+            rows.append(("Guarantee", f"[UNVERIFIED] {g_val}"))
 
         if result.kind == "compare" and isinstance(result.value, dict):
             equiv = result.value.get("equivalent", False)
