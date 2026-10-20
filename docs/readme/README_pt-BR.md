@@ -133,7 +133,7 @@ O AXIOM atua como infraestrutura para investigação científica rigorosa. Para 
   - **Benchmark EXP-0001 ($n=21$ casos adversariais)**: 0.0% de taxa de falsos positivos, limite superior de 95% de confiança de $\approx 14.3\%$ via Regra dos Três vs 46.2% em CAS ingênuo (SymPy 1.12 sem envolucro);
   - **Sondas dos Problemas do Milênio ($n=111$ critérios, 40 controles negativos)**: Limite superior de 95% $\le 7.5\%$;
   - **Isenção de Sondas de Fronteira**: O AXIOM não afirma solucionar problemas abertos (Poincaré verificado como demonstrado por Perelman; Navier-Stokes valida decaimento clássico de Taylor-Green recusando alegações sem prova de blowup);
-  - **Corpus Versionado de Aritmética (`research/arithmetic/`)**: Demonstrações formalizadas em Lean 4 do Teorema Fundamental da Aritmética (Hefez) auditadas no CI.
+  - **Corpus Versionado de Aritmética (`research/arithmetic/`)**: Demonstrações formalizadas em Lean 4 de Bézout, Lema de Euclides, Teorema Fundamental da Aritmética e Infinitude dos Primos (Hefez) auditadas no CI.
 - **[Casos de Uso (`docs/use-cases.md`)](../use-cases.md)**: 10 fluxos de trabalho reais para agentes e pesquisadores.
 - **[Catálogo de Skills (`docs/skills-catalog.md`)](../skills-catalog.md)**: 17 habilidades integradas para agentes.
 - **[Histórico de Decisões Arquiteturais (`docs/adr/`)](../adr/README.md)**: 27 registros de decisões formais.

@@ -2,7 +2,7 @@
   Chronokairo AXIOM — Mathematical Investigation Dossier
   Dia 06: Teorema Fundamental da Aritmética — Existência da Decomposição em Primos
   Referência: "Iniciação à Aritmética" (Abramo Hefez, SBM/OBMEP), Cap. 2.1, 2.2 e 2.3, pág. 31-36.
-  Kernel: Lean 4 (version 4.35.0)
+  Kernel: Lean 4 (compatível com v4.14.0 do CI e v4.35.0 local)
   Garantia Epistêmica: formal-proof (Machine-checked, zero sorry, zero untrusted axioms)
 -/
 
@@ -112,6 +112,27 @@ theorem not_prime_has_divisor (n : Nat) (hn : n ≥ 2) (hnp : ¬ IsPrime n) :
         exact ⟨d, hd, h1, hn_neq⟩
 
 /-!
+### 5.5 Produto de uma Lista de Naturais (autocontido)
+`List.prod` entrou no core do Lean 4 após a v4.14.0 usada pelo CI; para
+independência de versão do kernel, definimos localmente o produto de uma
+lista com as propriedades algébricas necessárias à decomposição em primos.
+-/
+def listProd : List Nat → Nat
+  | [] => 1
+  | a :: t => a * listProd t
+
+theorem listProd_nil : listProd [] = 1 := rfl
+
+theorem listProd_cons (a : Nat) (t : List Nat) : listProd (a :: t) = a * listProd t := rfl
+
+theorem listProd_append (s t : List Nat) : listProd (s ++ t) = listProd s * listProd t := by
+  induction s with
+  | nil => rw [List.nil_append, listProd_nil, Nat.one_mul]
+  | cons a s ih =>
+    rw [List.cons_append, listProd_cons, listProd_cons, ih,
+      Nat.mul_assoc a (listProd s) (listProd t)]
+
+/-!
 ### 6. Teorema Fundamental da Aritmética — Existência (Abramo Hefez, Teorema 2.1)
 "Todo número natural n ≥ 2 se decompõe em um produto de um ou mais números primos."
 Demonstração (Hefez): Por indução forte sobre n:
@@ -121,14 +142,14 @@ Demonstração (Hefez): Por indução forte sobre n:
   com prod (La ++ Lb) = (prod La) * (prod Lb) = a * b = n.
 -/
 theorem hefez_fundamental_theorem_existence (n : Nat) :
-    n ≥ 2 → ∃ (L : List Nat), (∀ p ∈ L, IsPrime p) ∧ L.prod = n ∧ L ≠ [] := by
+    n ≥ 2 → ∃ (L : List Nat), (∀ p ∈ L, IsPrime p) ∧ listProd L = n ∧ L ≠ [] := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro hn
     have hem := Classical.em (IsPrime n)
     cases hem with
     | inl hp =>
-      refine ⟨[n], ?_, by simp, by simp⟩
+      refine ⟨[n], ?_, by simp [listProd], List.cons_ne_nil n []⟩
       intro p hp_in
       simp at hp_in
       subst hp_in
@@ -149,7 +170,7 @@ theorem hefez_fundamental_theorem_existence (n : Nat) :
         cases List.mem_append.1 hp_in with
         | inl h => exact hLa_prime p h
         | inr h => exact hLb_prime p h
-      · rw [List.prod_append, hLa_prod, hLb_prod, ← heq]
+      · rw [listProd_append, hLa_prod, hLb_prod, ← heq]
       · intro h_nil
         cases La with
         | nil => exact hLa_ne rfl

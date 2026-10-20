@@ -1436,6 +1436,12 @@ class TestAxiom(unittest.TestCase):
         assert nxt.evidence is not None
         self.assertEqual(nxt.evidence.reproducible_with, "axiom number-theory nextprime --n 7")
 
+        # Direct helper method equivalence
+        nxt_direct = ax.nextprime(7)
+        self.assertTrue(nxt_direct.ok and nxt_direct.verified)
+        self.assertEqual(nxt_direct.value, 11)
+        self.assertEqual(nxt_direct.guarantee, Guarantee.EXACT_SYMBOLIC)
+
         # Edge case: the least prime (2) has no preceding prime, minimality is vacuous.
         nxt_least = ax.number_theory("nextprime", n=1)
         self.assertTrue(nxt_least.ok and nxt_least.verified)

@@ -15,6 +15,7 @@ Diferente de artefatos efêmeros gerados em `build/`, os arquivos contidos aqui 
 | [`dia_05_euclid_lemma.lean`](./dia_05_euclid_lemma.lean) | Coprimalidade e Lema de Euclides ($p \mid ab \implies p \mid a \lor p \mid b$) | Seção 3.5 & Teorema 3.4 | Machine-checked (0 sorry) |
 | [`dia_06_fundamental_theorem_existence.lean`](./dia_06_fundamental_theorem_existence.lean) | Teorema Fundamental da Aritmética: **Existência** da fatoração prima | Seção 2.1–2.3 & Lema 2.1 | Machine-checked (0 sorry) |
 | [`dia_07_fundamental_theorem_uniqueness.lean`](./dia_07_fundamental_theorem_uniqueness.lean) | Teorema Fundamental da Aritmética: **Unicidade** da fatoração prima | Teorema 3.5 & Corolário 3.6 | Machine-checked (0 sorry) |
+| [`dia_08_euclid_infinitude.lean`](./dia_08_euclid_infinitude.lean) | Teorema de Euclides: **Infinitude** dos números primos ($\forall n, \exists p > n$) | Seção 2.4 (p. 40) & Problema 1.21 | Machine-checked (0 sorry) |
 
 ---
 
@@ -37,6 +38,7 @@ lean research/arithmetic/dia_04_bezout.lean
 lean research/arithmetic/dia_05_euclid_lemma.lean
 lean research/arithmetic/dia_06_fundamental_theorem_existence.lean
 lean research/arithmetic/dia_07_fundamental_theorem_uniqueness.lean
+lean research/arithmetic/dia_08_euclid_infinitude.lean
 ```
 
 ### 2. Pelo Chronokairo AXIOM

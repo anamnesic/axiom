@@ -217,7 +217,7 @@ AXIOM operates as a rigorous neuro-symbolic research harness. For theoretical ju
   - **Benchmark EXP-0001 ($n=21$ targeted adversarial cases)**: 0.0% False Positive Rate, 95% CI upper bound $\approx 14.3\%$ via Rule of Three (Clopper-Pearson: $[0.0\%, 13.1\%]$) vs 46.2% in naive CAS baseline (unwrapped SymPy 1.12);
   - **Millennium Boundary Probes ($n=111$ criteria, 40 negative controls)**: 95% CI upper bound $\le 7.5\%$;
   - **Boundary Stress-Test Disclaimer**: Clarifies that AXIOM makes **no claim** of solving open Millennium Prize Problems (Poincaré is verified as solved by Perelman; Navier-Stokes validates known Taylor-Green analytical solutions while refusing to certify unproven regularity);
-  - **Versioned Arithmetic Corpus (`research/arithmetic/`)**: Machine-checked Lean 4 proofs (Bézout, Euclid's Lemma, Fundamental Theorem of Arithmetic Existence and Uniqueness) based on Abramo Hefez.
+  - **Versioned Arithmetic Corpus (`research/arithmetic/`)**: Machine-checked Lean 4 proofs (Bézout, Euclid's Lemma, Fundamental Theorem of Arithmetic Existence and Uniqueness, Euclid's Infinitude of Primes) based on Abramo Hefez.
 - **[Research Proposal (`proposal.md`)](proposal.md)** & **[Experimental Methodology (`methodology.md`)](methodology.md)**.
 - **[Curriculum Track (`curriculum.md`)](curriculum.md)** & **[Daily Research Log (`study-log.md`)](study-log.md)**.
 - **[Academic Citation (`CITATION.cff`)](CITATION.cff)**.

@@ -2,7 +2,7 @@
   Chronokairo AXIOM — Mathematical Investigation Dossier
   Dia 07: Teorema Fundamental da Aritmética — Unicidade da Decomposição em Primos
   Referência: "Iniciação à Aritmética" (Abramo Hefez, SBM/OBMEP), Cap. 2.1, 2.2 e 2.3, pág. 34-36.
-  Kernel: Lean 4 (version 4.35.0)
+  Kernel: Lean 4 (compatível com v4.14.0 do CI e v4.35.0 local)
   Garantia Epistêmica: formal-proof (Machine-checked, zero sorry, zero untrusted axioms)
 -/
 
@@ -118,41 +118,60 @@ theorem hefez_euclid_lemma (p a b : Nat)
 
 /-!
 ### 3. Lemas Aritméticos de Listas de Fatores e Produtos
--/
-theorem prod_split (a : Nat) (s t : List Nat) :
-    (s ++ a :: t).prod = a * (s ++ t).prod := by
-  rw [List.prod_append, List.prod_cons, List.prod_append]
-  rw [← Nat.mul_assoc, Nat.mul_comm s.prod a, Nat.mul_assoc]
 
-theorem empty_of_prod_one (L : List Nat) (hprimes : ∀ q ∈ L, IsPrime q) (hprod : L.prod = 1) :
+`List.prod` entrou no core do Lean 4 após a v4.14.0 usada pelo CI; para
+independência de versão do kernel, definimos localmente o produto de uma
+lista com as propriedades algébricas necessárias à decomposição em primos.
+-/
+def listProd : List Nat → Nat
+  | [] => 1
+  | a :: t => a * listProd t
+
+theorem listProd_nil : listProd [] = 1 := rfl
+
+theorem listProd_cons (a : Nat) (t : List Nat) : listProd (a :: t) = a * listProd t := rfl
+
+theorem listProd_append (s t : List Nat) : listProd (s ++ t) = listProd s * listProd t := by
+  induction s with
+  | nil => rw [List.nil_append, listProd_nil, Nat.one_mul]
+  | cons a s ih =>
+    rw [List.cons_append, listProd_cons, listProd_cons, ih,
+      Nat.mul_assoc a (listProd s) (listProd t)]
+
+theorem prod_split (a : Nat) (s t : List Nat) :
+    listProd (s ++ a :: t) = a * listProd (s ++ t) := by
+  rw [listProd_append, listProd_cons, listProd_append]
+  rw [← Nat.mul_assoc, Nat.mul_comm (listProd s) a, Nat.mul_assoc]
+
+theorem empty_of_prod_one (L : List Nat) (hprimes : ∀ q ∈ L, IsPrime q) (hprod : listProd L = 1) :
     L = [] := by
   cases L with
   | nil => rfl
   | cons x xs =>
-    rw [List.prod_cons] at hprod
+    rw [listProd_cons] at hprod
     have hx_prime : IsPrime x := hprimes x (List.Mem.head xs)
     have hx_ge : x ≥ 2 := hx_prime.1
-    have hx_dvd : x ∣ 1 := ⟨xs.prod, hprod.symm⟩
+    have hx_dvd : x ∣ 1 := ⟨listProd xs, hprod.symm⟩
     have hx_le : x ≤ 1 := Nat.le_of_dvd (by decide) hx_dvd
     omega
 
-theorem prime_dvd_prod (p : Nat) (L : List Nat) (hp : IsPrime p) (hdvd : p ∣ L.prod) :
+theorem prime_dvd_prod (p : Nat) (L : List Nat) (hp : IsPrime p) (hdvd : p ∣ listProd L) :
     ∃ q ∈ L, p ∣ q := by
   induction L with
   | nil =>
-    rw [List.prod_nil] at hdvd
+    rw [listProd_nil] at hdvd
     exfalso
     exact not_dvd_one_of_ge_two p hp.1 hdvd
   | cons x xs ih =>
-    rw [List.prod_cons] at hdvd
-    cases hefez_euclid_lemma p x xs.prod hp hdvd with
+    rw [listProd_cons] at hdvd
+    cases hefez_euclid_lemma p x (listProd xs) hp hdvd with
     | inl hx => exact ⟨x, List.Mem.head xs, hx⟩
     | inr hxs =>
       rcases ih hxs with ⟨q, hq_mem, hq_dvd⟩
       exact ⟨q, List.Mem.tail x hq_mem, hq_dvd⟩
 
 theorem prime_mem_of_dvd_prod (p : Nat) (L : List Nat) (hp : IsPrime p)
-    (hprimes : ∀ q ∈ L, IsPrime q) (hdvd : p ∣ L.prod) : p ∈ L := by
+    (hprimes : ∀ q ∈ L, IsPrime q) (hdvd : p ∣ listProd L) : p ∈ L := by
   rcases prime_dvd_prod p L hp hdvd with ⟨q, hq_mem, hq_dvd⟩
   have hq_prime := hprimes q hq_mem
   have heq := prime_dvd_prime p q hp hq_prime hq_dvd
@@ -179,21 +198,21 @@ Se L1 e L2 são listas de números primos tais que prod L1 = prod L2:
 theorem hefez_fundamental_theorem_uniqueness (L1 L2 : List Nat)
     (h1 : ∀ p ∈ L1, IsPrime p)
     (h2 : ∀ q ∈ L2, IsPrime q)
-    (hprod : L1.prod = L2.prod) :
+    (hprod : listProd L1 = listProd L2) :
     L1.Perm L2 := by
   induction L1 generalizing L2 with
   | nil =>
-    rw [List.prod_nil] at hprod
+    rw [listProd_nil] at hprod
     have hL2_nil := empty_of_prod_one L2 h2 hprod.symm
     subst hL2_nil
     exact List.Perm.nil
   | cons p xs ih =>
     have hp : IsPrime p := h1 p (List.Mem.head xs)
     have hxs : ∀ q ∈ xs, IsPrime q := fun q hq => h1 q (List.Mem.tail p hq)
-    have hp_dvd_L1 : p ∣ (p :: xs).prod := by
-      rw [List.prod_cons]
-      exact Nat.dvd_mul_right p xs.prod
-    have hp_dvd_L2 : p ∣ L2.prod := by
+    have hp_dvd_L1 : p ∣ listProd (p :: xs) := by
+      rw [listProd_cons]
+      exact Nat.dvd_mul_right p (listProd xs)
+    have hp_dvd_L2 : p ∣ listProd L2 := by
       rw [← hprod]
       exact hp_dvd_L1
     have hp_in_L2 : p ∈ L2 := prime_mem_of_dvd_prod p L2 hp h2 hp_dvd_L2
@@ -211,8 +230,8 @@ theorem hefez_fundamental_theorem_uniqueness (L1 L2 : List Nat)
         rw [List.mem_append]
         right
         exact List.Mem.tail p ht
-    have hprod_st : xs.prod = (s ++ t).prod := by
-      rw [List.prod_cons] at hprod
+    have hprod_st : listProd xs = listProd (s ++ t) := by
+      rw [listProd_cons] at hprod
       rw [prod_split p s t] at hprod
       have hp_pos : p > 0 := by
         have := hp.1
@@ -226,6 +245,6 @@ theorem hefez_fundamental_theorem_uniqueness (L1 L2 : List Nat)
 def L_canonical : List Nat := [2, 2, 2, 3, 3, 5]
 def L_permuted : List Nat := [3, 2, 5, 2, 3, 2]
 
-#eval L_canonical.prod == 360 && L_permuted.prod == 360
+#eval listProd L_canonical == 360 && listProd L_permuted == 360
 
 end Dia07TFAUniqueness

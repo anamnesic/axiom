@@ -1875,6 +1875,25 @@ class Axiom:
             verification=ver,
         )
 
+    def verify_lean_file(
+        self,
+        path: str | Path,
+        *,
+        canonical_statement: str | None = None,
+        declared_hypotheses: list[str] | dict[str, Any] | None = None,
+        spec_alignment: str | dict[str, Any] | None = None,
+        timeout: int | None = None,
+    ) -> MathResult:
+        """Audit and verify a Lean 4 formal proof file (.lean)."""
+        return self.prove(
+            str(path),
+            engine="lean",
+            canonical_statement=canonical_statement,
+            declared_hypotheses=declared_hypotheses,
+            spec_alignment=spec_alignment,
+            timeout=timeout,
+        )
+
     def prove(
         self,
         statement: str,
@@ -2462,6 +2481,10 @@ class Axiom:
             verification=ver,
             reproducible_with=" ".join(flags),
         )
+
+    def nextprime(self, n: int, *, engine: str | None = None) -> MathResult:
+        """Find the smallest prime strictly greater than n with primality and minimality verification."""
+        return self.number_theory("nextprime", n=n, engine=engine)
 
     def optimize(
         self,
