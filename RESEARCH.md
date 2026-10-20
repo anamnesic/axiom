@@ -146,6 +146,8 @@ All formal arithmetic demonstrations produced during the research campaign are v
 - [`dia_06_fundamental_theorem_existence.lean`](research/arithmetic/dia_06_fundamental_theorem_existence.lean): Fundamental Theorem of Arithmetic (Existence of prime factor decomposition).
 - [`dia_07_fundamental_theorem_uniqueness.lean`](research/arithmetic/dia_07_fundamental_theorem_uniqueness.lean): Fundamental Theorem of Arithmetic (Uniqueness of prime factor decomposition via `List.Perm`).
 - [`dia_08_euclid_infinitude.lean`](research/arithmetic/dia_08_euclid_infinitude.lean): Euclid's Theorem on the Infinitude of Prime Numbers ($\forall n, \exists p > n$) via constructive least factor of $n! + 1$.
+- [`dia_09_diophantine.lean`](research/arithmetic/dia_09_diophantine.lean): Linear Diophantine Equations ($ax + by = c$ general solution and solvability criterion).
+- [`dia_10_congruences.lean`](research/arithmetic/dia_10_congruences.lean): Congruence Relations, Modular Arithmetic $\mathbb{Z}/m\mathbb{Z}$, and Modular Inverses via Bézout.
 
 Every file compiles in Lean 4 (v4.14.0+) with **0 sorry** and **0 untrusted axioms**, and is validated in continuous integration via GitHub Actions.
 
