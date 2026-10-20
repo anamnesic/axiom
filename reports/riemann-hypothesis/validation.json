@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-20T18:16:47.154588+00:00",
+  "generated_at_utc": "2026-10-20T18:56:39.670243+00:00",
   "axiom_version": "0.2.3",
   "scope": "Analytical, number-theoretic, and numerical properties of the Riemann zeta function (Bombieri Clay exposition) + AXIOM v0.2.3 contract & edge-case validation",
   "riemann_hypothesis_proven": false,
@@ -8,14 +8,14 @@
     "https://www.claymath.org/wp-content/uploads/2022/05/riemann.pdf"
   ],
   "source_sha256": {
-    "src/axiom/contract.py": "eb99bb120127af4774a27b84505bb630b504af81b97c2ec5efd30294bf0bcd1e",
+    "src/axiom/contract.py": "37a5d289d428d14e7e21432b5c1427fbb0021de3ee0302bbd0d0dc901b0cc069",
     "src/axiom/parsing.py": "72f2c0d0c976f0bb55cbae1367cae2fb35389ba5280554a456a0fb0e11947634",
-    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383",
-    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
+    "src/axiom/core.py": "81666fa93a9592f92b0ca1c4fe7e73e5f609f884a4558adf548778803d4cb116",
+    "src/axiom/verification.py": "e912dad6ff553ecaa50af2341e12eee7c17292466ec3887cd3bb170d4a14b7a3",
     "src/axiom/engines/lean_engine.py": "d683e4555012d487f05cf08a1d46d0f9c517395c0fef0889581eb5f9244bb511",
     "src/axiom/engines/sympy_engine.py": "618c33eaf16733970481af77455c3f7d14dbe4de28523f1172bca1a949e55b75",
-    "src/axiom/mcp_server.py": "8858d44c96e59f48ca6a8e42a11c14f2f3258e03dd8534aa881787551be8d2d8",
-    "src/axiom/cli.py": "abedb4b6cadb19f98c397b87bdae24b8729bbfe170b7010412c1d53cce2bff30",
+    "src/axiom/mcp_server.py": "3e7302611d84e6c20e9dd9516630e1877f225c802b019db7040a87780fbef885",
+    "src/axiom/cli.py": "759c44f9796f1368840a976db1185e05af44f47f0c404284203021172a99bd91",
     "examples/theorems.lean": "83243090afccba6460bb3fcaad1544a87492f42a1d2f6d5925109f5f260124d4"
   },
   "independent_checks": {
@@ -41,7 +41,7 @@
       "result": {
         "ok": true,
         "python": "3.14.7",
-        "mcp_tools_count": 21,
+        "mcp_tools_count": 29,
         "skills_count": 17,
         "skills": [
           {
@@ -624,7 +624,13 @@
           "max_error": 0.4112335167120566,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "pi**2/24",
+              "observed": "pi**2/24 != 0"
+            }
           }
         }
       }
@@ -1035,6 +1041,12 @@
           "detail": "definite integral diverges or is undefined (oo)",
           "checks": 1,
           "data": {
+            "witness": {
+              "type": "divergence",
+              "expected": "0",
+              "expression": "oo",
+              "observed": "diverges or is undefined (oo)"
+            },
             "lower": "-1",
             "upper": "1",
             "limits": [
@@ -2735,6 +2747,268 @@
               }
             },
             {
+              "name": "math_investigate",
+              "description": "Create a persistent mathematical investigation dossier for a target claim: formalised statement, domain scope and a registered, undecided claim node. Part of the Mathematical Investigation Layer.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "statement": {
+                    "type": "string",
+                    "description": "The target claim to investigate."
+                  },
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Explicit dossier id (generated when omitted)."
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations",
+                    "description": "Dossier root directory."
+                  },
+                  "scope": {
+                    "type": "object",
+                    "description": "Optional scope metadata (domain, chapter, target)."
+                  }
+                },
+                "required": [
+                  "statement"
+                ]
+              }
+            },
+            {
+              "name": "math_analyze_claim",
+              "description": "Decompose a claim into free variables, implicit and explicit hypotheses, data types and boundary conditions.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "statement": {
+                    "type": "string",
+                    "description": "Override the claim to analyse."
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id"
+                ]
+              }
+            },
+            {
+              "name": "math_trace_dependencies",
+              "description": "Build and audit the proof dependency graph of an investigation, separating DAG structural integrity from demonstrated logical implication.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "lemmas": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "statement": {
+                              "type": "string"
+                            },
+                            "depends_on": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "required": [
+                            "statement"
+                          ]
+                        }
+                      }
+                    ],
+                    "description": "Lemma statements (optionally with explicit dependencies)."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "identity",
+                      "equation"
+                    ],
+                    "default": "identity"
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id",
+                  "lemmas"
+                ]
+              }
+            },
+            {
+              "name": "math_find_counterexample",
+              "description": "Actively hunt a counterexample to the target claim using complex Gaussian probing and polynomial residual inspection.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "statement": {
+                    "type": "string",
+                    "description": "Override the claim to attack."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "identity",
+                      "equation"
+                    ],
+                    "default": "identity"
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id"
+                ]
+              }
+            },
+            {
+              "name": "math_compare_proofs",
+              "description": "Compare several proof routes for the same claim and surface the hypotheses each route requires (shared vs. route-specific).",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "statements": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "statement": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "statement"
+                          ]
+                        }
+                      }
+                    ],
+                    "description": "The proof attempts to compare."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "identity",
+                      "equation"
+                    ],
+                    "default": "identity"
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id",
+                  "statements"
+                ]
+              }
+            },
+            {
+              "name": "math_list_unknowns",
+              "description": "The Unknown Ledger: open gaps, unproved lemmas, pending hypotheses and evidence markers still blocking the investigation.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id"
+                ]
+              }
+            },
+            {
+              "name": "math_get_evidence_bundle",
+              "description": "Export the immutable provenance package of an investigation: engine versions, per-node verification records and SHA-256 digests of every artifact.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id"
+                ]
+              }
+            },
+            {
+              "name": "math_export_investigation",
+              "description": "Render the reproducible dossier report (REPORT.md) with the claim analysis, the Mermaid dependency graph, the Unknown Ledger and the evidence bundle.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "description": "Dossier id."
+                  },
+                  "root": {
+                    "type": "string",
+                    "default": ".axiom/investigations"
+                  }
+                },
+                "required": [
+                  "investigation_id"
+                ]
+              }
+            },
+            {
               "name": "math_session",
               "description": "Record verified mathematical steps and conjectures into a reproducible research session, tracking the weakest-link guarantee across the chain.",
               "inputSchema": {
@@ -2888,7 +3162,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"sqrt(x**2)\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"-x + sqrt(x**2)\",\n    \"counterexample\": {\n      \"x\": \"-1\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'x': '-1'})\",\n  \"latex\": \"\\\\sqrt{x^{2}} \\\\neq x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = sqrt(x**2)\",\n      \"rhs = x\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -x + sqrt(x**2)\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+              "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"sqrt(x^2) == x\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"sqrt(x**2)\",\n    \"right\": \"x\",\n    \"simplified_difference\": \"-x + sqrt(x**2)\",\n    \"counterexample\": {\n      \"x\": \"-1\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'x': '-1'})\",\n  \"latex\": \"\\\\sqrt{x^{2}} \\\\neq x\",\n  \"variables\": [\n    \"x\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = sqrt(x**2)\",\n      \"rhs = x\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -x + sqrt(x**2)\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"sqrt(x^2)\\\" \\\"x\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'x': '-1'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"x\": \"-1\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false,\n      \"witness\": {\n        \"type\": \"counterexample\",\n        \"expected\": \"0\",\n        \"expression\": \"-x + sqrt(x**2)\",\n        \"substitutions\": {\n          \"x\": \"-1\"\n        },\n        \"observed\": \"|diff| = 2.000e+00\"\n      }\n    }\n  }\n}"
             }
           ],
           "structuredContent": {
@@ -2936,7 +3210,16 @@
                   "x": "-1"
                 },
                 "status": "disproven",
-                "proven": false
+                "proven": false,
+                "witness": {
+                  "type": "counterexample",
+                  "expected": "0",
+                  "expression": "-x + sqrt(x**2)",
+                  "substitutions": {
+                    "x": "-1"
+                  },
+                  "observed": "|diff| = 2.000e+00"
+                }
               }
             }
           },

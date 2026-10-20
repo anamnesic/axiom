@@ -23,6 +23,8 @@ mechanism than the one that computed it:
 
 from __future__ import annotations
 
+from typing import Any
+
 import mpmath as mp
 import sympy as sp
 
@@ -165,6 +167,88 @@ def _is_symbolic_zero(expr: sp.Expr) -> bool:
     return False
 
 
+def _make_witness(
+    witness_type: str,
+    *,
+    expression: Any = None,
+    substitutions: dict[str, Any] | None = None,
+    observed: Any = None,
+    expected: Any = "0",
+) -> dict[str, Any]:
+    """Build the uniform, replayable falsity-witness record (ADR-0032).
+
+    A witness is *structured* evidence that a claim is false. It must be
+    machine-readable: ``expression`` together with ``substitutions`` can be
+    replayed by :func:`revalidate_witness` to confirm that the claim is
+    still false. A prose sentence in ``Verification.detail`` is **not**
+    admissible on its own.
+    """
+    witness: dict[str, Any] = {"type": witness_type, "expected": str(expected)}
+    if expression is not None:
+        witness["expression"] = str(expression)
+    if substitutions:
+        witness["substitutions"] = {str(k): str(v) for k, v in substitutions.items()}
+    if observed is not None:
+        witness["observed"] = str(observed)
+    return witness
+
+
+def revalidate_witness(verification: Verification | None) -> tuple[str, str]:
+    """Replay the falsity witness of a failed verification.
+
+    Returns ``(status, detail)`` where ``status`` is one of:
+
+    * ``"confirmed"`` - the witness was replayed and still shows the claim
+      to be false;
+    * ``"not-replayable"`` - the witness is structured but intrinsically
+      non-numeric (a domain-constraint violation, a numerical disagreement);
+      it remains admissible on its recorded evidence;
+    * ``"failed"`` - the witness was replayed and the claim did **not** fail,
+      so the refutation does not reproduce;
+    * ``"absent"`` - the verification carries no structured witness.
+    """
+    if verification is None or verification.passed:
+        return "absent", "no failed verification to re-validate"
+    data = verification.data or {}
+    witness = data.get("witness")
+    if not isinstance(witness, dict) or not witness:
+        return "absent", "verification carries no structured witness"
+
+    expr_str = witness.get("expression")
+    subs_raw = witness.get("substitutions")
+    if not expr_str:
+        return "not-replayable", (
+            f"witness type '{witness.get('type')}' is structured but not numerically replayable"
+        )
+    try:
+        from axiom.parsing import Parser
+
+        parser = Parser()
+        expr = parser.parse_expression(str(expr_str))
+        subs = {}
+        if isinstance(subs_raw, dict):
+            subs = {str(k): parser.parse_expression(str(v)) for k, v in subs_raw.items()}
+        value = expr.subs(subs) if subs else expr
+    except Exception as exc:
+        return "failed", f"witness replay error: {exc}"
+
+    if value.has(sp.nan, sp.zoo, sp.oo, -sp.oo):
+        return "confirmed", (
+            f"witness replayed: '{expr_str}' is non-finite at {subs or '{}'} (still falsifying)"
+        )
+    try:
+        residual = sp.simplify(value)
+    except Exception:
+        residual = value
+    if residual == 0:
+        return "failed", (
+            f"witness replay failed: '{expr_str}' evaluates to 0 at {subs or '{}'}"
+        )
+    return "confirmed", (
+        f"witness replayed: '{expr_str}' = {value} at {subs or '{}'} (nonzero, still falsifying)"
+    )
+
+
 def verify_solutions(
     equation: sp.Rel,
     var: sp.Symbol,
@@ -223,7 +307,15 @@ def verify_solutions(
                             f"in the equation (lhs={lhs_sub}, rhs={rhs_sub})"
                         ),
                         checks=len(solutions),
-                        data={"residuals": residuals_data},
+                        data={
+                            "residuals": residuals_data,
+                            "witness": _make_witness(
+                                "domain-violation",
+                                expression=residual_expr,
+                                substitutions={var: sol},
+                                observed=f"undefined (lhs={lhs_sub}, rhs={rhs_sub})",
+                            ),
+                        },
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -234,7 +326,15 @@ def verify_solutions(
                     passed=False,
                     detail=f"domain error substituting {var} = {sol}: {exc}",
                     checks=len(solutions),
-                    data={"residuals": residuals_data},
+                    data={
+                        "residuals": residuals_data,
+                        "witness": _make_witness(
+                            "domain-violation",
+                            expression=residual_expr,
+                            substitutions={var: sol},
+                            observed=f"domain error: {exc}",
+                        ),
+                    },
                 ),
                 Guarantee.UNVERIFIED,
             )
@@ -247,7 +347,15 @@ def verify_solutions(
                     passed=False,
                     detail=f"candidate root {var} = {sol} violates domain assumptions on {var}",
                     checks=len(solutions),
-                    data={"residuals": residuals_data},
+                    data={
+                        "residuals": residuals_data,
+                        "witness": _make_witness(
+                            "assumption-violation",
+                            expression=residual_expr,
+                            substitutions={var: sol},
+                            observed="violates the declared domain assumption",
+                        ),
+                    },
                 ),
                 Guarantee.UNVERIFIED,
             )
@@ -266,7 +374,7 @@ def verify_solutions(
         except Exception as exc:
             return (
                 Verification(
-                    kind="substitution",
+                    kind="substitution-indeterminate",
                     passed=False,
                     detail=f"could not evaluate residual at {var} = {sol}: {exc}",
                     checks=len(solutions),
@@ -287,7 +395,15 @@ def verify_solutions(
                     detail=f"root {var} = {sol} failed substitution (|residual| = {err:.3e})",
                     checks=len(solutions),
                     max_error=err,
-                    data={"residuals": residuals_data},
+                    data={
+                        "residuals": residuals_data,
+                        "witness": _make_witness(
+                            "residual",
+                            expression=residual_expr,
+                            substitutions={var: sol},
+                            observed=f"|residual| = {err:.3e}",
+                        ),
+                    },
                 ),
                 Guarantee.UNVERIFIED,
             )
@@ -336,7 +452,7 @@ def verify_system_solutions(
     if solutions_set == sp.EmptySet or not getattr(solutions_set, "args", None):
         return (
             Verification(
-                kind="system-substitution",
+                kind="system-empty-solution-set",
                 passed=False,
                 detail="no solutions to verify",
             ),
@@ -354,6 +470,13 @@ def verify_system_solutions(
                         passed=False,
                         detail=f"candidate solution {var_sym} = {sol_val} violates domain assumptions on {var_sym}",
                         checks=checks,
+                        data={
+                            "witness": _make_witness(
+                                "assumption-violation",
+                                substitutions={var_sym: sol_val},
+                                observed="violates the declared domain assumption",
+                            )
+                        },
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -374,6 +497,14 @@ def verify_system_solutions(
                             passed=False,
                             detail=f"solution {subs_map} hits a pole or singularity in equation {eq}",
                             checks=checks,
+                            data={
+                                "witness": _make_witness(
+                                    "domain-violation",
+                                    expression=eq.lhs - eq.rhs,
+                                    substitutions=subs_map,
+                                    observed="undefined (pole or singularity)",
+                                )
+                            },
                         ),
                         Guarantee.UNVERIFIED,
                     )
@@ -384,6 +515,14 @@ def verify_system_solutions(
                         passed=False,
                         detail=f"domain error substituting {subs_map} into {eq}: {exc}",
                         checks=checks,
+                        data={
+                            "witness": _make_witness(
+                                "domain-violation",
+                                expression=eq.lhs - eq.rhs,
+                                substitutions=subs_map,
+                                observed=f"domain error: {exc}",
+                            )
+                        },
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -396,6 +535,14 @@ def verify_system_solutions(
                         passed=False,
                         detail=f"equation {eq} not satisfied by {subs_map}",
                         checks=checks,
+                        data={
+                            "witness": _make_witness(
+                                "residual",
+                                expression=eq.lhs - eq.rhs,
+                                substitutions=subs_map,
+                                observed="equation not satisfied",
+                            )
+                        },
                     ),
                     Guarantee.UNVERIFIED,
                 )
@@ -469,6 +616,11 @@ def verify_equivalence(
                         "left_excluded_points": left_excl,
                         "right_excluded_points": right_excl,
                         "counterexample": {v_name: pt_str},
+                        "witness": _make_witness(
+                            "domain-violation",
+                            substitutions={v_name: pt_str},
+                            observed="excluded on one side only",
+                        ),
                     },
                 ),
                 Guarantee.UNVERIFIED,
@@ -540,6 +692,12 @@ def verify_equivalence(
                 data_out["counterexample"] = counterexample
                 data_out["status"] = "disproven"
                 data_out["proven"] = False
+                data_out["witness"] = _make_witness(
+                    "counterexample",
+                    expression=diff,
+                    substitutions=counterexample,
+                    observed=f"|diff| = {err:.3e}",
+                )
                 return (
                     Verification(
                         kind="counterexample-search",
@@ -563,6 +721,11 @@ def verify_equivalence(
             if err > active_tol:
                 data_out["status"] = "disproven"
                 data_out["proven"] = False
+                data_out["witness"] = _make_witness(
+                    "constant-disproof",
+                    expression=diff,
+                    observed=f"|diff| = {err:.3e} (exceeds tolerance {active_tol:.1e})",
+                )
                 return (
                     Verification(
                         kind="approximate-disproof",
@@ -674,6 +837,11 @@ def verify_equivalence(
                 )
             data_out["status"] = "disproven"
             data_out["proven"] = False
+            data_out["witness"] = _make_witness(
+                "constant-disproof",
+                expression=diff,
+                observed=f"{diff} != 0",
+            )
             return (
                 Verification(
                     kind="constant-exact-disproof",
@@ -726,6 +894,12 @@ def verify_equivalence(
             data_out["counterexample"] = counterexample
             data_out["status"] = "disproven"
             data_out["proven"] = False
+            data_out["witness"] = _make_witness(
+                "counterexample",
+                expression=diff,
+                substitutions=counterexample,
+                observed=f"|diff| = {err:.3e}",
+            )
             return (
                 Verification(
                     kind="counterexample-search",
@@ -1009,6 +1183,13 @@ def verify_integral(
                 passed=False,
                 detail=f"definite integral diverges or is undefined ({result})",
                 checks=1,
+                data={
+                    "witness": _make_witness(
+                        "divergence",
+                        expression=result,
+                        observed=f"diverges or is undefined ({result})",
+                    )
+                },
             ),
             Guarantee.UNVERIFIED,
         )
@@ -1053,7 +1234,15 @@ def verify_integral(
                     f"{var} in {pole_strs} on [{lower}, {upper}]; naive FTC across pole rejected"
                 ),
                 checks=1,
-                data={"singularities": pole_strs},
+                data={
+                    "singularities": pole_strs,
+                    "witness": _make_witness(
+                        "singularity",
+                        expression=integrand,
+                        substitutions={var: pole_strs[0]},
+                        observed=f"non-integrable pole at {pole_strs}",
+                    ),
+                },
             ),
             Guarantee.UNVERIFIED,
         )
@@ -1093,6 +1282,13 @@ def verify_integral(
                                 detail=f"Disagrees with numerical quadrature (rel error {err:.2e})",
                                 checks=1,
                                 max_error=err,
+                                data={
+                                    "witness": _make_witness(
+                                        "numerical-disagreement",
+                                        observed=f"quadrature rel error {err:.2e}",
+                                        expected="agreement within tolerance",
+                                    )
+                                },
                             ),
                             Guarantee.UNVERIFIED,
                         )

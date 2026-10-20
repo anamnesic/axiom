@@ -72,15 +72,16 @@ class EpistemicState(str, Enum):
 
 
 # Verification kinds that carry *positive evidence of falsity*: each one
-# records a witness (a counterexample, a violating substitution, a domain
-# violation, a divergence, ...) that decisively shows the checked claim to be
-# false.
+# records a structured witness (see :func:`has_refutation_evidence`) that
+# decisively shows the checked claim to be false.
 #
 # A verification that merely *fails* is NOT a refutation. Checks such as
 # ``constant-exact-inconclusive``, ``unevaluated-integral``,
-# ``definite-integral-check``, ``inequality-check`` or
-# ``empty-solution-set`` fail because the question could not be decided (or
-# was out of scope), which is an INCONCLUSIVE outcome, not a disproof.
+# ``definite-integral-check``, ``inequality-check``,
+# ``empty-solution-set``, ``system-empty-solution-set`` or
+# ``substitution-indeterminate`` fail because the question could not be
+# decided (or was out of scope), which is an INCONCLUSIVE outcome, not a
+# mathematical disproof.
 REFUTING_VERIFICATION_KINDS: frozenset[str] = frozenset(
     {
         "approximate-disproof",
@@ -108,36 +109,39 @@ def has_refutation_evidence(
 
     A *failed* verification is not by itself a refutation: the check may have
     been undecidable, out of scope, or aborted by a parse/timeout error. Only
-    an explicit witness qualifies, so that ``REFUTATION`` is never used as a
-    synonym for "the check did not succeed".
+    a **structured witness** qualifies, so that ``REFUTATION`` is never used
+    as a synonym for "the check did not succeed".
 
-    The witness must be verifiable:
-    * an explicit counterexample/witness recorded in ``verification.data`` or ``value``;
-    * a verification kind that is, by construction, a disproof
-      (:data:`REFUTING_VERIFICATION_KINDS`) with a non-empty detail describing the witness;
-    * or a refuting status backed by a recognized refuting verification kind.
+    The witness is one of:
+
+    * a structured witness record (``verification.data["witness"]``) produced
+      by the verifier: a machine-readable falsity certificate carrying the
+      expression that was evaluated, the substitution point, and the observed
+      value. Such a witness is *replayable* via
+      :func:`axiom.verification.revalidate_witness`;
+    * an explicit counterexample mapping recorded by the verifier
+      (``verification.data["counterexample"]``) or carried by the result
+      payload (``value["counterexample"]``).
+
+    A prose sentence in ``Verification.detail`` is **not** admissible on its
+    own: it is a human-readable summary of the witness, not the witness.
     """
     if verification is None or verification.passed:
         return False
 
+    # Only a verification kind that is, by construction, a disproof may ever
+    # carry a refutation; an undecidable check can never be promoted to one.
+    if verification.kind not in REFUTING_VERIFICATION_KINDS:
+        return False
+
     data = verification.data or {}
-    # 1. Explicit counterexample or witness dictionary/object
-    if data.get("counterexample") or data.get("witness"):
+    witness = data.get("witness")
+    if isinstance(witness, dict) and witness:
         return True
-    if isinstance(value, dict) and (value.get("counterexample") or value.get("witness")):
+    if data.get("counterexample"):
         return True
-
-    # 2. Inherently refuting verification kind with explanatory witness detail
-    if verification.kind in REFUTING_VERIFICATION_KINDS and verification.detail:
+    if isinstance(value, dict) and value.get("counterexample"):
         return True
-
-    # 3. Status flag in data or value only accepted if backed by a refuting kind
-    if verification.kind in REFUTING_VERIFICATION_KINDS:
-        if str(data.get("status") or "") in REFUTING_STATUSES:
-            return True
-        if isinstance(value, dict) and str(value.get("status") or "") in REFUTING_STATUSES:
-            return True
-
     return False
 
 

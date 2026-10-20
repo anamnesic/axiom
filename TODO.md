@@ -1,8 +1,8 @@
 # Auditoria de Gaps & Matriz de Rastreabilidade — Chronokairo AXIOM
 
-> **Status:** Atualizado para **v0.2.9** (commit `7981df2` / `HEAD` + ADR-0031)  
+> **Status:** Atualizado para **v0.3.0** (ADR-0031, ADR-0032 — camada de investigação matemática)  
 > **Referência Histórica:** Auditoria inicial realizada na **v0.2.5** (commit `66307c38b67a`)  
-> **Suíte de Testes:** 101/101 testes automatizados aprovados em 6 suítes (incluindo testes adversariais sem mocks, detecção de adulteração de alta precisão e suíte dedicada aos estados epistémicos)  
+> **Suíte de Testes:** 143/143 testes automatizados aprovados em 8 suítes (incluindo testes adversariais sem mocks, replay de testemunhas estruturadas, rejeição de payloads sem valor e a suíte dedicada da camada de investigação matemática)  
 > **Millennium Research Bench:** 111/111 critérios aprovados · 40/40 controles negativos fail-closed (0.0% falsos positivos)
 
 ---
@@ -46,6 +46,8 @@ A auditoria externa independente sobre o commit `7981df2` identificou 8 pontos d
 | **P2** | Esquema MCP de `math_number_theory` omitia operações disponíveis no motor e CLI (`divisors`, `primefactors`, `factors_perm_check`). | ✅ **RESOLVIDO** | Atualizado esquema JSON-RPC de `math_number_theory` e despacho em [src/axiom/mcp_server.py](src/axiom/mcp_server.py) com todos os parâmetros (`factors1`, `factors2`). Testado em [tests/test_axiom.py](tests/test_axiom.py). |
 | **P2** | Exemplo em `research/arithmetic/README.md` referenciava `res.status` inexistente em `MathResult`. | ✅ **RESOLVIDO** | Corrigido para `print(res.epistemic_state, res.verified, res.guarantee)` em [research/arithmetic/README.md](research/arithmetic/README.md). |
 | **P2** | ADRs referenciavam checklist sem versão rastreada no repositório. | ✅ **RESOLVIDO** | Checklist sincronizado e versionado em [research/CHECKLIST_PROVAS.md](research/CHECKLIST_PROVAS.md), registrando 10/120 dias e clarificando o marco acadêmico de 100% dos tópicos fundamentais selecionados do Livro 1. |
+| **P1** | Refutação aceitava texto em prosa sem certificado de testemunha estruturada. | ✅ **RESOLVIDO** | `has_refutation_evidence` em [src/axiom/contract.py](src/axiom/contract.py) agora exige testemunha estruturada (`data["witness"]` ou `data["counterexample"]`), suportando replay via `revalidate_witness()`. Testado em [tests/test_epistemic_states.py](tests/test_epistemic_states.py) ([ADR-0032](docs/adr/0032-structured-falsity-witnesses-and-investigation-layer.md)). |
+| **P1** | `_values_semantically_equal` aceitava payloads adulterados com `value: null`. | ✅ **RESOLVIDO** | Rejeição mandatória de valores nulos ou ausentes na revalidação de payloads em [src/axiom/core.py](src/axiom/core.py). Testado com todas as operações em [tests/test_epistemic_states.py](tests/test_epistemic_states.py) ([ADR-0032](docs/adr/0032-structured-falsity-witnesses-and-investigation-layer.md)). |
 
 ---
 

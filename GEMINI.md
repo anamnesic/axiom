@@ -57,7 +57,7 @@ axiom number-theory primefactors -n 360
 
 ## 2. Model Context Protocol (MCP) Integration
 
-AXIOM exposes 21 standardized mathematical tools over MCP stdio:
+AXIOM exposes 29 standardized mathematical tools over MCP stdio (21 computational + 8 investigation layer):
 ```bash
 axiom mcp
 # or: python -m axiom.mcp_server

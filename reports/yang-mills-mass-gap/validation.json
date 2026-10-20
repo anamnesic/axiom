@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-20T18:18:14.079415+00:00",
+  "timestamp_utc": "2026-10-20T18:58:06.834859+00:00",
   "axiom_version": "0.2.3",
   "problem": "Yang-Mills and the Mass Gap (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/yang-mills-mass-gap/validate.py": "75a5c8291492daf0c9432beedbe318e2b1d738772a534b0cdfee9eea496ff15d",
     "reports/yang-mills-mass-gap/README.md": "cca057185dd88f43aff5b56006ddb31ef3cd59873745e68119b62f81cd959be3",
     "reports/yang-mills-mass-gap/REPORT.md": "7b76844b6150cae8d9749837ded14449e7c4a3476ddba0849386667912e97fbb",
-    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
-    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383"
+    "src/axiom/verification.py": "e912dad6ff553ecaa50af2341e12eee7c17292466ec3887cd3bb170d4a14b7a3",
+    "src/axiom/core.py": "81666fa93a9592f92b0ca1c4fe7e73e5f609f884a4558adf548778803d4cb116"
   },
   "runs": {
     "doctor": {
@@ -182,7 +182,7 @@
       "result": {
         "ok": true,
         "python": "3.14.7",
-        "mcp_tools_count": 21,
+        "mcp_tools_count": 29,
         "skills_count": 17,
         "skills": [
           {
@@ -479,7 +479,16 @@
               "T3": "-2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "I*T3",
+              "substitutions": {
+                "T3": "-2"
+              },
+              "observed": "|diff| = 2.000e+00"
+            }
           }
         }
       }
@@ -617,7 +626,21 @@
               "d3": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "A1*d2*d3 - A2*d1*d3 + A3*d1*d2",
+              "substitutions": {
+                "A1": "-2",
+                "A2": "2",
+                "A3": "2",
+                "d1": "2",
+                "d2": "2",
+                "d3": "2"
+              },
+              "observed": "|diff| = 8.000e+00"
+            }
           }
         }
       }
@@ -868,7 +891,16 @@
               "Delta_photon": "1"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "Delta_photon",
+              "substitutions": {
+                "Delta_photon": "1"
+              },
+              "observed": "|diff| = 1.000e+00"
+            }
           }
         }
       }
@@ -930,7 +962,16 @@
               "Delta_YM": "-2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "Delta_YM",
+              "substitutions": {
+                "Delta_YM": "-2"
+              },
+              "observed": "|diff| = 2.000e+00"
+            }
           }
         }
       }
@@ -1024,7 +1065,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"I*T3 == 0\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"I*T3\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"I*T3\",\n    \"counterexample\": {\n      \"T3\": \"-2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'T3': '-2'})\",\n  \"latex\": \"i T_{3} \\\\neq 0\",\n  \"variables\": [\n    \"T3\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = I*T3\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> I*T3\",\n      \"assumptions: {'T3': {'nonzero': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"I*T3\\\" \\\"0\\\" --assumptions \\\"T3:nonzero\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'T3': '-2'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"T3\": \"-2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"I*T3 == 0\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"I*T3\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"I*T3\",\n    \"counterexample\": {\n      \"T3\": \"-2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'T3': '-2'})\",\n  \"latex\": \"i T_{3} \\\\neq 0\",\n  \"variables\": [\n    \"T3\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = I*T3\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> I*T3\",\n      \"assumptions: {'T3': {'nonzero': True}}\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"I*T3\\\" \\\"0\\\" --assumptions \\\"T3:nonzero\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'T3': '-2'} (|diff| = 2.000e+00)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"counterexample\": {\n        \"T3\": \"-2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false,\n      \"witness\": {\n        \"type\": \"counterexample\",\n        \"expected\": \"0\",\n        \"expression\": \"I*T3\",\n        \"substitutions\": {\n          \"T3\": \"-2\"\n        },\n        \"observed\": \"|diff| = 2.000e+00\"\n      }\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -1073,7 +1114,16 @@
                 "T3": "-2"
               },
               "status": "disproven",
-              "proven": false
+              "proven": false,
+              "witness": {
+                "type": "counterexample",
+                "expected": "0",
+                "expression": "I*T3",
+                "substitutions": {
+                  "T3": "-2"
+                },
+                "observed": "|diff| = 2.000e+00"
+              }
             }
           }
         },

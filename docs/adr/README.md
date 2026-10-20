@@ -39,9 +39,4 @@ This directory records the architectural decisions made in the design and evolut
 | [ADR-0029](0029-euclid-infinitude-of-primes-and-nextprime-primitive.md) | Euclid's Infinitude of Primes Verification & Prime Generation Primitives (Day 08) | Accepted | 2026-10-20 | Formalize Day 08 Euclid's Infinitude of Primes in Lean 4 (0 sorry); add verified `nextprime` computational primitive with minimality checks; add `verify_lean_file` alias; record reproducible session and advance 120-day checklist to 8/120. |
 | [ADR-0030](0030-linear-diophantine-equations-modular-arithmetic-and-book-completion.md) | Linear Diophantine Equations, Modular Arithmetic & Book 1 Completion (Days 09 & 10) | Accepted | 2026-10-20 | Formalize Days 09 & 10 in Lean 4 (0 sorry); verify general solutions to diophantine equations and congruence ring properties; complete 100% of Book 1 (Abramo Hefez) and advance 120-day checklist to 10/120. |
 | [ADR-0031](0031-exact-value-integrity-refutation-evidence-and-statistical-corrections.md) | Exact Value Integrity, Refutation Evidence & Statistical Corrections | Accepted | 2026-10-20 | Compare integers exactly in the tamper comparator (no binary-float reconciliation above $2^{53}$); require an explicit falsity witness before reporting `REFUTATION`; restore the Lean 4.14.0 corpus contract; replace the positional session-step assertion with semantic identification; adopt one consistent two-sided Clopper-Pearson convention and emit baseline provenance machine-readably. |
-
-
-
-
-
-
+| [ADR-0032](0032-structured-falsity-witnesses-and-investigation-layer.md) | Structured Falsity Witnesses, Strict Payload Integrity & the Mathematical Investigation Layer | Accepted | 2026-10-20 | Require a machine-readable, replayable falsity witness (and its re-validation) before any `REFUTATION`; close the live payload hole where a deleted `value` skipped the tamper check; implement the eight ADR-0019 investigation primitives over a persistent dossier, exposed through MCP (29 tools) and the CLI, with the dependency DAG keeping structural integrity separate from demonstrated logical implication. |

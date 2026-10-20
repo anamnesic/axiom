@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-20T18:17:50.860647+00:00",
+  "timestamp_utc": "2026-10-20T18:57:41.589912+00:00",
   "axiom_version": "0.2.3",
   "problem": "Birch and Swinnerton-Dyer Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -201,8 +201,8 @@
     "reports/birch-and-swinnerton-dyer/validate.py": "06bb882819cdee8238f39c62b49e7db60f22a2e041f714c55e62d7cbe875c3ee",
     "reports/birch-and-swinnerton-dyer/README.md": "27f9800b132ccb9d50294a0d7552295334cea275425bbda99377d68c3214d93e",
     "reports/birch-and-swinnerton-dyer/REPORT.md": "85d560e8ff66b5b16b1a80daec34c738e8a41adcbd38646c72d678ea1ad51784",
-    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
-    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383"
+    "src/axiom/verification.py": "e912dad6ff553ecaa50af2341e12eee7c17292466ec3887cd3bb170d4a14b7a3",
+    "src/axiom/core.py": "81666fa93a9592f92b0ca1c4fe7e73e5f609f884a4558adf548778803d4cb116"
   },
   "runs": {
     "doctor": {
@@ -218,7 +218,7 @@
       "result": {
         "ok": true,
         "python": "3.14.7",
-        "mcp_tools_count": 21,
+        "mcp_tools_count": 29,
         "skills_count": 17,
         "skills": [
           {
@@ -597,7 +597,13 @@
           "max_error": 64.0,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "-64",
+              "observed": "-64 != 0"
+            }
           }
         }
       }
@@ -829,7 +835,13 @@
           "max_error": 11.0,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "-11",
+              "observed": "-11 != 0"
+            }
           }
         }
       }
@@ -978,7 +990,13 @@
           "max_error": 5.52786404500042,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "10 - 2*sqrt(5)",
+              "observed": "10 - 2*sqrt(5) != 0"
+            }
           }
         }
       }
@@ -1086,7 +1104,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -11 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"verify\",\n  \"input\": \"5^2 == (-4)^3 - 25*(-4)\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"25\",\n    \"right\": \"36\",\n    \"simplified_difference\": \"-11\"\n  },\n  \"value_str\": \"not equivalent (diff = -11)\",\n  \"latex\": \"25 \\\\neq 36\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 25\",\n      \"rhs = 36\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -11\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"5^2\\\" \\\"(-4)^3 - 25*(-4)\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -11 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 11.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false,\n      \"witness\": {\n        \"type\": \"constant-disproof\",\n        \"expected\": \"0\",\n        \"expression\": \"-11\",\n        \"observed\": \"-11 != 0\"\n      }\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -1125,7 +1143,13 @@
             "max_error": 11.0,
             "data": {
               "status": "disproven",
-              "proven": false
+              "proven": false,
+              "witness": {
+                "type": "constant-disproof",
+                "expected": "0",
+                "expression": "-11",
+                "observed": "-11 != 0"
+              }
             }
           }
         },

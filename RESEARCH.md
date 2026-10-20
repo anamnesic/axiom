@@ -155,7 +155,37 @@ Every file compiles in Lean 4 (v4.14.0+) with **0 sorry** and **0 untrusted axio
 
 ---
 
-## 7. Index of Academic Artifacts
+## 7. The Mathematical Investigation Layer
+
+A CAS answers a question; an *investigation* pursues a claim. The v0.3.0 layer
+implements the eight high-level primitives specified in
+[ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md),
+porting the REA paradigm to mathematics
+([ADR-0032](docs/adr/0032-structured-falsity-witnesses-and-investigation-layer.md)):
+
+| Primitive | Research contribution |
+| :--- | :--- |
+| `math_investigate` | Fixes a *formalised* target statement and a domain scope, so that later work cannot drift to a weaker proposition. |
+| `math_analyze_claim` | Makes the claim's **implicit hypotheses** explicit (denominators, excluded points, inexact floats) — the primary source of specification drift. |
+| `math_trace_dependencies` | Builds the Proof Dependency DAG and **separates structural integrity from demonstrated logical implication**: a dependency list is never a proof. |
+| `math_find_counterexample` | Actively refutes via complex Gaussian probing and polynomial residual inspection, recording a **structured, replayable witness**. |
+| `math_compare_proofs` | Diffs the hypothesis sets of competing proof routes, exposing route-specific assumptions. |
+| `math_list_unknowns` | The **Unknown Ledger**: an honest, queryable catalogue of what is still unproved. |
+| `math_get_evidence_bundle` | Freezes the dossier into a SHA-256 provenance package with engine versions and per-node verifications. |
+| `math_export_investigation` | Renders a reproducible dossier report (`REPORT.md`) with a Mermaid dependency graph. |
+
+Two invariants govern the layer:
+
+1. **An investigation is never a proof.** Its results carry
+   `guarantee = heuristic` and `epistemic_state = inconclusive`; every claim
+   *inside* the dossier keeps its own guarantee.
+2. **A refutation always carries a witness.** Since ADR-0032, the
+   `REFUTATION` state requires a machine-readable falsity certificate that can
+   be replayed on another host — a prose sentence is not admissible.
+
+---
+
+## 8. Index of Academic Artifacts
 
 - **[Research Proposal (`proposal.md`)](proposal.md)** — Research question, hypothesis, methodology, and theoretical justification.
 - **[Curriculum & Study Program (`curriculum.md`)](curriculum.md)** — Comprehensive graduate-level mathematics bibliography and syllabus.

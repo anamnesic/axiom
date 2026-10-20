@@ -21,7 +21,7 @@ Every AXIOM tool returns a `MathResult` with an explicit `guarantee` field order
 
 ---
 
-## 2. MCP Tools Reference (21 Standard Tools)
+## 2. MCP Tools Reference (29 Standard Tools: 21 Computation + 8 Investigation Layer)
 
 Start the MCP stdio server with:
 
@@ -54,6 +54,26 @@ axiom mcp
 | `math_tensor` | Verified Riemannian geometry (metric inverse, Christoffel, Riemann, Ricci, Einstein) |
 | `math_search_mathlib` | Hybrid offline and Loogle search across Mathlib 4 theorem catalog |
 
+### Mathematical Investigation Layer (v0.3.0, ADR-0019)
+
+| Tool | Purpose |
+| :--- | :--- |
+| `math_investigate` | Create a persistent investigation dossier for a target claim (statement, scope, claim node) |
+| `math_analyze_claim` | Decompose a claim into free variables, implicit/explicit hypotheses, and boundary conditions |
+| `math_trace_dependencies` | Build and audit the proof dependency DAG, separating structural integrity from demonstrated implication |
+| `math_find_counterexample` | Actively refute a claim via complex Gaussian probing and polynomial residual inspection |
+| `math_compare_proofs` | Compare proof routes and surface the hypotheses each route requires (shared vs. route-specific) |
+| `math_list_unknowns` | The Unknown Ledger: open gaps, unproved lemmas, pending hypotheses, and evidence markers |
+| `math_get_evidence_bundle` | Export the immutable provenance package: engine versions, per-node verifications, SHA-256 digests |
+| `math_export_investigation` | Render the reproducible dossier report (`REPORT.md`) with a Mermaid dependency graph |
+
+> **Fail-closed rule for the Investigation Layer:** an investigation orchestrates
+> verified computations but is never itself a proof. Its results carry
+> `guarantee = heuristic` and `epistemic_state = inconclusive`; every individual
+> claim inside the dossier keeps its own guarantee. A dependency list certifies
+> graph *structure* only — never that a dependency logically implies its
+> dependant.
+
 ---
 
 ## 3. CLI Quick Reference
@@ -74,6 +94,19 @@ axiom number-theory factorint -n 360
 axiom number-theory divisors -n 12
 axiom number-theory primefactors -n 360
 axiom session record --file proof.lean --note "Step 1"
+```
+
+Investigation Layer (v0.3.0):
+
+```bash
+axiom investigate "(x^2 - 1)/(x - 1) = x + 1"
+axiom analyze-claim <investigation_id>
+axiom trace-dependencies <investigation_id> --lemma "sin(x)^2 + cos(x)^2 = 1"
+axiom find-counterexample <investigation_id>
+axiom compare-proofs <investigation_id> --statement "sin(x)^2 + cos(x)^2 = 1"
+axiom list-unknowns <investigation_id>
+axiom get-evidence-bundle <investigation_id>
+axiom export-investigation <investigation_id>
 ```
 
 Pass `--json` to any command for structured JSON output matching the MCP contract.

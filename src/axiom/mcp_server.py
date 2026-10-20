@@ -1,6 +1,8 @@
 """AXIOM Model Context Protocol (MCP) server.
 
-Exposes the 13 composable mathematical tools defined by the AXIOM contract:
+Exposes the 29 composable tools defined by the AXIOM contract.
+
+Computational and verification tools:
 
 * ``math_parse``
 * ``math_simplify``
@@ -15,6 +17,25 @@ Exposes the 13 composable mathematical tools defined by the AXIOM contract:
 * ``math_explain``
 * ``math_compare``
 * ``math_explore``
+* ``math_matrix``
+* ``math_ode``
+* ``math_number_theory``
+* ``math_optimize``
+* ``math_statistics``
+* ``math_tensor``
+* ``math_search_mathlib``
+* ``math_session``
+
+Mathematical Investigation Layer (v0.3.0, ADR-0019):
+
+* ``math_investigate``
+* ``math_analyze_claim``
+* ``math_trace_dependencies``
+* ``math_find_counterexample``
+* ``math_compare_proofs``
+* ``math_list_unknowns``
+* ``math_get_evidence_bundle``
+* ``math_export_investigation``
 
 Can run either through the official ``mcp`` Python SDK (when installed) or via
 the built-in zero-dependency JSON-RPC 2.0 stdio transport so agents can connect
@@ -488,6 +509,168 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "math_investigate",
+        "description": (
+            "Create a persistent mathematical investigation dossier for a target "
+            "claim: formalised statement, domain scope and a registered, "
+            "undecided claim node. Part of the Mathematical Investigation Layer."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "statement": {"type": "string", "description": "The target claim to investigate."},
+                "investigation_id": {"type": "string", "description": "Explicit dossier id (generated when omitted)."},
+                "root": {"type": "string", "default": ".axiom/investigations", "description": "Dossier root directory."},
+                "scope": {"type": "object", "description": "Optional scope metadata (domain, chapter, target)."},
+            },
+            "required": ["statement"],
+        },
+    },
+    {
+        "name": "math_analyze_claim",
+        "description": (
+            "Decompose a claim into free variables, implicit and explicit "
+            "hypotheses, data types and boundary conditions."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "statement": {"type": "string", "description": "Override the claim to analyse."},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id"],
+        },
+    },
+    {
+        "name": "math_trace_dependencies",
+        "description": (
+            "Build and audit the proof dependency graph of an investigation, "
+            "separating DAG structural integrity from demonstrated logical implication."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "lemmas": {
+                    "oneOf": [
+                        {"type": "array", "items": {"type": "string"}},
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "statement": {"type": "string"},
+                                    "depends_on": {"type": "array", "items": {"type": "string"}},
+                                },
+                                "required": ["statement"],
+                            },
+                        },
+                    ],
+                    "description": "Lemma statements (optionally with explicit dependencies).",
+                },
+                "mode": {"type": "string", "enum": ["identity", "equation"], "default": "identity"},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id", "lemmas"],
+        },
+    },
+    {
+        "name": "math_find_counterexample",
+        "description": (
+            "Actively hunt a counterexample to the target claim using complex "
+            "Gaussian probing and polynomial residual inspection."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "statement": {"type": "string", "description": "Override the claim to attack."},
+                "mode": {"type": "string", "enum": ["identity", "equation"], "default": "identity"},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id"],
+        },
+    },
+    {
+        "name": "math_compare_proofs",
+        "description": (
+            "Compare several proof routes for the same claim and surface the "
+            "hypotheses each route requires (shared vs. route-specific)."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "statements": {
+                    "oneOf": [
+                        {"type": "array", "items": {"type": "string"}},
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "statement": {"type": "string"},
+                                    "label": {"type": "string"},
+                                },
+                                "required": ["statement"],
+                            },
+                        },
+                    ],
+                    "description": "The proof attempts to compare.",
+                },
+                "mode": {"type": "string", "enum": ["identity", "equation"], "default": "identity"},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id", "statements"],
+        },
+    },
+    {
+        "name": "math_list_unknowns",
+        "description": (
+            "The Unknown Ledger: open gaps, unproved lemmas, pending hypotheses "
+            "and evidence markers still blocking the investigation."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id"],
+        },
+    },
+    {
+        "name": "math_get_evidence_bundle",
+        "description": (
+            "Export the immutable provenance package of an investigation: engine "
+            "versions, per-node verification records and SHA-256 digests of every artifact."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id"],
+        },
+    },
+    {
+        "name": "math_export_investigation",
+        "description": (
+            "Render the reproducible dossier report (REPORT.md) with the claim "
+            "analysis, the Mermaid dependency graph, the Unknown Ledger and the evidence bundle."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investigation_id": {"type": "string", "description": "Dossier id."},
+                "root": {"type": "string", "default": ".axiom/investigations"},
+            },
+            "required": ["investigation_id"],
+        },
+    },
+    {
         "name": "math_session",
         "description": (
             "Record verified mathematical steps and conjectures into a reproducible "
@@ -850,6 +1033,63 @@ def dispatch_tool(
 
     if name == "math_statistics":
         return ax.statistics(args["data"])
+
+    if name == "math_investigate":
+        return ax.investigate(
+            args["statement"],
+            investigation_id=args.get("investigation_id"),
+            root=args.get("root", ".axiom/investigations"),
+            scope=args.get("scope"),
+        )
+
+    if name == "math_analyze_claim":
+        return ax.analyze_claim(
+            args["investigation_id"],
+            root=args.get("root", ".axiom/investigations"),
+            statement=args.get("statement"),
+        )
+
+    if name == "math_trace_dependencies":
+        return ax.trace_dependencies(
+            args["investigation_id"],
+            args.get("lemmas") or [],
+            root=args.get("root", ".axiom/investigations"),
+            mode=args.get("mode", "identity"),
+        )
+
+    if name == "math_find_counterexample":
+        return ax.find_counterexample(
+            args["investigation_id"],
+            root=args.get("root", ".axiom/investigations"),
+            statement=args.get("statement"),
+            mode=args.get("mode", "identity"),
+        )
+
+    if name == "math_compare_proofs":
+        return ax.compare_proofs(
+            args["investigation_id"],
+            args.get("statements") or [],
+            root=args.get("root", ".axiom/investigations"),
+            mode=args.get("mode", "identity"),
+        )
+
+    if name == "math_list_unknowns":
+        return ax.list_unknowns(
+            args["investigation_id"],
+            root=args.get("root", ".axiom/investigations"),
+        )
+
+    if name == "math_get_evidence_bundle":
+        return ax.get_evidence_bundle(
+            args["investigation_id"],
+            root=args.get("root", ".axiom/investigations"),
+        )
+
+    if name == "math_export_investigation":
+        return ax.export_investigation(
+            args["investigation_id"],
+            root=args.get("root", ".axiom/investigations"),
+        )
 
     if name == "math_session":
         return ax.session(

@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-20T18:18:27.173610+00:00",
+  "timestamp_utc": "2026-10-20T18:58:20.934403+00:00",
   "axiom_version": "0.2.3",
   "problem": "Poincaré Conjecture (Solved Millennium Problem)",
   "all_criteria_passed": true,
@@ -165,8 +165,8 @@
     "reports/poincare-conjecture/validate.py": "6a3ce8219ce747aca3e821ce3bd76632626ad9baae957e50f80e1ca609d279b9",
     "reports/poincare-conjecture/README.md": "a0e87d9c426b1f498246f195630a75dd4d5f22766a4a9962024f6033fded02d6",
     "reports/poincare-conjecture/REPORT.md": "43b44e347f43e4e2f7f16dc6b8ed1e53a6533d032effde30bd0cc35e0810dd4d",
-    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
-    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383"
+    "src/axiom/verification.py": "e912dad6ff553ecaa50af2341e12eee7c17292466ec3887cd3bb170d4a14b7a3",
+    "src/axiom/core.py": "81666fa93a9592f92b0ca1c4fe7e73e5f609f884a4558adf548778803d4cb116"
   },
   "runs": {
     "doctor": {
@@ -182,7 +182,7 @@
       "result": {
         "ok": true,
         "python": "3.14.7",
-        "mcp_tools_count": 21,
+        "mcp_tools_count": 29,
         "skills_count": 17,
         "skills": [
           {
@@ -557,7 +557,16 @@
               "R0": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "6/R0**2",
+              "substitutions": {
+                "R0": "2"
+              },
+              "observed": "|diff| = 1.500e+00"
+            }
           }
         }
       }
@@ -631,7 +640,16 @@
               "R0": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "-3/R0**2",
+              "substitutions": {
+                "R0": "2"
+              },
+              "observed": "|diff| = 7.500e-01"
+            }
           }
         }
       }
@@ -811,7 +829,17 @@
               "T": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "-4*T",
+              "substitutions": {
+                "R0": "-2",
+                "T": "2"
+              },
+              "observed": "|diff| = 8.000e+00"
+            }
           }
         }
       }
@@ -929,7 +957,17 @@
               "S_sphere": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "M_manifold - S_sphere",
+              "substitutions": {
+                "M_manifold": "-2",
+                "S_sphere": "2"
+              },
+              "observed": "|diff| = 4.000e+00"
+            }
           }
         }
       }
@@ -1024,7 +1062,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / R0^2 == 0\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"6/R0**2\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"6/R0**2\",\n    \"counterexample\": {\n      \"R0\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'R0': '2'})\",\n  \"latex\": \"\\\\frac{6}{R_{0}^{2}} \\\\neq 0\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 6/R0**2\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 6/R0**2\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / R0^2\\\" \\\"0\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'R0': '2'} (|diff| = 1.500e+00)\",\n    \"checks\": 1,\n    \"max_error\": 1.5,\n    \"data\": {\n      \"domain_constraints\": [\n        \"R0**2 != 0\"\n      ],\n      \"counterexample\": {\n        \"R0\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"6 / R0^2 == 0\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"6/R0**2\",\n    \"right\": \"0\",\n    \"simplified_difference\": \"6/R0**2\",\n    \"counterexample\": {\n      \"R0\": \"2\"\n    }\n  },\n  \"value_str\": \"not equivalent (counterexample: {'R0': '2'})\",\n  \"latex\": \"\\\\frac{6}{R_{0}^{2}} \\\\neq 0\",\n  \"variables\": [\n    \"R0\"\n  ],\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 6/R0**2\",\n      \"rhs = 0\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> 6/R0**2\",\n      \"assumptions: {'R0': {'positive': True}}\",\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"limitations\": [\n      \"Domain constraint(s): R0**2 != 0\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"6 / R0^2\\\" \\\"0\\\" --assumptions \\\"R0:positive\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"counterexample-search\",\n    \"passed\": false,\n    \"detail\": \"counterexample found at {'R0': '2'} (|diff| = 1.500e+00)\",\n    \"checks\": 1,\n    \"max_error\": 1.5,\n    \"data\": {\n      \"domain_constraints\": [\n        \"R0**2 != 0\"\n      ],\n      \"counterexample\": {\n        \"R0\": \"2\"\n      },\n      \"status\": \"disproven\",\n      \"proven\": false,\n      \"witness\": {\n        \"type\": \"counterexample\",\n        \"expected\": \"0\",\n        \"expression\": \"6/R0**2\",\n        \"substitutions\": {\n          \"R0\": \"2\"\n        },\n        \"observed\": \"|diff| = 1.500e+00\"\n      }\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -1080,7 +1118,16 @@
                 "R0": "2"
               },
               "status": "disproven",
-              "proven": false
+              "proven": false,
+              "witness": {
+                "type": "counterexample",
+                "expected": "0",
+                "expression": "6/R0**2",
+                "substitutions": {
+                  "R0": "2"
+                },
+                "observed": "|diff| = 1.500e+00"
+              }
             }
           }
         },

@@ -28,6 +28,7 @@ from pathlib import Path
 from axiom import Axiom, EpistemicState, Guarantee, MathResult, Verification
 from axiom.contract import REFUTING_VERIFICATION_KINDS, outcome_word
 from axiom.core import _values_semantically_equal
+from axiom.verification import revalidate_witness
 
 
 class TestEpistemicStateSeparation(unittest.TestCase):
@@ -154,14 +155,34 @@ class TestEpistemicStateSeparation(unittest.TestCase):
             self.assertNotIn(kind, REFUTING_VERIFICATION_KINDS)
 
     def test_outcome_word_distinguishes_failure_from_falsity(self) -> None:
-        """``outcome_word`` must report 'refuted' only with falsity evidence."""
+        """``outcome_word`` must report 'refuted' only with a structured witness.
+
+        A recognised refutation *kind* plus a prose ``detail`` is not enough:
+        the detail is a human-readable summary, not machine-checkable evidence.
+        """
+        # Prose only -> not a refutation.
         self.assertEqual(
             outcome_word(Verification(kind="substitution", passed=False, detail="residual 5 != 0")),
-            "refuted",
-        )
-        self.assertEqual(
-            outcome_word(Verification(kind="unevaluated-integral", passed=False, detail="nope")),
             "inconclusive",
+        )
+        # Structured witness -> refutation.
+        self.assertEqual(
+            outcome_word(
+                Verification(
+                    kind="substitution",
+                    passed=False,
+                    detail="root x = 7 failed substitution",
+                    data={
+                        "witness": {
+                            "type": "residual",
+                            "expression": "x**2 - 5*x + 6",
+                            "substitutions": {"x": "7"},
+                            "expected": "0",
+                        }
+                    },
+                )
+            ),
+            "refuted",
         )
         self.assertEqual(
             outcome_word(Verification(kind="exact-substitution", passed=True, detail="ok")),
@@ -202,6 +223,145 @@ class TestEpistemicStateSeparation(unittest.TestCase):
             )
             self.assertTrue(true_hyp.ok)
             self.assertEqual(true_hyp.value["hypotheses"][0]["status"], "verified")
+
+
+class TestStructuredFalsityWitnesses(unittest.TestCase):
+    """ADR-0032: a refutation must carry a *structured*, replayable witness."""
+
+    def setUp(self) -> None:
+        self.ax = Axiom()
+
+    def test_prose_detail_alone_is_not_a_witness(self) -> None:
+        """A recognised kind plus a prose detail must NOT be a refutation."""
+        res = MathResult(
+            kind="compare",
+            input="x",
+            ok=True,
+            value={},
+            value_str="refuted",
+            guarantee=Guarantee.UNVERIFIED,
+            verification=Verification(
+                kind="counterexample-search",
+                passed=False,
+                detail="counterexample found somewhere (trust me)",
+            ),
+        )
+        self.assertFalse(res.has_refutation_evidence)
+        self.assertEqual(res.epistemic_state, EpistemicState.INCONCLUSIVE)
+
+    def test_real_counterexample_carries_a_replayable_witness(self) -> None:
+        """A genuine counterexample ships a structured, replayable witness."""
+        res = self.ax.compare("sqrt(x^2)", "x")
+        self.assertEqual(res.epistemic_state, EpistemicState.REFUTATION)
+        assert res.verification is not None
+        witness = (res.verification.data or {}).get("witness")
+        self.assertIsInstance(witness, dict)
+        self.assertEqual(witness["type"], "counterexample")
+        self.assertIn("expression", witness)
+        self.assertIn("substitutions", witness)
+
+    def test_witness_replay_confirms_the_refutation(self) -> None:
+        """Replaying the recorded witness must confirm that the claim is false."""
+        res = self.ax.compare("sqrt(x^2)", "x")
+        status, detail = revalidate_witness(res.verification)
+        self.assertEqual(status, "confirmed", detail)
+
+    def test_witness_replay_detects_a_doctored_witness(self) -> None:
+        """A witness doctored so the expression vanishes must not re-validate."""
+        res = self.ax.compare("sqrt(x^2)", "x")
+        assert res.verification is not None
+        data = dict(res.verification.data or {})
+        witness = dict(data["witness"])
+        # Point the witness at an expression that IS zero at that point.
+        witness["expression"] = "x - x"
+        data["witness"] = witness
+        doctored = Verification(
+            kind=res.verification.kind,
+            passed=False,
+            detail=res.verification.detail,
+            checks=res.verification.checks,
+            max_error=res.verification.max_error,
+            data=data,
+        )
+        status, detail = revalidate_witness(doctored)
+        self.assertEqual(status, "failed", detail)
+
+    def test_missing_witness_is_absent(self) -> None:
+        """A verification with no structured witness is not re-validatable."""
+        status, _ = revalidate_witness(
+            Verification(kind="substitution", passed=False, detail="no witness")
+        )
+        self.assertEqual(status, "absent")
+
+    def test_undeterminable_substitution_is_not_a_refutation(self) -> None:
+        """A residual that could not even be evaluated is inconclusive."""
+        res = MathResult(
+            kind="verify",
+            input="x = 1",
+            ok=True,
+            value={},
+            value_str="inconclusive",
+            guarantee=Guarantee.UNVERIFIED,
+            verification=Verification(
+                kind="substitution-indeterminate",
+                passed=False,
+                detail="could not evaluate residual at x = 1",
+            ),
+        )
+        self.assertNotIn("substitution-indeterminate", REFUTING_VERIFICATION_KINDS)
+        self.assertEqual(res.epistemic_state, EpistemicState.INCONCLUSIVE)
+
+
+class TestPersistedPayloadIntegrity(unittest.TestCase):
+    """ADR-0032: a persisted payload must not be able to skip its own audit."""
+
+    def setUp(self) -> None:
+        self.ax = Axiom()
+
+    def test_missing_value_field_is_rejected_for_every_kind(self) -> None:
+        """Deleting the persisted 'value' must be detected, not silently accepted."""
+        cases = [
+            self.ax.number_theory("factorint", n=60),
+            self.ax.solve("x**2 - 4 = 0", variable="x"),
+            self.ax.differentiate("x**3", variable="x"),
+            self.ax.limit("sin(x)/x", variable="x", point="0"),
+            self.ax.statistics("[1,2,3,4]"),
+        ]
+        for res in cases:
+            payload = res.to_dict()
+            del payload["value"]
+            out = self.ax.verify(payload)
+            self.assertFalse(out.ok, f"{res.kind} accepted a payload with no value")
+            self.assertFalse(out.verified)
+            self.assertIn("tamper", (out.error or "").lower(), res.kind)
+
+    def test_null_value_field_is_rejected(self) -> None:
+        """A null 'value' is as suspicious as an absent one."""
+        payload = self.ax.number_theory("factorint", n=60).to_dict()
+        payload["value"] = None
+        out = self.ax.verify(payload)
+        self.assertFalse(out.ok)
+        self.assertIn("tamper", (out.error or "").lower())
+
+    def test_failed_operation_payload_is_not_reverifiable(self) -> None:
+        """A persisted failed operation carries no re-verifiable value."""
+        payload = self.ax.number_theory("factorint", n=60).to_dict()
+        payload["ok"] = False
+        payload.pop("value", None)
+        out = self.ax.verify(payload)
+        self.assertFalse(out.ok)
+        self.assertIn("tamper", (out.error or "").lower())
+
+    def test_untampered_payload_is_still_accepted(self) -> None:
+        """The integrity gate must not break legitimate re-verification."""
+        for res in (
+            self.ax.number_theory("factorint", n=60),
+            self.ax.solve("x**2 - 4 = 0", variable="x"),
+            self.ax.differentiate("x**3", variable="x"),
+        ):
+            out = self.ax.verify(res.to_dict())
+            self.assertTrue(out.ok, out.error)
+            self.assertTrue(out.verified, res.kind)
 
 
 class TestExactValueIntegrity(unittest.TestCase):

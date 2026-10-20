@@ -369,6 +369,79 @@ def build_parser() -> argparse.ArgumentParser:
     p_sess.add_argument("--note", default="", help="Optional note for recorded step.")
     p_sess.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
+    # Mathematical Investigation Layer (v0.3.0)
+    p_inv = sub.add_parser(
+        "investigate",
+        help="Create a persistent mathematical investigation dossier for a target claim.",
+    )
+    p_inv.add_argument("statement", help="The target claim to investigate.")
+    p_inv.add_argument("--id", dest="investigation_id", help="Explicit dossier id.")
+    p_inv.add_argument("--root", default=".axiom/investigations", help="Dossier root directory.")
+    p_inv.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_aclaim = sub.add_parser(
+        "analyze-claim",
+        help="Decompose a claim into variables, hypotheses and boundary conditions.",
+    )
+    p_aclaim.add_argument("investigation_id", help="Dossier id.")
+    p_aclaim.add_argument("--statement", help="Override the claim to analyse.")
+    p_aclaim.add_argument("--root", default=".axiom/investigations")
+    p_aclaim.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_trace = sub.add_parser(
+        "trace-dependencies",
+        help="Build and audit the proof dependency graph of an investigation.",
+    )
+    p_trace.add_argument("investigation_id", help="Dossier id.")
+    p_trace.add_argument("--lemma", action="append", default=[], help="Lemma statement (repeatable).")
+    p_trace.add_argument("--mode", default="identity", choices=["identity", "equation"])
+    p_trace.add_argument("--root", default=".axiom/investigations")
+    p_trace.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_ce = sub.add_parser(
+        "find-counterexample",
+        help="Actively hunt a counterexample to the target claim.",
+    )
+    p_ce.add_argument("investigation_id", help="Dossier id.")
+    p_ce.add_argument("--statement", help="Override the claim to attack.")
+    p_ce.add_argument("--mode", default="identity", choices=["identity", "equation"])
+    p_ce.add_argument("--root", default=".axiom/investigations")
+    p_ce.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_cproofs = sub.add_parser(
+        "compare-proofs",
+        help="Compare proof routes and surface the hypotheses each one requires.",
+    )
+    p_cproofs.add_argument("investigation_id", help="Dossier id.")
+    p_cproofs.add_argument("--statement", action="append", default=[], help="Proof attempt (repeatable).")
+    p_cproofs.add_argument("--mode", default="identity", choices=["identity", "equation"])
+    p_cproofs.add_argument("--root", default=".axiom/investigations")
+    p_cproofs.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_unk = sub.add_parser(
+        "list-unknowns",
+        help="The Unknown Ledger of an investigation.",
+    )
+    p_unk.add_argument("investigation_id", help="Dossier id.")
+    p_unk.add_argument("--root", default=".axiom/investigations")
+    p_unk.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_bundle = sub.add_parser(
+        "get-evidence-bundle",
+        help="Export the immutable provenance package of an investigation.",
+    )
+    p_bundle.add_argument("investigation_id", help="Dossier id.")
+    p_bundle.add_argument("--root", default=".axiom/investigations")
+    p_bundle.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    p_export = sub.add_parser(
+        "export-investigation",
+        help="Render the reproducible dossier report (REPORT.md).",
+    )
+    p_export.add_argument("investigation_id", help="Dossier id.")
+    p_export.add_argument("--root", default=".axiom/investigations")
+    p_export.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
     # engines
     p_eng = sub.add_parser("engines", help="List registered mathematical engines and capabilities.")
     p_eng.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
@@ -586,6 +659,45 @@ def main(argv: Sequence[str] | None = None) -> int:
             spec_alignment=getattr(args, "spec_alignment", None),
             timeout=getattr(args, "timeout", None),
         )
+    elif cmd == "investigate":
+        res = ax.investigate(
+            args.statement,
+            investigation_id=args.investigation_id,
+            root=args.root,
+        )
+    elif cmd == "analyze-claim":
+        res = ax.analyze_claim(
+            args.investigation_id,
+            root=args.root,
+            statement=args.statement,
+        )
+    elif cmd == "trace-dependencies":
+        res = ax.trace_dependencies(
+            args.investigation_id,
+            list(args.lemma),
+            root=args.root,
+            mode=args.mode,
+        )
+    elif cmd == "find-counterexample":
+        res = ax.find_counterexample(
+            args.investigation_id,
+            root=args.root,
+            statement=args.statement,
+            mode=args.mode,
+        )
+    elif cmd == "compare-proofs":
+        res = ax.compare_proofs(
+            args.investigation_id,
+            list(args.statement),
+            root=args.root,
+            mode=args.mode,
+        )
+    elif cmd == "list-unknowns":
+        res = ax.list_unknowns(args.investigation_id, root=args.root)
+    elif cmd == "get-evidence-bundle":
+        res = ax.get_evidence_bundle(args.investigation_id, root=args.root)
+    elif cmd == "export-investigation":
+        res = ax.export_investigation(args.investigation_id, root=args.root)
     elif cmd == "matrix":
         res = ax.matrix(args.matrix, operation=args.op, rhs=args.rhs)
     elif cmd == "ode":

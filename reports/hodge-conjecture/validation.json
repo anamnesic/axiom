@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-20T18:18:01.898982+00:00",
+  "timestamp_utc": "2026-10-20T18:57:53.666578+00:00",
   "axiom_version": "0.2.3",
   "problem": "Hodge Conjecture (Clay Millennium Problem)",
   "all_criteria_passed": true,
@@ -153,8 +153,8 @@
     "reports/hodge-conjecture/validate.py": "44a4b32b9be56e36ed724542a4a3b295725983b98830dc7d0548282b6b5ba7d9",
     "reports/hodge-conjecture/README.md": "2731738affb12b51b00dc1110fff6f35f5806f8b28c3382c8ed99c117c6b6cef",
     "reports/hodge-conjecture/REPORT.md": "52507bab9518dc30091fe330b6e07ddeb1292aebbfc998713075c9cd521c9bca",
-    "src/axiom/verification.py": "0cf66e1d2874adc65849981d2e75d4f83bbc7bdf2405d0b4938be69a3144155d",
-    "src/axiom/core.py": "a319d769d01e0730daad2b0c9f4233435d613a09456e3867c0a7ea364a7c9383"
+    "src/axiom/verification.py": "e912dad6ff553ecaa50af2341e12eee7c17292466ec3887cd3bb170d4a14b7a3",
+    "src/axiom/core.py": "81666fa93a9592f92b0ca1c4fe7e73e5f609f884a4558adf548778803d4cb116"
   },
   "runs": {
     "doctor": {
@@ -170,7 +170,7 @@
       "result": {
         "ok": true,
         "python": "3.14.7",
-        "mcp_tools_count": 21,
+        "mcp_tools_count": 29,
         "skills_count": 17,
         "skills": [
           {
@@ -502,7 +502,13 @@
           "max_error": 2.0,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "-2",
+              "observed": "-2 != 0"
+            }
           }
         }
       }
@@ -661,7 +667,13 @@
           "max_error": 3.0,
           "data": {
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "constant-disproof",
+              "expected": "0",
+              "expression": "3",
+              "observed": "3 != 0"
+            }
           }
         }
       }
@@ -779,7 +791,17 @@
               "hodge_class": "2"
             },
             "status": "disproven",
-            "proven": false
+            "proven": false,
+            "witness": {
+              "type": "counterexample",
+              "expected": "0",
+              "expression": "-algebraic_cycle + hodge_class",
+              "substitutions": {
+                "algebraic_cycle": "-2",
+                "hodge_class": "2"
+              },
+              "observed": "|diff| = 4.000e+00"
+            }
           }
         }
       }
@@ -862,7 +884,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"3 == 5\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"3\",\n    \"right\": \"5\",\n    \"simplified_difference\": \"-2\"\n  },\n  \"value_str\": \"not equivalent (diff = -2)\",\n  \"latex\": \"3 \\\\neq 5\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 3\",\n      \"rhs = 5\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -2\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"3\\\" \\\"5\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -2 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false\n    }\n  }\n}"
+            "text": "{\n  \"kind\": \"compare\",\n  \"input\": \"3 == 5\",\n  \"ok\": true,\n  \"epistemic_state\": \"refutation\",\n  \"value\": {\n    \"status\": \"disproven\",\n    \"equivalent\": false,\n    \"consistent_with_samples\": false,\n    \"left\": \"3\",\n    \"right\": \"5\",\n    \"simplified_difference\": \"-2\"\n  },\n  \"value_str\": \"not equivalent (diff = -2)\",\n  \"latex\": \"3 \\\\neq 5\",\n  \"guarantee\": \"unverified\",\n  \"evidence\": {\n    \"engine\": \"sympy\",\n    \"engine_version\": \"1.14.0\",\n    \"method\": \"symbolic difference reduction + domain & multi-point sampling\",\n    \"steps\": [\n      \"lhs = 3\",\n      \"rhs = 5\",\n      \"status = disproven\",\n      \"simplify(lhs - rhs) -> -2\"\n    ],\n    \"reproducible_with\": \"axiom compare \\\"3\\\" \\\"5\\\"\"\n  },\n  \"verification\": {\n    \"kind\": \"constant-exact-disproof\",\n    \"passed\": false,\n    \"detail\": \"Exact constant expressions are not equal (difference -2 != 0)\",\n    \"checks\": 1,\n    \"max_error\": 2.0,\n    \"data\": {\n      \"status\": \"disproven\",\n      \"proven\": false,\n      \"witness\": {\n        \"type\": \"constant-disproof\",\n        \"expected\": \"0\",\n        \"expression\": \"-2\",\n        \"observed\": \"-2 != 0\"\n      }\n    }\n  }\n}"
           }
         ],
         "structuredContent": {
@@ -901,7 +923,13 @@
             "max_error": 2.0,
             "data": {
               "status": "disproven",
-              "proven": false
+              "proven": false,
+              "witness": {
+                "type": "constant-disproof",
+                "expected": "0",
+                "expression": "-2",
+                "observed": "-2 != 0"
+              }
             }
           }
         },

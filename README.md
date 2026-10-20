@@ -78,7 +78,7 @@ Every result carries structured `Evidence` metadata: `engine`, `engine_version`,
 │  AI Agents                                               │
 │  Antigravity · Codex · Claude Code · Cursor · Copilot    │
 └────────────────────────┬─────────────────────────────────┘
-                         │  MCP (21 tools) / CLI
+                         │  MCP (29 tools) / CLI
 ┌────────────────────────▼─────────────────────────────────┐
 │  AXIOM Core                                              │
 │  Safe AST Parser · Dispatcher · Engine Registry ·        │
@@ -195,7 +195,7 @@ axiom integrate "exp(-x^3)" --variable x
 
 ---
 
-## 21 Composable MCP Tools
+## 29 Composable MCP Tools
 
 | Category | Count | Tools |
 | :--- | :---: | :--- |
@@ -204,6 +204,46 @@ axiom integrate "exp(-x^3)" --variable x
 | **3. Structural & Diagnostic** | 3 | `math_parse`, `math_explain`, `math_explore` |
 | **4. Catalog Lookup** | 1 | `math_search_mathlib` |
 | **5. Visualization & Session** | 2 | `math_plot`, `math_session` |
+| **6. Mathematical Investigation Layer** | 8 | `math_investigate`, `math_analyze_claim`, `math_trace_dependencies`, `math_find_counterexample`, `math_compare_proofs`, `math_list_unknowns`, `math_get_evidence_bundle`, `math_export_investigation` |
+
+---
+
+## Mathematical Investigation Layer
+
+A CAS answers a question. An **investigation** pursues a claim: it formalises
+the claim, decomposes it, tracks the lemmas it depends on, hunts for
+counterexamples, compares proof routes, catalogues what remains unknown, and
+exports a reproducible dossier of evidence
+([ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md)).
+
+```bash
+axiom investigate "(x^2 - 1)/(x - 1) = x + 1"
+axiom analyze-claim inv-20261020-e6e353
+axiom trace-dependencies inv-20261020-e6e353 --lemma "sin(x)^2 + cos(x)^2 = 1"
+axiom find-counterexample inv-20261020-e6e353
+axiom list-unknowns inv-20261020-e6e353
+axiom get-evidence-bundle inv-20261020-e6e353
+axiom export-investigation inv-20261020-e6e353
+```
+
+Each dossier is a self-contained directory:
+
+```text
+.axiom/investigations/<id>/
+├── spec.json        # formalised statement and domain scope
+├── graph.json       # proof dependency graph (audited nodes and edges)
+├── unknowns.json    # Unknown Ledger: gaps, pending hypotheses, unproved lemmas
+├── evidence/        # per-step evidence artifacts
+├── bundle.json      # provenance package with SHA-256 digests
+└── REPORT.md        # reproducible dossier report (with a Mermaid graph)
+```
+
+> **Fail-closed by design.** An investigation orchestrates verified
+> computations but is never itself a proof: its results carry
+> `guarantee = heuristic` and `epistemic_state = inconclusive`, while every
+> individual claim inside the dossier keeps its own guarantee. A dependency
+> list certifies the *structure* of a derivation, never that a dependency
+> logically implies its dependant — only a kernel-checked proof does that.
 
 ---
 
@@ -237,9 +277,9 @@ AXIOM operates as a rigorous neuro-symbolic research harness. For theoretical ju
 - [x] **v0.2.5 — Formal Statement Integrity**: Lean 4 binder and signature parsing, 4-state semantic alignment, and kinetic energy spatial integration derivation (`54` tests).
 - [x] **v0.2.6 — Four Epistemic States & Adversarial Soundness**: 4-epistemic-state separation, Lean sandbox with resource bounds, authorized path restriction, and zero-mock adversarial test suite ([ADR-0017](docs/adr/0017-four-epistemic-states-and-soundness-governance.md), `63` tests).
 - [x] **v0.2.7 — Evidence Integrity & Sandboxing**: Untrusted JSON session quarantine, sanitized process environment for Lean, and interface alignment ([ADR-0018](docs/adr/0018-evidence-integrity-sandboxing-and-interface-alignment.md), `73` tests).
-- [x] **v0.2.8 — CI Recovery, Tamper-Resistant Revalidation & Versioned Arithmetic Corpus**: CI matrix recovery work, strict semantic value comparison for tamper detection across all operations, hypothesis downgrading on load, and the versioned Abramo Hefez Lean 4 arithmetic corpus in `research/arithmetic/` ([ADR-0026](docs/adr/0026-ci-recovery-tamper-detection-and-versioned-arithmetic-corpus.md)). **The CI matrix is not yet confirmed green — see v0.2.9.**
-- [x] **v0.2.9 — Exact Value Integrity, Refutation Evidence & Statistical Corrections**: Exact integer comparison in the tamper comparator (a payload altered by one unit above $2^{53}$ is now rejected instead of silently accepted); `REFUTATION` now requires an explicit falsity witness, so an undecidable check stays fail-closed `INCONCLUSIVE`; positional session-step assertion replaced by semantic identification of the Lean step; the Lean arithmetic corpus proven to compile on the CI-pinned Lean 4.14.0 *and* 4.35.0; one consistent two-sided Clopper-Pearson convention with the correct false-positive denominator; and baseline provenance emitted machine-readably ([ADR-0031](docs/adr/0031-exact-value-integrity-refutation-evidence-and-statistical-corrections.md), `101` automated tests across 6 suites).
-- [ ] **v0.3.0 — The Mathematical Investigation Layer (Porting REA to Mathematics)**: Mathematical Investigation Dossiers (`.axiom/investigations/<id>/`), Proof Dependency Graphs (DAG), the **Unknown Ledger** (`list_unknowns`), Evidence Bundles with SHA-256 provenance hashes (`get_evidence_bundle`), 8 high-level investigation primitives, and reproducible cross-engine validation across Lean 4, SymPy, SageMath, and Julia ([ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md)).
+- [x] **v0.2.8 — CI Recovery, Tamper-Resistant Revalidation & Versioned Arithmetic Corpus**: Strict semantic value comparison for tamper detection across all operations, hypothesis downgrading on load, and the versioned Abramo Hefez Lean 4 arithmetic corpus in `research/arithmetic/` ([ADR-0026](docs/adr/0026-ci-recovery-tamper-detection-and-versioned-arithmetic-corpus.md)).
+- [x] **v0.2.9 — Exact Value Integrity, Refutation Evidence, Structured Witnesses & CI Full Pass**: 8/8 CI jobs fully green on all platforms; exact integer comparison in the tamper comparator (no float loss above $2^{53}$); `REFUTATION` strictly requires machine-readable structured witnesses with replay verification; mandatory value integrity gate in persisted evidence; positional assertions replaced by semantic identification; dual Lean 4.14/4.35 compatibility; consistent two-sided Clopper-Pearson bounds ([ADR-0031](docs/adr/0031-exact-value-integrity-refutation-evidence-and-statistical-corrections.md), [ADR-0032](docs/adr/0032-structured-falsity-witnesses-and-investigation-layer.md), `111` automated tests across 6 suites).
+- [x] **v0.3.0 — The Mathematical Investigation Layer (Porting REA to Mathematics)**: Mathematical Investigation Dossiers (`.axiom/investigations/<id>/`), Proof Dependency Graphs (DAG, with structural integrity kept separate from demonstrated logical implication), the **Unknown Ledger** (`math_list_unknowns`), Evidence Bundles with SHA-256 provenance hashes (`math_get_evidence_bundle`), the 8 high-level investigation primitives over MCP and CLI, and a reproducible dossier report with a Mermaid dependency graph ([ADR-0019](docs/adr/0019-mathematical-investigation-layer-rea-paradigm.md), [ADR-0032](docs/adr/0032-structured-falsity-witnesses-and-investigation-layer.md), `143` automated tests across 8 suites).
 
 ---
 
@@ -268,7 +308,7 @@ axiom/
 │       ├── parsing.py         # Safe AST mathematical parser & relational assumptions
 │       ├── verification.py    # Independent verifiers & ternary equivalence
 │       ├── registry.py        # Multi-engine registry
-│       ├── mcp_server.py      # 21-tool MCP JSON-RPC 2.0 stdio server
+│       ├── mcp_server.py      # 29-tool MCP JSON-RPC 2.0 stdio server
 │       ├── cli.py             # CLI & Unicode evidence box renderer
 │       ├── session.py         # Reproducible research sessions
 │       ├── setup_agent.py     # Agent auto-config (setup) & diagnostics (doctor)

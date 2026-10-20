@@ -30,6 +30,7 @@ from axiom.engines.base import Answer, Engine, EngineError
 from axiom.parsing import ParseError, Parser, extract_expression_excluded_points
 from axiom.registry import EngineRegistry
 from axiom.verification import (
+    revalidate_witness,
     verify_derivative,
     verify_equivalence,
     verify_integral,
@@ -131,6 +132,39 @@ def _split_top_level_equality(text: str) -> tuple[str, str] | None:
         i += 1
 
 
+# Operations whose ``MathResult`` always carries a persisted ``value``.
+#
+# A persisted payload is an *audit artifact*, never a fresh computation
+# request: a fresh request is expressed as a string expression, while a
+# persisted result arrives as a dict/JSON. For these kinds a payload whose
+# ``value`` is absent or null has been truncated or tampered with. It must be
+# rejected explicitly, instead of silently skipping the revalidation (which
+# would certify an unaudited result).
+_VALUE_REQUIRED_KINDS: frozenset[str] = frozenset(
+    {
+        "compare",
+        "differentiate",
+        "evaluate",
+        "expand",
+        "explore",
+        "factor",
+        "integrate",
+        "limit",
+        "matrix",
+        "number_theory",
+        "ode",
+        "optimize",
+        "parse",
+        "plot",
+        "prove",
+        "simplify",
+        "solve",
+        "statistics",
+        "tensor",
+        "verify",
+    }
+)
+
 # Numeric literal accepted for exact (decimal) comparison of a persisted value.
 _NUMERIC_LITERAL_RE = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
 
@@ -163,8 +197,12 @@ def _values_semantically_equal(
       already floating-point approximations. It is never used to reconcile two
       different exact integers, nor an exact integer with a different float.
     """
-    if persisted_val is None:
+    if persisted_val is None and recomputed_val is None:
         return True
+    if persisted_val is None:
+        if persisted_str is not None and recomputed_str is not None and str(persisted_str).strip() != '':
+            return str(persisted_str).strip() == str(recomputed_str).strip()
+        return False
     if recomputed_val == persisted_val:
         return True
     if str(recomputed_val) == str(persisted_val):
@@ -1560,6 +1598,51 @@ class Axiom:
         inp = str(payload.get("input", ""))
         val = payload.get("value")
         variables = payload.get("variables") or []
+
+        # --- integrity gate on the persisted payload (ADR-0032) --------------
+        # A payload is an audit artifact, not a new computation request. A
+        # missing (or null) required ``value`` means the payload was
+        # truncated: accepting it would silently skip the revalidation and
+        # certify an unaudited result.
+        if kind in _VALUE_REQUIRED_KINDS:
+            if payload.get("ok", True) is False:
+                return error_result(
+                    "verify",
+                    inp,
+                    "tamper/integrity violation: the persisted payload records a failed "
+                    "operation and carries no re-verifiable mathematical value",
+                )
+            if "value" not in payload or val is None:
+                return error_result(
+                    "verify",
+                    inp,
+                    f"tamper/integrity violation: the persisted '{kind}' payload is missing "
+                    "its required 'value' field",
+                )
+
+        # A recorded falsity witness must still reproduce on this host.
+        persisted_ver = payload.get("verification")
+        if isinstance(persisted_ver, dict) and persisted_ver.get("kind"):
+            try:
+                witness_ver = Verification(
+                    kind=str(persisted_ver.get("kind", "")),
+                    passed=bool(persisted_ver.get("passed", False)),
+                    detail=str(persisted_ver.get("detail", "")),
+                    checks=int(persisted_ver.get("checks", 0) or 0),
+                    max_error=persisted_ver.get("max_error"),
+                    data=persisted_ver.get("data") or {},
+                )
+            except Exception:
+                witness_ver = None
+            if witness_ver is not None and not witness_ver.passed:
+                w_status, w_detail = revalidate_witness(witness_ver)
+                if w_status == "failed":
+                    return error_result(
+                        "verify",
+                        inp,
+                        "tamper/integrity violation: the persisted falsity witness does not "
+                        f"reproduce ({w_detail})",
+                    )
         var = variables[0] if variables else None
         if assumptions is None:
             verif_data = (payload.get("verification") or {}).get("data") or {}
@@ -2937,6 +3020,113 @@ class Axiom:
             f"{name}:{action}",
             f"unknown session action '{action}' (choose from: show, record, hypothesis, export, clear, new, status)",
         )
+
+    # ------------------------------------------- Mathematical Investigation Layer (v0.3.0)
+
+    def investigate(
+        self,
+        statement: str,
+        *,
+        investigation_id: str | None = None,
+        root: str = ".axiom/investigations",
+        scope: dict[str, Any] | None = None,
+        assumptions: dict[str, Any] | str | None = None,
+    ) -> MathResult:
+        """Create a persistent mathematical investigation dossier (ADR-0019)."""
+        from axiom.investigation import investigate as _impl
+
+        return _impl(
+            self,
+            statement,
+            root=root,
+            investigation_id=investigation_id,
+            scope=scope,
+            assumptions=assumptions,
+        )
+
+    def analyze_claim(
+        self,
+        investigation_id: str,
+        *,
+        root: str = ".axiom/investigations",
+        statement: str | None = None,
+    ) -> MathResult:
+        """Decompose a claim into variables, hypotheses and boundary conditions."""
+        from axiom.investigation import analyze_claim as _impl
+
+        return _impl(self, investigation_id, root=root, statement=statement)
+
+    def trace_dependencies(
+        self,
+        investigation_id: str,
+        lemmas: list[Any],
+        *,
+        root: str = ".axiom/investigations",
+        mode: str = "identity",
+    ) -> MathResult:
+        """Build and audit the proof dependency graph of an investigation."""
+        from axiom.investigation import trace_dependencies as _impl
+
+        return _impl(self, investigation_id, lemmas, root=root, mode=mode)
+
+    def find_counterexample(
+        self,
+        investigation_id: str,
+        *,
+        root: str = ".axiom/investigations",
+        statement: str | None = None,
+        mode: str = "identity",
+    ) -> MathResult:
+        """Actively hunt a counterexample to the target claim."""
+        from axiom.investigation import find_counterexample as _impl
+
+        return _impl(self, investigation_id, root=root, statement=statement, mode=mode)
+
+    def compare_proofs(
+        self,
+        investigation_id: str,
+        statements: list[Any],
+        *,
+        root: str = ".axiom/investigations",
+        mode: str = "identity",
+    ) -> MathResult:
+        """Compare proof routes and surface the hypotheses each one needs."""
+        from axiom.investigation import compare_proofs as _impl
+
+        return _impl(self, investigation_id, statements, root=root, mode=mode)
+
+    def list_unknowns(
+        self,
+        investigation_id: str,
+        *,
+        root: str = ".axiom/investigations",
+    ) -> MathResult:
+        """The Unknown Ledger of an investigation."""
+        from axiom.investigation import list_unknowns as _impl
+
+        return _impl(self, investigation_id, root=root)
+
+    def get_evidence_bundle(
+        self,
+        investigation_id: str,
+        *,
+        root: str = ".axiom/investigations",
+    ) -> MathResult:
+        """Export the immutable provenance package of an investigation."""
+        from axiom.investigation import get_evidence_bundle as _impl
+
+        return _impl(self, investigation_id, root=root)
+
+    def export_investigation(
+        self,
+        investigation_id: str,
+        *,
+        root: str = ".axiom/investigations",
+    ) -> MathResult:
+        """Render the reproducible dossier report of an investigation."""
+        from axiom.investigation import export_investigation as _impl
+
+        return _impl(self, investigation_id, root=root)
 
 
 def _render_svg_plot(
