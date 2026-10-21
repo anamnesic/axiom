@@ -17,6 +17,12 @@ from axiom.engines.external_engines import JuliaEngine, SageEngine
 from axiom.engines.lean_engine import LeanEngine
 from axiom.engines.numeric_engine import NumericEngine
 from axiom.engines.sympy_engine import SymPyEngine
+from axiom.literature import (
+    lookup_msc,
+    search_literature,
+    search_software,
+    verify_citation,
+)
 from axiom.mcp_server import TOOL_DEFINITIONS, dispatch_tool
 from axiom.parsing import ParseError, Parser
 from axiom.registry import EngineRegistry
@@ -44,6 +50,10 @@ __all__ = [
     "TOOL_DEFINITIONS",
     "Verification",
     "dispatch_tool",
+    "lookup_msc",
+    "search_literature",
+    "search_software",
     "solve_expression",
+    "verify_citation",
     "__version__",
 ]

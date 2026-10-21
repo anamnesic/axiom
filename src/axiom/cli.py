@@ -347,6 +347,48 @@ def build_parser(exit_on_error: bool = True) -> argparse.ArgumentParser:
     p_sml.add_argument("--online", action="store_true", help="Also query the live Loogle Mathlib4 API.")
     p_sml.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
 
+    # literature / zbmath (arXiv:2106.04664)
+    p_lit = sub.add_parser(
+        "literature",
+        aliases=["zbmath", "lit"],
+        help="Search peer-reviewed mathematical literature via zbMATH Open (arXiv:2106.04664).",
+    )
+    p_lit.add_argument("query", help="Search query (e.g. 'riemann hypothesis', 'fermat little theorem').")
+    p_lit.add_argument("-n", "--max-results", type=int, default=8, help="Max results (default: 8).")
+    p_lit.add_argument("--offline", action="store_true", help="Force offline curated catalog search only.")
+    p_lit.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    # msc (Mathematics Subject Classification)
+    p_msc = sub.add_parser(
+        "msc",
+        help="Lookup Mathematics Subject Classification (MSC 2020) codes and hierarchies.",
+    )
+    p_msc.add_argument("code_or_query", help="MSC code or topic (e.g. '11-XX', '11M06', 'Navier-Stokes').")
+    p_msc.add_argument("-n", "--max-results", type=int, default=5, help="Max results (default: 5).")
+    p_msc.add_argument("--offline", action="store_true", help="Force offline curated MSC catalog search only.")
+    p_msc.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    # software (swMATH)
+    p_sw = sub.add_parser(
+        "software",
+        aliases=["swmath"],
+        help="Search mathematical research software tracked via swMATH and zbMATH Open.",
+    )
+    p_sw.add_argument("query", help="Software name or mathematical domain (e.g. 'lean', 'sympy', 'pari').")
+    p_sw.add_argument("-n", "--max-results", type=int, default=5, help="Max results (default: 5).")
+    p_sw.add_argument("--offline", action="store_true", help="Force offline curated software catalog search only.")
+    p_sw.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
+    # verify-citation
+    p_vc = sub.add_parser(
+        "verify-citation",
+        aliases=["citation"],
+        help="Audit a mathematical citation against zbMATH Open to eliminate hallucinated references.",
+    )
+    p_vc.add_argument("citation", help="Citation string, DOI, arXiv ID, or paper title.")
+    p_vc.add_argument("--offline", action="store_true", help="Force offline curated catalog validation only.")
+    p_vc.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+
     # session
     p_sess = sub.add_parser(
         "session",
@@ -677,6 +719,14 @@ def execute_cli_args(ax: Axiom, args: argparse.Namespace) -> MathResult:
         return ax.tensor(args.metric, coordinates=args.coords, operation=args.op)
     elif cmd in ("search-mathlib", "mathlib"):
         return ax.search_mathlib(args.query, max_results=args.max_results, online=args.online)
+    elif cmd in ("literature", "zbmath", "lit"):
+        return ax.search_literature(args.query, max_results=args.max_results, online=not getattr(args, "offline", False))
+    elif cmd == "msc":
+        return ax.lookup_msc(args.code_or_query, max_results=args.max_results, online=not getattr(args, "offline", False))
+    elif cmd in ("software", "swmath"):
+        return ax.search_software(args.query, max_results=args.max_results, online=not getattr(args, "offline", False))
+    elif cmd in ("verify-citation", "citation"):
+        return ax.verify_citation(args.citation, online=not getattr(args, "offline", False))
     elif cmd == "session":
         deps = None
         if getattr(args, "depends_on", None):

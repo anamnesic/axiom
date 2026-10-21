@@ -24,6 +24,7 @@ Computational and verification tools:
 * ``math_statistics``
 * ``math_tensor``
 * ``math_search_mathlib``
+* ``math_search_literature``
 * ``math_session``
 
 Mathematical Investigation Layer (v0.3.0, ADR-0019):
@@ -766,6 +767,45 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "required": ["query"],
         },
     },
+    {
+        "name": "math_search_literature",
+        "description": (
+            "Search peer-reviewed mathematical literature, reviews, author profiles, "
+            "MSC 2020 classifications, research software (swMATH), or verify citations "
+            "via zbMATH Open (arXiv:2106.04664)."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query, paper title, DOI, arXiv ID, MSC code, or software name.",
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": ["search", "classification", "software", "verify_citation"],
+                    "default": "search",
+                    "description": (
+                        "Query mode: 'search' (default, document/review search), "
+                        "'classification' (MSC 2020 taxonomy lookup), "
+                        "'software' (swMATH research software database), "
+                        "or 'verify_citation' (anti-hallucination reference verification)."
+                    ),
+                },
+                "max_results": {
+                    "type": "integer",
+                    "default": 8,
+                    "description": "Maximum number of results to return.",
+                },
+                "online": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Query the live zbMATH Open REST API (falls back to offline catalog if False or network unavailable).",
+                },
+            },
+            "required": ["query"],
+        },
+    },
 ]
 
 
@@ -1121,6 +1161,20 @@ def dispatch_tool(
             max_results=int(args.get("max_results", 8)),
             online=bool(args.get("online", False)),
         )
+
+    if name == "math_search_literature":
+        mode = args.get("mode", "search")
+        query = args["query"]
+        max_res = int(args.get("max_results", 8))
+        online = bool(args.get("online", True))
+        if mode == "classification":
+            return ax.lookup_msc(query, max_results=max_res, online=online)
+        elif mode == "software":
+            return ax.search_software(query, max_results=max_res, online=online)
+        elif mode == "verify_citation":
+            return ax.verify_citation(query, online=online)
+        else:
+            return ax.search_literature(query, max_results=max_res, online=online)
 
     return error_result(name, str(args), f"unknown MCP tool: {name!r}")
 

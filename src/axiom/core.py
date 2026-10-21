@@ -27,6 +27,12 @@ from axiom.contract import (
     outcome_word,
 )
 from axiom.engines.base import Answer, Engine, EngineError
+from axiom.literature import (
+    lookup_msc,
+    search_literature,
+    search_software,
+    verify_citation,
+)
 from axiom.parsing import ParseError, Parser, extract_expression_excluded_points
 from axiom.registry import EngineRegistry
 from axiom.verification import (
@@ -2820,6 +2826,49 @@ class Axiom:
             verification=ver,
             reproducible_with=f'axiom search-mathlib "{query}"',
         )
+
+    def search_literature(
+        self,
+        query: str,
+        *,
+        max_results: int = 8,
+        online: bool = True,
+        timeout: int = 10,
+    ) -> MathResult:
+        """Search peer-reviewed mathematical literature and reviews via zbMATH Open (arXiv:2106.04664)."""
+        return search_literature(query, max_results=max_results, online=online, timeout=timeout)
+
+    def lookup_msc(
+        self,
+        code_or_query: str,
+        *,
+        max_results: int = 5,
+        online: bool = True,
+        timeout: int = 10,
+    ) -> MathResult:
+        """Lookup Mathematics Subject Classification (MSC 2020) codes via zbMATH Open."""
+        return lookup_msc(code_or_query, max_results=max_results, online=online, timeout=timeout)
+
+    def search_software(
+        self,
+        query: str,
+        *,
+        max_results: int = 5,
+        online: bool = True,
+        timeout: int = 10,
+    ) -> MathResult:
+        """Search mathematical research software tracked via swMATH and zbMATH Open."""
+        return search_software(query, max_results=max_results, online=online, timeout=timeout)
+
+    def verify_citation(
+        self,
+        citation: str | dict[str, Any],
+        *,
+        online: bool = True,
+        timeout: int = 10,
+    ) -> MathResult:
+        """Audit a mathematical citation against zbMATH Open to eliminate hallucinated references."""
+        return verify_citation(citation, online=online, timeout=timeout)
 
     def session(
         self,

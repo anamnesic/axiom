@@ -472,7 +472,7 @@ class TestAxiom(unittest.TestCase):
     def test_doctor_and_setup_with_backup(self) -> None:
         doc = run_doctor()
         self.assertTrue(doc["ok"])
-        self.assertEqual(doc["mcp_tools_count"], 29)
+        self.assertEqual(doc["mcp_tools_count"], 30)
 
         with tempfile.TemporaryDirectory() as td:
             fake_home = Path(td)
@@ -888,7 +888,7 @@ class TestAxiom(unittest.TestCase):
         self.assertFalse(payload["value"]["equivalent"])
 
     def test_mcp_all_tools_and_jsonrpc(self) -> None:
-        self.assertEqual(len(TOOL_DEFINITIONS), 29)
+        self.assertEqual(len(TOOL_DEFINITIONS), 30)
         names = {t["name"] for t in TOOL_DEFINITIONS}
         self.assertEqual(
             names,
@@ -914,6 +914,7 @@ class TestAxiom(unittest.TestCase):
                 "math_session",
                 "math_tensor",
                 "math_search_mathlib",
+                "math_search_literature",
                 "math_investigate",
                 "math_analyze_claim",
                 "math_trace_dependencies",
@@ -1090,7 +1091,7 @@ class TestAxiom(unittest.TestCase):
         r_list = json.loads(lines[1])
         r_call = json.loads(lines[2])
         self.assertEqual(r_init["result"]["serverInfo"]["name"], "axiom")
-        self.assertEqual(len(r_list["result"]["tools"]), 29)
+        self.assertEqual(len(r_list["result"]["tools"]), 30)
         self.assertEqual(
             r_call["result"]["structuredContent"]["guarantee"],
             "verified-substitution",
