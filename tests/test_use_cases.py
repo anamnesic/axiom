@@ -241,6 +241,38 @@ class TestUseCases(unittest.TestCase):
             finally:
                 os.chdir(prev_cwd)
 
+    def test_session_record_diverse_cli_commands(self) -> None:
+        """Test recording non-solve CLI commands (number-theory, matrix) into a session."""
+        with tempfile.TemporaryDirectory() as td:
+            prev_cwd = os.getcwd()
+            os.chdir(td)
+            try:
+                self.assertEqual(cli_main(["session", "new", "--name", "multicmd"]), 0)
+                # number-theory
+                rc1 = cli_main(["session", "record", "--name", "multicmd", "--command", "axiom number-theory binomial -n 5 -k 2"])
+                self.assertEqual(rc1, 0)
+                # matrix
+                rc2 = cli_main(["session", "record", "--name", "multicmd", "--command", "axiom matrix [[1,2],[3,4]] --op det"])
+                self.assertEqual(rc2, 0)
+                # status
+                buf_stat = io.StringIO()
+                with redirect_stdout(buf_stat):
+                    self.assertEqual(cli_main(["session", "status", "--name", "multicmd"]), 0)
+                stat_text = buf_stat.getvalue()
+                self.assertIn("Step 1: step_valid=True, chain_valid=True, guarantee=exact-symbolic", stat_text)
+                self.assertIn("Step 2: step_valid=True, chain_valid=True, guarantee=exact-symbolic", stat_text)
+            finally:
+                os.chdir(prev_cwd)
+
+    def test_lean_binary_custom_configuration(self) -> None:
+        """Test Axiom(lean_binary=...) and AXIOM_LEAN_BIN configuration."""
+        from axiom.core import Axiom
+        with tempfile.TemporaryDirectory() as td:
+            fake_lean = Path(td) / ("fake_lean.exe" if os.name == "nt" else "fake_lean")
+            fake_lean.write_text("dummy", encoding="utf-8")
+            ax = Axiom(lean_binary=fake_lean)
+            self.assertEqual(ax.registry.get("lean").lean_bin, str(fake_lean))
+
     # ----------------------------------------------------------- Use Case 9
     def test_use_case_9_tensor_sphere(self) -> None:
         """Use Case 9: Differential Geometry & Levi-Civita Tensor Calculus."""

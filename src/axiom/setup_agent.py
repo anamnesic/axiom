@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -209,6 +211,30 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
         bin_name: shutil.which(bin_name)
         for bin_name in ("lean", "lake", "sage", "julia")
     }
+
+    # Respect AXIOM_LEAN_BIN and AXIOM_LAKE_BIN environment variables or engine settings
+    env_lean = os.environ.get("AXIOM_LEAN_BIN")
+    if env_lean and Path(env_lean).exists():
+        binaries["lean"] = env_lean
+    elif ax:
+        try:
+            lean_eng = ax.registry.get("lean")
+            if getattr(lean_eng, "lean_bin", None):
+                binaries["lean"] = str(lean_eng.lean_bin)
+        except Exception:
+            pass
+
+    env_lake = os.environ.get("AXIOM_LAKE_BIN")
+    if env_lake and Path(env_lake).exists():
+        binaries["lake"] = env_lake
+    elif ax:
+        try:
+            lean_eng = ax.registry.get("lean")
+            if getattr(lean_eng, "lake_bin", None):
+                binaries["lake"] = str(lean_eng.lake_bin)
+        except Exception:
+            pass
+
     # Also check ~/.elan/bin for lean/lake
     elan_bin = Path.home() / ".elan" / "bin"
     for b in ("lean", "lake"):
@@ -220,7 +246,6 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
 
     # Also check LOCALAPPDATA/Programs for Julia on Windows
     if not binaries.get("julia"):
-        import os
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
             programs = Path(local_app_data) / "Programs"
@@ -229,6 +254,25 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
                     if p.exists():
                         binaries["julia"] = str(p)
                         break
+
+    toolchain_versions: dict[str, str | None] = {}
+    for name, bin_path in binaries.items():
+        if not bin_path:
+            continue
+        try:
+            proc = subprocess.run(
+                [bin_path, "--version"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
+                check=False,
+            )
+            fl = (proc.stdout or "").splitlines()
+            toolchain_versions[name] = fl[0].strip() if fl else None
+        except Exception:
+            toolchain_versions[name] = None
 
     engines_info = [
         {
@@ -289,6 +333,7 @@ def run_doctor(axiom: Axiom | None = None) -> dict[str, Any]:
         "skills": skills_list,
         "packages": packages,
         "external_toolchains": binaries,
+        "toolchain_versions": toolchain_versions,
         "engines": engines_info,
         "self_tests": checks,
     }

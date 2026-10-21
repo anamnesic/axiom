@@ -238,9 +238,38 @@ class LeanEngine(Engine):
     version = "4"
     capabilities = ("prove", "search_mathlib")
 
-    def __init__(self) -> None:
-        self.lean_bin = self._find_binary("lean")
-        self.lake_bin = self._find_binary("lake")
+    def __init__(
+        self,
+        lean_binary: str | Path | None = None,
+        lake_binary: str | Path | None = None,
+    ) -> None:
+        env_lean = os.environ.get("AXIOM_LEAN_BIN")
+        chosen_lean = lean_binary or env_lean
+        if chosen_lean:
+            chosen_str = str(chosen_lean)
+            if Path(chosen_str).exists():
+                self.lean_bin = chosen_str
+            else:
+                self.lean_bin = shutil.which(chosen_str) or chosen_str
+        else:
+            self.lean_bin = self._find_binary("lean")
+
+        env_lake = os.environ.get("AXIOM_LAKE_BIN")
+        chosen_lake = lake_binary or env_lake
+        if chosen_lake:
+            chosen_lake_str = str(chosen_lake)
+            if Path(chosen_lake_str).exists():
+                self.lake_bin = chosen_lake_str
+            else:
+                self.lake_bin = shutil.which(chosen_lake_str) or chosen_lake_str
+        else:
+            self.lake_bin = self._find_binary("lake")
+
+        if not self.lake_bin and self.lean_bin:
+            sibling_lake = Path(self.lean_bin).parent / ("lake.exe" if os.name == "nt" else "lake")
+            if sibling_lake.exists():
+                self.lake_bin = str(sibling_lake)
+
         if self.lean_bin:
             self.version = self._detect_version(self.lean_bin)
 
@@ -901,6 +930,8 @@ class LeanEngine(Engine):
                     "trivial_theorems": trivial_theorems,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted_axioms,
+                    "lean_version": self.version,
+                    "lean_bin": self.lean_bin,
                     "diagnostics": diagnostics,
                 },
                 value_str=status_str,
@@ -908,6 +939,7 @@ class LeanEngine(Engine):
                 steps=[
                     f"source: {origin}",
                     f"runner: {runner_label} (exit code: {proc.returncode})",
+                    f"lean version: {self.version}",
                     f"audited theorems: {audited_theorems or ['none']}",
                     f"axioms used: {axioms_used or ['none (constructive)']}",
                 ],
@@ -924,6 +956,8 @@ class LeanEngine(Engine):
                     "missing_audits": missing_audits,
                     "axioms_used": axioms_used,
                     "untrusted_axioms": untrusted_axioms,
+                    "lean_version": self.version,
+                    "lean_bin": self.lean_bin,
                     "diagnostics": diagnostics,
                 },
             )

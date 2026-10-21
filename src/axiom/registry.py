@@ -7,6 +7,8 @@ backend while preserving a uniform result contract.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from axiom.engines.base import Engine, EngineError, EngineInfo
 from axiom.engines.external_engines import JuliaEngine, SageEngine
 from axiom.engines.lean_engine import LeanEngine
@@ -17,13 +19,18 @@ from axiom.engines.sympy_engine import SymPyEngine
 class EngineRegistry:
     """Registry of mathematical engines indexed by name."""
 
-    def __init__(self, *, register_defaults: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        register_defaults: bool = True,
+        lean_binary: str | Path | None = None,
+    ) -> None:
         self._engines: dict[str, Engine] = {}
         self._default_order: list[str] = []
         if register_defaults:
             self.register(SymPyEngine(), default=True)
             self.register(NumericEngine())
-            self.register(LeanEngine())
+            self.register(LeanEngine(lean_binary=lean_binary))
             self.register(SageEngine())
             self.register(JuliaEngine())
 

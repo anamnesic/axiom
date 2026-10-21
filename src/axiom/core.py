@@ -742,8 +742,25 @@ def _audit_specification_alignment(
 class Axiom:
     """Facade for mathematical computation, exploration, and verification."""
 
-    def __init__(self, registry: EngineRegistry | None = None) -> None:
-        self.registry = registry or EngineRegistry()
+    def __init__(
+        self,
+        registry: EngineRegistry | None = None,
+        *,
+        lean_binary: str | Path | None = None,
+    ) -> None:
+        if registry is not None:
+            self.registry = registry
+            if lean_binary:
+                try:
+                    lean_eng = self.registry.get("lean")
+                    if hasattr(lean_eng, "lean_bin"):
+                        lean_eng.lean_bin = str(lean_binary)
+                        if hasattr(lean_eng, "_detect_version"):
+                            lean_eng.version = lean_eng._detect_version(str(lean_binary))
+                except Exception:
+                    pass
+        else:
+            self.registry = EngineRegistry(lean_binary=lean_binary)
 
     # ----------------------------------------------------------------- parse
 
@@ -2231,6 +2248,8 @@ class Axiom:
             "untrusted_axioms": untrusted,
             "has_sorry": has_hole,
             "audit_complete": audit_complete,
+            "lean_version": getattr(lean_eng, "version", "4"),
+            "lean_bin": getattr(lean_eng, "lean_bin", None),
             "runner": getattr(ans, "method", "lean"),
             "status": "kernel_verified" if kernel_ok else "kernel_failed",
         }
@@ -2886,55 +2905,15 @@ class Axiom:
                 if tokens and tokens[0] in ("axiom", "math"):
                     tokens = tokens[1:]
                 if tokens:
-                    cmd_sub = tokens[0]
-                    if cmd_sub == "solve" and len(tokens) > 1:
-                        var = None
-                        if "-v" in tokens:
-                            var = tokens[tokens.index("-v") + 1]
-                        elif "--variable" in tokens:
-                            var = tokens[tokens.index("--variable") + 1]
-                        step_res = self.solve(tokens[1], variable=var)
-                    elif cmd_sub == "prove" and len(tokens) > 1:
-                        eng = "lean"
-                        target = None
-                        i = 1
-                        while i < len(tokens):
-                            tok = tokens[i]
-                            if tok in ("-e", "--engine") and i + 1 < len(tokens):
-                                eng = tokens[i + 1]
-                                i += 2
-                            elif tok.startswith("-"):
-                                i += 1
-                            else:
-                                target = tok
-                                i += 1
-                        if target:
-                            step_res = self.prove(target, engine=eng)
-                    elif cmd_sub == "simplify" and len(tokens) > 1:
-                        step_res = self.simplify(tokens[1])
-                    elif cmd_sub == "compare" and len(tokens) > 2:
-                        tol = None
-                        if "--tolerance" in tokens:
-                            tol = float(tokens[tokens.index("--tolerance") + 1])
-                        step_res = self.compare(tokens[1], tokens[2], tolerance=tol)
-                    elif cmd_sub in ("evaluate", "eval") and len(tokens) > 1:
-                        prec = None
-                        if "-p" in tokens:
-                            prec = int(tokens[tokens.index("-p") + 1])
-                        elif "--precision" in tokens:
-                            prec = int(tokens[tokens.index("--precision") + 1])
-                        step_res = self.evaluate(tokens[1], precision=prec)
-                    elif cmd_sub in ("differentiate", "diff") and len(tokens) > 1:
-                        var = None
-                        if "-v" in tokens:
-                            var = tokens[tokens.index("-v") + 1]
-                        step_res = self.differentiate(tokens[1], variable=var)
-                    elif cmd_sub == "integrate" and len(tokens) > 1:
-                        step_res = self.integrate(tokens[1])
-                    elif cmd_sub == "tensor" and len(tokens) > 1:
-                        step_res = self.tensor(tokens[1])
-                    else:
-                        step_res = self.solve(tokens[1]) if len(tokens) > 1 else None
+                    try:
+                        from axiom.cli import execute_command
+                        step_res = execute_command(self, tokens)
+                    except Exception as exc:
+                        step_res = error_result(
+                            "session",
+                            command,
+                            f"failed to execute command {command!r}: {exc}",
+                        )
 
             if step_res is None:
                 if not expression:

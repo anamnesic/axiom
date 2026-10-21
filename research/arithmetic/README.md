@@ -18,12 +18,13 @@ Diferente de artefatos efêmeros gerados em `build/`, os arquivos contidos aqui 
 | [`dia_08_euclid_infinitude.lean`](./dia_08_euclid_infinitude.lean) | Teorema de Euclides: **Infinitude** dos números primos ($\forall n, \exists p > n$) | Seção 2.4 (p. 40) & Problema 1.21 | Machine-checked (0 sorry) |
 | [`dia_09_diophantine.lean`](./dia_09_diophantine.lean) | Equações Diofantinas Lineares: Critério e Solução Geral ($ax + by = c$) | Seção 3.10 (p. 75–80, Teorema 3.5) | Machine-checked (0 sorry) |
 | [`dia_10_congruences.lean`](./dia_10_congruences.lean) | Relações de Congruência, Aritmética Modular e Inverso via Bézout | Cap. 4 (p. 81–98, Proposições 4.1–4.6) | Machine-checked (0 sorry) |
+| [`dia_11_fermat.lean`](./dia_11_fermat.lean) | Pequeno Teorema de Fermat (Formas Aditiva e Multiplicativa) | Brochero et al., Cap. 3; Hefez, Cap. 4 | Machine-checked (0 sorry) |
 
 ---
 
 ## 🛡️ Garantias Epistêmicas
 
-1. **Kernel Oficial Lean 4**: Todas as provas compilam com o kernel Lean 4 (leanprover/lean4:v4.35.0 ou superior).
+1. **Kernel Oficial Lean 4**: Todas as provas compilam com o kernel Lean 4 (dualmente compatível com leanprover/lean4:v4.14.0 do CI e leanprover/lean4:v4.35.0 local).
 2. **Zero `sorry`**: Nenhuma demonstração recorre a passos incompletos.
 3. **Zero axiomas não-confiáveis**: Verificado via inspeção de axiomas (nenhum axioma ad-hoc introduzido).
 4. **Independência de Mathlib**: Todas as formalizações foram construídas de forma autossuficiente sobre o núcleo do Lean 4 e a tática `omega`, eliminando fragilidades de dependências externas.
@@ -43,6 +44,7 @@ lean research/arithmetic/dia_07_fundamental_theorem_uniqueness.lean
 lean research/arithmetic/dia_08_euclid_infinitude.lean
 lean research/arithmetic/dia_09_diophantine.lean
 lean research/arithmetic/dia_10_congruences.lean
+lean research/arithmetic/dia_11_fermat.lean
 ```
 
 ### 2. Pelo Chronokairo AXIOM

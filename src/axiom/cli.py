@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Sequence
 
-from axiom.contract import EpistemicState, Guarantee, MathResult
+from axiom.contract import EpistemicState, Guarantee, MathResult, error_result
 from axiom.core import Axiom
 from axiom.mcp_server import run_stdio_server
 from axiom.setup_agent import configure_clients, run_doctor
@@ -93,13 +93,14 @@ def _parse_range(spec: str) -> tuple[float, float]:
     return float(parts[0]), float(parts[1])
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(exit_on_error: bool = True) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="axiom",
         description=(
             "AXIOM — Mathematical Reasoning Engine. "
             "One MCP & CLI for mathematical computation, exploration, and verification."
         ),
+        exit_on_error=exit_on_error,
     )
     parser.add_argument(
         "--json",
@@ -477,6 +478,243 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def execute_cli_args(ax: Axiom, args: argparse.Namespace) -> MathResult:
+    """Execute a parsed CLI command namespace against an Axiom instance."""
+    cmd = args.command
+    assump = getattr(args, "assumptions", None)
+    if cmd == "parse":
+        return ax.parse(args.expression, assumptions=assump)
+    elif cmd == "solve":
+        return ax.solve(
+            args.expression, variable=args.variable, assumptions=assump, engine=args.engine
+        )
+    elif cmd == "simplify":
+        return ax.simplify(args.expression, assumptions=assump, engine=args.engine)
+    elif cmd == "factor":
+        return ax.factor(args.expression, assumptions=assump, engine=args.engine)
+    elif cmd == "expand":
+        return ax.expand(args.expression, assumptions=assump, engine=args.engine)
+    elif cmd in ("differentiate", "diff"):
+        return ax.differentiate(
+            args.expression,
+            variable=args.variable,
+            order=args.order,
+            assumptions=assump,
+            engine=args.engine,
+        )
+    elif cmd == "integrate":
+        return ax.integrate(
+            args.expression,
+            variable=args.variable,
+            lower=args.lower,
+            upper=args.upper,
+            assumptions=assump,
+            engine=args.engine,
+        )
+    elif cmd == "limit":
+        return ax.limit(
+            args.expression,
+            variable=args.variable,
+            point=args.point,
+            direction=args.direction,
+            assumptions=assump,
+            engine=args.engine,
+        )
+    elif cmd == "series":
+        return ax.series(
+            args.expression,
+            variable=args.variable,
+            point=args.point,
+            order=args.order,
+        )
+    elif cmd in ("evaluate", "eval"):
+        return ax.evaluate(
+            args.expression,
+            precision=args.precision,
+            assumptions=assump,
+            engine=args.engine,
+        )
+    elif cmd == "compare":
+        return ax.compare(
+            args.left,
+            args.right,
+            assumptions=assump,
+            tolerance=getattr(args, "tolerance", None),
+        )
+    elif cmd == "verify":
+        return ax.verify(
+            args.target,
+            candidate=args.solutions,
+            variable=args.variable,
+            assumptions=assump,
+        )
+    elif cmd == "explain":
+        return ax.explain(
+            args.expression,
+            operation=args.operation,
+            variable=args.variable,
+        )
+    elif cmd == "explore":
+        return ax.explore(
+            args.expression,
+            variable=args.variable,
+            samples=args.samples,
+        )
+    elif cmd == "plot":
+        try:
+            r_min, r_max = _parse_range(args.range)
+        except ValueError as exc:
+            return error_result("plot", args.expression, str(exc), engine="axiom")
+        return ax.plot(
+            args.expression,
+            variable=args.variable,
+            range_=(r_min, r_max),
+            points=args.points,
+            output=args.output,
+        )
+    elif cmd == "prove":
+        hyps = None
+        if getattr(args, "declared_hypotheses", None):
+            try:
+                hyps = json.loads(args.declared_hypotheses)
+            except Exception:
+                hyps = [h.strip() for h in args.declared_hypotheses.split(",") if h.strip()]
+        return ax.prove(
+            args.statement,
+            proof=args.proof,
+            engine=args.engine,
+            canonical_statement=getattr(args, "canonical_statement", None),
+            declared_hypotheses=hyps,
+            spec_alignment=getattr(args, "spec_alignment", None),
+            timeout=getattr(args, "timeout", None),
+        )
+    elif cmd == "investigate":
+        return ax.investigate(
+            args.statement,
+            investigation_id=args.investigation_id,
+            root=args.root,
+        )
+    elif cmd == "analyze-claim":
+        return ax.analyze_claim(
+            args.investigation_id,
+            root=args.root,
+            statement=args.statement,
+        )
+    elif cmd == "trace-dependencies":
+        return ax.trace_dependencies(
+            args.investigation_id,
+            list(args.lemma),
+            root=args.root,
+            mode=args.mode,
+        )
+    elif cmd == "find-counterexample":
+        return ax.find_counterexample(
+            args.investigation_id,
+            root=args.root,
+            statement=args.statement,
+            mode=args.mode,
+        )
+    elif cmd == "compare-proofs":
+        return ax.compare_proofs(
+            args.investigation_id,
+            list(args.statement),
+            root=args.root,
+            mode=args.mode,
+        )
+    elif cmd == "list-unknowns":
+        return ax.list_unknowns(args.investigation_id, root=args.root)
+    elif cmd == "get-evidence-bundle":
+        return ax.get_evidence_bundle(args.investigation_id, root=args.root)
+    elif cmd == "export-investigation":
+        return ax.export_investigation(args.investigation_id, root=args.root)
+    elif cmd == "matrix":
+        return ax.matrix(args.matrix, operation=args.op, rhs=args.rhs)
+    elif cmd == "ode":
+        return ax.ode(args.equation, function=args.function, variable=args.variable)
+    elif cmd in ("number-theory", "nt"):
+        rems = (
+            [int(x.strip()) for x in args.remainders.split(",") if x.strip()]
+            if getattr(args, "remainders", None)
+            else None
+        )
+        mods = (
+            [int(x.strip()) for x in args.moduli.split(",") if x.strip()]
+            if getattr(args, "moduli", None)
+            else None
+        )
+        f1 = (
+            [int(x.strip()) for x in args.factors1.split(",") if x.strip()]
+            if getattr(args, "factors1", None)
+            else None
+        )
+        f2 = (
+            [int(x.strip()) for x in args.factors2.split(",") if x.strip()]
+            if getattr(args, "factors2", None)
+            else None
+        )
+        return ax.number_theory(
+            args.operation,
+            n=args.n,
+            a=args.a,
+            b=args.b,
+            k=args.k,
+            remainders=rems,
+            moduli=mods,
+            factors1=f1,
+            factors2=f2,
+        )
+    elif cmd == "optimize":
+        return ax.optimize(
+            args.expression,
+            variable=args.variable,
+            mode=args.mode,
+            lower=args.lower,
+            upper=args.upper,
+        )
+    elif cmd in ("stats", "statistics"):
+        return ax.statistics(args.data)
+    elif cmd == "tensor":
+        return ax.tensor(args.metric, coordinates=args.coords, operation=args.op)
+    elif cmd in ("search-mathlib", "mathlib"):
+        return ax.search_mathlib(args.query, max_results=args.max_results, online=args.online)
+    elif cmd == "session":
+        deps = None
+        if getattr(args, "depends_on", None):
+            deps = [int(x.strip()) for x in str(args.depends_on).split(",") if x.strip()]
+        return ax.session(
+            args.action,
+            name=args.name,
+            title=getattr(args, "title", None),
+            step=getattr(args, "step", None),
+            command=getattr(args, "session_command", None),
+            file=getattr(args, "file", None),
+            depends_on=deps,
+            expression=args.expression,
+            operation=args.operation,
+            hypothesis=args.hypothesis,
+            note=args.note,
+        )
+    else:
+        return error_result("cli", str(cmd), f"unrecognized or unsupported CLI command '{cmd}'", engine="axiom-cli")
+
+
+def execute_command(ax: Axiom, tokens: Sequence[str]) -> MathResult:
+    """Parse and execute CLI tokens, returning the resulting MathResult."""
+    toks = list(tokens)
+    if toks and toks[0] in ("axiom", "math"):
+        toks = toks[1:]
+    if not toks:
+        return error_result("cli", "", "empty command line tokens", engine="axiom-cli")
+    parser = build_parser(exit_on_error=False)
+    try:
+        args = parser.parse_args(toks)
+    except Exception as exc:
+        return error_result(
+            "cli", " ".join(tokens), f"invalid command line arguments: {exc}", engine="axiom-cli"
+        )
+    return execute_cli_args(ax, args)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     if sys.platform == "win32":
         try:
@@ -525,8 +763,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"    - {k:<12} {v or 'not installed'}")
             if "external_toolchains" in report:
                 print("  Toolchains:")
+                versions = report.get("toolchain_versions", {})
                 for k, v in report["external_toolchains"].items():
-                    print(f"    - {k:<12} {v or 'not installed'}")
+                    ver_suffix = f" ({versions[k]})" if versions.get(k) else ""
+                    print(f"    - {k:<12} {v or 'not installed'}{ver_suffix}")
             if "skills_count" in report and report["skills_count"] > 0:
                 print(f"  Agent skills: {report['skills_count']} installed")
                 for s in report.get("skills", [])[:6]:
@@ -550,228 +790,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"  - {item['client']}: {item['status']} ({item.get('config_path', '')})")
         return 0
 
-    cmd = args.command
-    assump = getattr(args, "assumptions", None)
-    if cmd == "parse":
-        res = ax.parse(args.expression, assumptions=assump)
-    elif cmd == "solve":
-        res = ax.solve(
-            args.expression, variable=args.variable, assumptions=assump, engine=args.engine
-        )
-    elif cmd == "simplify":
-        res = ax.simplify(args.expression, assumptions=assump, engine=args.engine)
-    elif cmd == "factor":
-        res = ax.factor(args.expression, assumptions=assump, engine=args.engine)
-    elif cmd == "expand":
-        res = ax.expand(args.expression, assumptions=assump, engine=args.engine)
-    elif cmd in ("differentiate", "diff"):
-        res = ax.differentiate(
-            args.expression,
-            variable=args.variable,
-            order=args.order,
-            assumptions=assump,
-            engine=args.engine,
-        )
-    elif cmd == "integrate":
-        res = ax.integrate(
-            args.expression,
-            variable=args.variable,
-            lower=args.lower,
-            upper=args.upper,
-            assumptions=assump,
-            engine=args.engine,
-        )
-    elif cmd == "limit":
-        res = ax.limit(
-            args.expression,
-            variable=args.variable,
-            point=args.point,
-            direction=args.direction,
-            assumptions=assump,
-            engine=args.engine,
-        )
-    elif cmd == "series":
-        res = ax.series(
-            args.expression,
-            variable=args.variable,
-            point=args.point,
-            order=args.order,
-        )
-    elif cmd in ("evaluate", "eval"):
-        res = ax.evaluate(
-            args.expression,
-            precision=args.precision,
-            assumptions=assump,
-            engine=args.engine,
-        )
-    elif cmd == "compare":
-        res = ax.compare(
-            args.left,
-            args.right,
-            assumptions=assump,
-            tolerance=getattr(args, "tolerance", None),
-        )
-    elif cmd == "verify":
-        res = ax.verify(
-            args.target,
-            candidate=args.solutions,
-            variable=args.variable,
-            assumptions=assump,
-        )
-    elif cmd == "explain":
-        res = ax.explain(
-            args.expression,
-            operation=args.operation,
-            variable=args.variable,
-        )
-    elif cmd == "explore":
-        res = ax.explore(
-            args.expression,
-            variable=args.variable,
-            samples=args.samples,
-        )
-    elif cmd == "plot":
-        try:
-            r_min, r_max = _parse_range(args.range)
-        except ValueError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 2
-        res = ax.plot(
-            args.expression,
-            variable=args.variable,
-            range_=(r_min, r_max),
-            points=args.points,
-            output=args.output,
-        )
-    elif cmd == "prove":
-        hyps = None
-        if getattr(args, "declared_hypotheses", None):
-            try:
-                hyps = json.loads(args.declared_hypotheses)
-            except Exception:
-                hyps = [h.strip() for h in args.declared_hypotheses.split(",") if h.strip()]
-        res = ax.prove(
-            args.statement,
-            proof=args.proof,
-            engine=args.engine,
-            canonical_statement=getattr(args, "canonical_statement", None),
-            declared_hypotheses=hyps,
-            spec_alignment=getattr(args, "spec_alignment", None),
-            timeout=getattr(args, "timeout", None),
-        )
-    elif cmd == "investigate":
-        res = ax.investigate(
-            args.statement,
-            investigation_id=args.investigation_id,
-            root=args.root,
-        )
-    elif cmd == "analyze-claim":
-        res = ax.analyze_claim(
-            args.investigation_id,
-            root=args.root,
-            statement=args.statement,
-        )
-    elif cmd == "trace-dependencies":
-        res = ax.trace_dependencies(
-            args.investigation_id,
-            list(args.lemma),
-            root=args.root,
-            mode=args.mode,
-        )
-    elif cmd == "find-counterexample":
-        res = ax.find_counterexample(
-            args.investigation_id,
-            root=args.root,
-            statement=args.statement,
-            mode=args.mode,
-        )
-    elif cmd == "compare-proofs":
-        res = ax.compare_proofs(
-            args.investigation_id,
-            list(args.statement),
-            root=args.root,
-            mode=args.mode,
-        )
-    elif cmd == "list-unknowns":
-        res = ax.list_unknowns(args.investigation_id, root=args.root)
-    elif cmd == "get-evidence-bundle":
-        res = ax.get_evidence_bundle(args.investigation_id, root=args.root)
-    elif cmd == "export-investigation":
-        res = ax.export_investigation(args.investigation_id, root=args.root)
-    elif cmd == "matrix":
-        res = ax.matrix(args.matrix, operation=args.op, rhs=args.rhs)
-    elif cmd == "ode":
-        res = ax.ode(args.equation, function=args.function, variable=args.variable)
-    elif cmd in ("number-theory", "nt"):
-        rems = (
-            [int(x.strip()) for x in args.remainders.split(",") if x.strip()]
-            if getattr(args, "remainders", None)
-            else None
-        )
-        mods = (
-            [int(x.strip()) for x in args.moduli.split(",") if x.strip()]
-            if getattr(args, "moduli", None)
-            else None
-        )
-        f1 = (
-            [int(x.strip()) for x in args.factors1.split(",") if x.strip()]
-            if getattr(args, "factors1", None)
-            else None
-        )
-        f2 = (
-            [int(x.strip()) for x in args.factors2.split(",") if x.strip()]
-            if getattr(args, "factors2", None)
-            else None
-        )
-        res = ax.number_theory(
-            args.operation,
-            n=args.n,
-            a=args.a,
-            b=args.b,
-            k=args.k,
-            remainders=rems,
-            moduli=mods,
-            factors1=f1,
-            factors2=f2,
-        )
-    elif cmd == "optimize":
-        res = ax.optimize(
-            args.expression,
-            variable=args.variable,
-            mode=args.mode,
-            lower=args.lower,
-            upper=args.upper,
-        )
-    elif cmd in ("stats", "statistics"):
-        res = ax.statistics(args.data)
-    elif cmd == "tensor":
-        res = ax.tensor(args.metric, coordinates=args.coords, operation=args.op)
-    elif cmd in ("search-mathlib", "mathlib"):
-        res = ax.search_mathlib(args.query, max_results=args.max_results, online=args.online)
-    elif cmd == "session":
-        deps = None
-        if getattr(args, "depends_on", None):
-            deps = [int(x.strip()) for x in str(args.depends_on).split(",") if x.strip()]
-        res = ax.session(
-            args.action,
-            name=args.name,
-            title=getattr(args, "title", None),
-            step=getattr(args, "step", None),
-            command=getattr(args, "session_command", None),
-            file=getattr(args, "file", None),
-            depends_on=deps,
-            expression=args.expression,
-            operation=args.operation,
-            hypothesis=args.hypothesis,
-            note=args.note,
-        )
-    else:  # pragma: no cover
-        parser.error(f"unknown command: {cmd}")
-        return 2
+    res = execute_cli_args(ax, args)
 
     if getattr(args, "json", False):
         _safe_print(res.to_json(indent=2))
-    elif cmd == "session" and getattr(args, "action", "") == "status":
+    elif args.command == "session" and getattr(args, "action", "") == "status":
         _safe_print(res.value_str)
     elif getattr(args, "plain", False):
         _safe_print(res.render())

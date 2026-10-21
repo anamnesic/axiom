@@ -31,8 +31,8 @@ Para cada dia do checklist:
 ## 📊 Progresso Geral
 
 - **Total de Dias Planejados:** 120 dias
-- **Teoremas Concluídos:** 10 / 120 (Tópicos fundamentais selecionados do Livro 1 — Iniciação à Aritmética 100% concluídos)
-- **Status do Kernel:** Lean 4 v4.35.0 (0 `sorry`, 0 axiomas não confiáveis)
+- **Teoremas Concluídos:** 11 / 120 (Livro 1 — Iniciação à Aritmética 100% concluído; Livro 3 — Passeio pelos Primos iniciado)
+- **Status do Kernel:** Lean 4 v4.14.0 (CI) & v4.35.0 (local) (0 `sorry`, 0 axiomas não confiáveis)
 
 ---
 
@@ -77,8 +77,9 @@ Para cada dia do checklist:
   - *Teoremas:* `Dia10Congruences.cong_refl`, `Dia10Congruences.cong_symm`, `Dia10Congruences.cong_trans`, `Dia10Congruences.cong_add`, `Dia10Congruences.cong_sub`, `Dia10Congruences.cong_mul`, `Dia10Congruences.cong_pow`, `Dia10Congruences.invertible_of_bezout`, `Dia10Congruences.bezout_of_invertible`, `Dia10Congruences.common_divisor_dvd_one_of_invertible`.
   - *Garantia:* `formal-proof` (Lean 4 kernel, 0 sorry, relação de equivalência, compatibilidade algébrica aditiva/multiplicativa/potências e inversos modulares via Bézout com 12 teoremas/exemplos auditados) + Teorema Chinês dos Restos e retrovalidação de sessão (`dia-10-congruences`).
   - 🎉 **Marco Concluído:** **100% dos tópicos e teoremas fundamentais selecionados do Livro 1 (*Iniciação à Aritmética*, Abramo Hefez) formalizados e verificados.**
-- [ ] **Dia 11:** Pequeno Teorema de Fermat (*Brochero, Cap. 3*)
-  - *Meta:* Se $p$ é primo e $\gcd(a, p) = 1$, então $a^{p-1} \equiv 1 \pmod p$.
+- [x] **Dia 11:** Pequeno Teorema de Fermat (*Brochero et al., Cap. 3 / Hefez, Cap. 4*)
+  - *Teoremas:* `Dia11Fermat.succ_mul_binom_succ`, `Dia11Fermat.prime_dvd_binom`, `Dia11Fermat.bsum_mul_add`, `Dia11Fermat.bsum_eq_pow`, `Dia11Fermat.dvd_bsum_sub_one`, `Dia11Fermat.cong_succ_pow`, `Dia11Fermat.fermat_little_congruence` ($a^p \equiv a \pmod p$), `Dia11Fermat.fermat_little_coprime` ($a^{p-1} \equiv 1 \pmod p$).
+  - *Garantia:* `formal-proof` (Lean 4 kernel v4.14.0 CI / v4.35.0 local, 0 sorry, 0 axiomas ad-hoc, 34 teoremas/exemplos auditados) + expansão binomial de Newton construtiva e retrovalidação de sessão (`dia-11-fermat`).
 - [ ] **Dia 12:** Teorema de Wilson (*Brochero, Cap. 3*)
   - *Meta:* $p$ é primo se e somente se $(p-1)! \equiv -1 \pmod p$.
 - [ ] **Dia 13:** Teorema Chinês dos Restos
