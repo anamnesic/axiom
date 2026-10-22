@@ -31,7 +31,7 @@ Para cada dia do checklist:
 ## 📊 Progresso Geral
 
 - **Total de Dias Planejados:** 120 dias
-- **Teoremas Concluídos:** 11 / 120 (Livro 1 — Iniciação à Aritmética 100% concluído; Livro 3 — Passeio pelos Primos iniciado)
+- **Teoremas Concluídos:** 12 / 120 (Livro 1 — Iniciação à Aritmética 100% concluído; Livro 3 — Passeio pelos Primos iniciado)
 - **Status do Kernel:** Lean 4 v4.14.0 (CI) & v4.35.0 (local) (0 `sorry`, 0 axiomas não confiáveis)
 
 ---
@@ -80,8 +80,10 @@ Para cada dia do checklist:
 - [x] **Dia 11:** Pequeno Teorema de Fermat (*Brochero et al., Cap. 3 / Hefez, Cap. 4*)
   - *Teoremas:* `Dia11Fermat.succ_mul_binom_succ`, `Dia11Fermat.prime_dvd_binom`, `Dia11Fermat.bsum_mul_add`, `Dia11Fermat.bsum_eq_pow`, `Dia11Fermat.dvd_bsum_sub_one`, `Dia11Fermat.cong_succ_pow`, `Dia11Fermat.fermat_little_congruence` ($a^p \equiv a \pmod p$), `Dia11Fermat.fermat_little_coprime` ($a^{p-1} \equiv 1 \pmod p$).
   - *Garantia:* `formal-proof` (Lean 4 kernel v4.14.0 CI / v4.35.0 local, 0 sorry, 0 axiomas ad-hoc, 34 teoremas/exemplos auditados) + expansão binomial de Newton construtiva e retrovalidação de sessão (`dia-11-fermat`).
-- [ ] **Dia 12:** Teorema de Wilson (*Brochero, Cap. 3*)
-  - *Meta:* $p$ é primo se e somente se $(p-1)! \equiv -1 \pmod p$.
+- [x] **Dia 12:** Teorema de Wilson (*Brochero et al., §1.6, Lema 1.33 e Teorema 1.34, pp. 43–44*)
+  - *Teoremas:* `Dia12Wilson.inverse_exists`, `Dia12Wilson.inverse_unique`, `Dia12Wilson.self_inverse`, `Dia12Wilson.paired_product`, `Dia12Wilson.wilson_forward`, `Dia12Wilson.wilson_converse`, `Dia12Wilson.wilson_iff`, `Dia12Wilson.wilson_congruence`: para $p \ge 2$, $p$ é primo se e somente se $(p-1)! \equiv -1 \pmod p$.
+  - *Garantia da proposição Lean:* `formal-proof` (Lean 4 v4.14.0 / v4.35.0; 31 teoremas auditados; 0 sorry; apenas `propext`, `Classical.choice`, `Quot.sound`). Pareamento de inversos via Bézout, sem Mathlib nem `Int.emod`; caso $p=1$ excluído explicitamente.
+  - *Evidências:* [`reports/dia-12-wilson/REPORT.md`](../reports/dia-12-wilson/REPORT.md), manifesto SHA-256 e sessão local `dia-12-wilson`. Alinhamento automático com a descrição em prosa permanece `candidate`/`unverified`, separado do certificado de kernel.
 - [ ] **Dia 13:** Teorema Chinês dos Restos
   - *Meta:* Solução simultânea de congruências com módulos coprimos dois a dois.
 - [ ] **Dia 14:** Função Totiente de Euler $\phi(n)$ e Multiplicatividade (*Brochero, Cap. 4*)

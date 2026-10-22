@@ -19,6 +19,7 @@ Diferente de artefatos efêmeros gerados em `build/`, os arquivos contidos aqui 
 | [`dia_09_diophantine.lean`](./dia_09_diophantine.lean) | Equações Diofantinas Lineares: Critério e Solução Geral ($ax + by = c$) | Seção 3.10 (p. 75–80, Teorema 3.5) | Machine-checked (0 sorry) |
 | [`dia_10_congruences.lean`](./dia_10_congruences.lean) | Relações de Congruência, Aritmética Modular e Inverso via Bézout | Cap. 4 (p. 81–98, Proposições 4.1–4.6) | Machine-checked (0 sorry) |
 | [`dia_11_fermat.lean`](./dia_11_fermat.lean) | Pequeno Teorema de Fermat (Formas Aditiva e Multiplicativa) | Brochero et al., Cap. 3; Hefez, Cap. 4 | Machine-checked (0 sorry) |
+| [`dia_12_wilson.lean`](./dia_12_wilson.lean) | Wilson: $p \ge 2 \implies (p \text{ primo} \iff p \mid (p-1)!+1)$ | Brochero et al., §1.6, Teorema 1.34, p. 44 | `formal-proof` (31 teoremas, 0 sorry) |
 
 ---
 
@@ -45,6 +46,7 @@ lean research/arithmetic/dia_08_euclid_infinitude.lean
 lean research/arithmetic/dia_09_diophantine.lean
 lean research/arithmetic/dia_10_congruences.lean
 lean research/arithmetic/dia_11_fermat.lean
+lean research/arithmetic/dia_12_wilson.lean
 ```
 
 ### 2. Pelo Chronokairo AXIOM

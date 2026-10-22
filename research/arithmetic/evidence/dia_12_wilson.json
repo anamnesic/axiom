@@ -1,0 +1,124 @@
+{
+  "audits": [
+    {
+      "source": "research/arithmetic/dia_12_wilson.lean",
+      "sha256": "f14dac59061651379b175293476bbee45b7130fa2a0aeaea62b3c7cd10077008",
+      "lean_version": "Lean (version 4.14.0, x86_64-w64-windows-gnu, commit 410fab728470, Release)",
+      "guarantee": "formal-proof",
+      "verification_passed": true,
+      "audited_theorems": [
+        "Dia12Wilson.bezout_algebra",
+        "Dia12Wilson.bezout",
+        "Dia12Wilson.coprime_cancel",
+        "Dia12Wilson.prime_gcd",
+        "Dia12Wilson.euclid",
+        "Dia12Wilson.cong_refl",
+        "Dia12Wilson.cong_symm",
+        "Dia12Wilson.cong_trans",
+        "Dia12Wilson.cong_mul",
+        "Dia12Wilson.mod_cong",
+        "Dia12Wilson.small_cong",
+        "Dia12Wilson.inverse_exists",
+        "Dia12Wilson.inverse_unique",
+        "Dia12Wilson.self_inverse",
+        "Dia12Wilson.prod_erase",
+        "Dia12Wilson.paired_product",
+        "Dia12Wilson.mem_middle",
+        "Dia12Wilson.middle_nodup",
+        "Dia12Wilson.fact_middle",
+        "Dia12Wilson.minus_one_inverse",
+        "Dia12Wilson.wilson_forward",
+        "Dia12Wilson.dvd_fact",
+        "Dia12Wilson.wilson_converse",
+        "Dia12Wilson.wilson_iff",
+        "Dia12Wilson.wilson_congruence",
+        "Dia12Wilson.wilson_two",
+        "Dia12Wilson.wilson_seven",
+        "Dia12Wilson.wilson_eleven",
+        "Dia12Wilson.composite_four",
+        "Dia12Wilson.composite_nine",
+        "Dia12Wilson.boundary_one"
+      ],
+      "axioms_used": [
+        "propext",
+        "Quot.sound",
+        "Classical.choice"
+      ],
+      "untrusted_axioms": [],
+      "session_revalidation": {
+        "name": "dia-12-wilson",
+        "guarantee": "formal-proof",
+        "step_validity": {
+          "all_steps_valid": true,
+          "valid_steps": [
+            1
+          ],
+          "invalid_steps": [],
+          "valid_count": 1,
+          "total_count": 1
+        },
+        "logical_implication_proven": false
+      }
+    },
+    {
+      "source": "research/arithmetic/dia_12_wilson.lean",
+      "sha256": "f14dac59061651379b175293476bbee45b7130fa2a0aeaea62b3c7cd10077008",
+      "lean_version": "Lean (version 4.35.0, x86_64-w64-windows-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "guarantee": "formal-proof",
+      "verification_passed": true,
+      "audited_theorems": [
+        "Dia12Wilson.bezout_algebra",
+        "Dia12Wilson.bezout",
+        "Dia12Wilson.coprime_cancel",
+        "Dia12Wilson.prime_gcd",
+        "Dia12Wilson.euclid",
+        "Dia12Wilson.cong_refl",
+        "Dia12Wilson.cong_symm",
+        "Dia12Wilson.cong_trans",
+        "Dia12Wilson.cong_mul",
+        "Dia12Wilson.mod_cong",
+        "Dia12Wilson.small_cong",
+        "Dia12Wilson.inverse_exists",
+        "Dia12Wilson.inverse_unique",
+        "Dia12Wilson.self_inverse",
+        "Dia12Wilson.prod_erase",
+        "Dia12Wilson.paired_product",
+        "Dia12Wilson.mem_middle",
+        "Dia12Wilson.middle_nodup",
+        "Dia12Wilson.fact_middle",
+        "Dia12Wilson.minus_one_inverse",
+        "Dia12Wilson.wilson_forward",
+        "Dia12Wilson.dvd_fact",
+        "Dia12Wilson.wilson_converse",
+        "Dia12Wilson.wilson_iff",
+        "Dia12Wilson.wilson_congruence",
+        "Dia12Wilson.wilson_two",
+        "Dia12Wilson.wilson_seven",
+        "Dia12Wilson.wilson_eleven",
+        "Dia12Wilson.composite_four",
+        "Dia12Wilson.composite_nine",
+        "Dia12Wilson.boundary_one"
+      ],
+      "axioms_used": [
+        "propext",
+        "Quot.sound",
+        "Classical.choice"
+      ],
+      "untrusted_axioms": [],
+      "session_revalidation": {
+        "name": "dia-12-wilson",
+        "guarantee": "formal-proof",
+        "step_validity": {
+          "all_steps_valid": true,
+          "valid_steps": [
+            1
+          ],
+          "invalid_steps": [],
+          "valid_count": 1,
+          "total_count": 1
+        },
+        "logical_implication_proven": false
+      }
+    }
+  ]
+}

@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Keep the byte-level Day 12 evidence hash stable across CI checkouts.
+research/arithmetic/dia_12_wilson.lean text eol=lf
