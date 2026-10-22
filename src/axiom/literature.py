@@ -26,8 +26,10 @@ Epistemic contract (fail-closed):
   or a strong normalized-title match, never merely because it was the top hit
   of a fuzzy search.
 
-The offline catalog below contains only records whose identifiers were checked
-against the live zbMATH Open API (see ``tests/test_literature.py``).
+The offline catalog is a curated snapshot, with provenance on each record;
+some works are cited by zbMATH but are not indexed documents themselves.
+``tests/test_literature.py`` checks this local contract without network access.
+Passing those tests does not certify the current contents of a live registry.
 """
 
 from __future__ import annotations

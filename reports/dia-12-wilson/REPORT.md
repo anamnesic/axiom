@@ -109,7 +109,7 @@ Os testes verificam a ligação ao fonte, exemplos com as primitivas exatas
 existentes (`factorial` e resto) e, quando Lean está disponível, repetem a
 auditoria real do bicondicional e do caso de fronteira.
 
-### Estado dos testes em 22/10/2026
+### Estado dos testes na auditoria inicial de 22/10/2026
 
 - `tests/test_wilson.py`: 3 testes aprovados.
 - `pytest tests/ -k lean`: 9 testes aprovados com Lean 4.14.0.
@@ -120,3 +120,11 @@ auditoria real do bicondicional e do caso de fronteira.
   [issue #6](https://github.com/anamnesic/axiom/issues/6), incluindo expectativas
   epistêmicas inadequadas (consulta bibliográfica não é prova matemática),
   contrato de campos MSC e busca no catálogo offline.
+
+**Correção posterior:** as expectativas antigas foram substituídas pelo
+[contrato bibliográfico documentado](../../docs/literature.md), sem promover
+consulta de catálogo a prova nem ausência a refutação. A suíte de literatura
+inclui regressões adicionais para atribuição, identificadores e proveniência.
+Os resultados iniciais acima são preservados como registro histórico.
+Após a correção, `python -X utf8 -m pytest tests/` passou com **162 testes e
+3 subtestes**, no ambiente local. Isso não substitui a execução remota do CI.
